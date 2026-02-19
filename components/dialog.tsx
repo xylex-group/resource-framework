@@ -1,285 +1,466 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { ResponsiveDialog } from "@/components/responsive-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ResponsiveDropdownV2 } from "@/components/ui-responsive/responsive-dropdown-v2";
+import {
+  ComboBox,
+  ComboBoxContent,
+  ComboBoxInput,
+  ComboBoxItem,
+} from "@/components/ui/combo-box";
+import { useUserStore } from "@/lib/stores";
+import { fetchData } from "@/lib/actions/data";
+import type { FieldEditorSpec, FieldSpec, Primitive } from "../resource-types";
 
-type Primitive = string | number | boolean | null | undefined;
+export type { FieldEditorSpec, FieldSpec, Primitive };
 
-export type FieldEditorSpec = {
-	type?: "text" | "number" | "boolean" | "select" | "keyvalue";
-	options?: Array<{ label: string; value: string | number | boolean }>;
-};
-
-export type FieldSpec =
-	| string
-	| {
-			column_name: string;
-			header?: string;
-			header_label?: string;
-			hidden?: boolean;
-			data_type?: string;
-			// Optional default value. Useful for hidden/system fields like customer_id.
-			default_value?: Primitive;
-			editor?: FieldEditorSpec;
-	  };
-
+/**
+ * Dialog component that renders form fields based on a specification
+ * @param props - Component props including spec, initial values, and callbacks
+ * @returns React component
+ */
 export function SpecDrivenDialog(props: {
-	open: boolean;
-	onClose: () => void;
-	title: string;
-	spec: Array<FieldSpec>;
-	initial?: Partial<Record<string, Primitive>>;
-	pending?: boolean;
-	submitLabel?: string;
-	cancelLabel?: string;
-	onSubmit(values: Record<string, unknown>): void;
-	stripEmpty?: boolean;
+  open: boolean;
+  onCloseAction: () => void;
+  title: string;
+  spec: Array<FieldSpec>;
+  requiredKeys?: string[];
+  initial?: Partial<Record<string, Primitive>>;
+  pending?: boolean;
+  submitLabel?: string;
+  cancelLabel?: string;
+  onSubmit(values: Record<string, unknown>): void;
+  stripEmpty?: boolean;
+  cacheEnabled?: boolean;
 }) {
-	const {
-		open,
-		onClose,
-		title,
-		spec,
-		initial = {},
-		pending = false,
-		submitLabel = "Create",
-		cancelLabel = "Cancel",
-		onSubmit,
-		stripEmpty = true,
-	} = props;
+  const {
+    open,
+    onCloseAction,
+    title,
+    spec,
+    requiredKeys = [],
+    initial = {},
+    pending = false,
+    submitLabel = "Create",
+    cancelLabel = "Cancel",
+    onSubmit,
+    stripEmpty = true,
+    cacheEnabled = false,
+  } = props;
 
-	const [values, setValues] = useState<Record<string, Primitive>>({});
+  const { user } = useUserStore();
 
-	useEffect(() => {
-		if (!open) return;
-		const init: Record<string, Primitive> = {};
-		const mapped = Array.isArray(spec) ? spec : [];
-		mapped.forEach((s) => {
-			const key = typeof s === "string" ? s : String(s?.column_name || "");
-			if (!key) return;
-			init[key] = initial[key] ?? "";
-		});
-		setValues(init);
-	}, [open, JSON.stringify(spec), JSON.stringify(initial)]);
+  const [values, setValues] = useState<Record<string, Primitive>>(() => {
+    const init: Record<string, Primitive> = {};
+    const mapped = Array.isArray(spec) ? spec : [];
+    mapped.forEach((s) => {
+      const key = typeof s === "string" ? s : String(s?.column_name || "");
+      if (!key) return;
+      init[key] = initial[key] ?? "";
+    });
+    return init;
+  });
+  const [dataSourceOptions, setDataSourceOptions] = useState<
+    Map<string, Array<{ label: string; value: string | number | boolean }>>
+  >(new Map());
 
-	const fields = useMemo(() => {
-		const normalize = (s: FieldSpec) => {
-			if (typeof s === "string") {
-				return {
-					key: s,
-					label: s.replace(/_/g, " "),
-					hidden: false,
-					data_type: "",
-					editor: undefined as FieldEditorSpec | undefined,
-				};
-			}
-			const key = String(s?.column_name || "").trim();
-			const label = String(s?.header_label || s?.header || key).trim();
-			return {
-				key,
-				label: label.replace(/_/g, " "),
-				hidden: Boolean(s?.hidden),
-				data_type: String(s?.data_type || ""),
-				editor: s?.editor,
-			};
-		};
-		const detectType = (
-			dataType: string,
-			editor?: FieldEditorSpec,
-		): "text" | "number" | "boolean" | "select" | "keyvalue" => {
-			if (editor?.type) return editor.type;
-			const dt = String(dataType || "").toLowerCase();
-			if (dt.includes("bool")) return "boolean";
-			if (
-				dt.includes("num") ||
-				dt.includes("int") ||
-				dt.includes("decimal") ||
-				dt.includes("currency")
-			)
-				return "number";
-			return editor?.options ? "select" : "text";
-		};
-		return (Array.isArray(spec) ? spec : [])
-			.map(normalize)
-			.filter((f) => f.key && !f.hidden)
-			.map((f) => {
-				const type = detectType(f.data_type, f.editor);
-				const options =
-					type === "select" && Array.isArray(f.editor?.options)
-						? f.editor?.options
-						: undefined;
-				return { ...f, type, options };
-			});
-	}, [JSON.stringify(spec)]);
+  const [isOpen, setIsOpen] = useState(open);
 
-	function handleSubmit() {
-		const out: Record<string, unknown> = {};
-		Object.entries(values).forEach(([k, v]) => {
-			if (!stripEmpty) {
-				out[k] = v as unknown;
-				return;
-			}
-			if (v === "" || v == null) return;
-			out[k] = v as unknown;
-		});
-		onSubmit(out);
-	}
+  if (open !== isOpen) {
+    setIsOpen(open);
+    if (open) {
+      const init: Record<string, Primitive> = {};
+      const mapped = Array.isArray(spec) ? spec : [];
+      mapped.forEach((s) => {
+        const key = typeof s === "string" ? s : String(s?.column_name || "");
+        if (!key) return;
+        init[key] = initial[key] ?? "";
+      });
+      setValues(init);
+    }
+  }
 
-	return (
-		<ResponsiveDialog isOpen={open} onClose={onClose} title={title} className="max-w-[620px]">
-			<div className="space-y-4 px-1">
-				{fields.map((col) => (
-					<label key={col.key} className="flex flex-col gap-1">
-						<span className="text-sm font-medium capitalize text-secondary">
-							{col.label}
-						</span>
-						{col.type === "boolean" ? (
-							<label className="inline-flex items-center gap-2">
-								<input
-									type="checkbox"
-									className="rounded-sm"
-									checked={Boolean(values[col.key])}
-									onChange={(e) =>
-										setValues((s) => ({ ...s, [col.key]: e.target.checked }))
-									}
-								/>
-								<span className="text-xs text-secondary">
-									{values[col.key] ? "Yes" : "No"}
-								</span>
-							</label>
-						) : col.type === "select" && Array.isArray(col.options) ? (
-							<div className="h-8">
-								<ResponsiveDropdownV2
-									items={(col.options || []).map((opt) => ({
-										buttonText: String(opt.label ?? opt.value),
-										isActive: String(values[col.key]) === String(opt.value),
-										onClick: () =>
-											setValues((s) => ({
-												...s,
-												[col.key]: opt.value as any,
-											})),
-									}))}
-									triggerButton={
-										<Button
-											variant="outline"
-											size="sm"
-											className="h-8 w-full justify-between"
-										>
-											<span className="truncate text-left text-secondary">
-												{(() => {
-													const current = (col.options || []).find(
-														(o) => String(o.value) === String(values[col.key]),
-													);
-													return current
-														? String(current.label ?? current.value)
-														: "Select…";
-												})()}
-											</span>
-										</Button>
-									}
-									enableSearch
-									inputPlaceholder="Search…"
-									noResultsMessage="No options"
-									forceNativeOnMobile
-									scrollBarInvisible
-								/>
-							</div>
-						) : col.type === "keyvalue" ? (
-							<div className="space-y-2 rounded-sm border p-2">
-								{(() => {
-									const obj = (values[col.key] ?? {}) as Record<string, unknown>;
-									const entries = Object.entries(obj);
-									const setKV = (k: string, v: unknown) => {
-										setValues((s) => {
-											const next = { ...(s[col.key] as any) };
-											if (v === "" || v == null) {
-												delete next[k];
-											} else {
-												next[k] = v as any;
-											}
-											return { ...s, [col.key]: next };
-										});
-									};
-									const renameKey = (oldK: string, newK: string) => {
-										if (!newK || newK === oldK) return;
-										setValues((s) => {
-											const next = { ...(s[col.key] as any) };
-											const val = next[oldK];
-											delete next[oldK];
-											if (newK) next[newK] = val;
-											return { ...s, [col.key]: next };
-										});
-									};
-									return (
-										<>
-											{entries.map(([k, v], idx) => (
-												<div key={`${k}-${idx}`} className="flex gap-2">
-													<Input
-														className="h-8"
-														placeholder="key"
-														value={k}
-														onChange={(e) => renameKey(k, e.target.value)}
-													/>
-													<Input
-														className="h-8"
-														placeholder="value"
-														value={v as any as string}
-														onChange={(e) => setKV(k, e.target.value)}
-													/>
-												</div>
-											))}
-											<Button
-												variant="outline"
-												size="sm"
-												className="h-8"
-												onClick={() => {
-													const base = "key";
-													let i = 1;
-													let candidate = base;
-													while (Object.prototype.hasOwnProperty.call(obj, candidate)) {
-														candidate = `${base}_${i++}`;
-													}
-													setKV(candidate, "");
-												}}
-											>
-												Add field
-											</Button>
-										</>
-									);
-								})()}
-							</div>
-						) : (
-							<Input
-								className="h-8"
-								type={col.type === "number" ? "number" : "text"}
-								value={values[col.key] == null ? "" : String(values[col.key] ?? "")}
-								onChange={(e) =>
-									setValues((s) => ({ ...s, [col.key]: e.target.value }))
-								}
-							/>
-						)}
-					</label>
-				))}
-			</div>
-			<div className="mt-4 flex justify-end gap-2 px-1">
-				<Button variant="outline" size="sm" onClick={onClose} disabled={pending}>
-					{cancelLabel}
-				</Button>
-				<Button
-					variant="brand"
-					size="sm"
-					onClick={() => handleSubmit()}
-					disabled={pending}
-					className="rounded-sm"
-				>
-					{submitLabel}
-				</Button>
-			</div>
-		</ResponsiveDialog>
-	);
+  const fields = useMemo(() => {
+    const normalize = (s: FieldSpec) => {
+      if (typeof s === "string") {
+        return {
+          key: s,
+          label: String(s),
+          hidden: false,
+          data_type: "",
+          editor: undefined as FieldEditorSpec | undefined,
+        };
+      }
+      const key = String(s?.column_name || "").trim();
+      const label = String(s?.header_label || s?.header || key).trim();
+      return {
+        key,
+        label: label.replace(/_/g, " "),
+        hidden: Boolean(s?.hidden),
+        data_type: String(s?.data_type || ""),
+        editor: s?.editor,
+      };
+    };
+    const detectType = (
+      dataType: string,
+      editor?: FieldEditorSpec,
+    ): "text" | "number" | "boolean" | "select" | "date" => {
+      if (editor?.type) return editor.type;
+      const dt = String(dataType || "").toLowerCase();
+      if (dt.includes("bool")) return "boolean";
+      if (
+        dt.includes("num") ||
+        dt.includes("int") ||
+        dt.includes("decimal") ||
+        dt.includes("currency")
+      ) {
+        return "number";
+      }
+      if (dt.includes("date") || dt.includes("time")) {
+        return "date";
+      }
+      return editor?.options ? "select" : "text";
+    };
+    const detectDateMode = (dataType: string) => {
+      const dt = String(dataType || "").toLowerCase();
+      if (dt.includes("unixtime")) return "unixtime";
+      if (dt.includes("timestamp") || dt.includes("datetime")) {
+        return "datetime";
+      }
+      if (dt.includes("date")) return "date";
+      return undefined;
+    };
+
+    return (Array.isArray(spec) ? spec : [])
+      .map(normalize)
+      .filter((f) => f.key && !f.hidden)
+      .map((f) => {
+        const type = detectType(f.data_type, f.editor);
+        const options = type === "select" && Array.isArray(f.editor?.options)
+          ? f.editor?.options
+          : undefined;
+        return {
+          ...f,
+          type,
+          options,
+          data_source: f.editor?.data_source,
+          dateInputMode: detectDateMode(f.data_type),
+        };
+      });
+  }, [spec]);
+
+  // Fetch options for data_source fields
+  useEffect(() => {
+    if (!open || !user?.user_id || !user?.organization_id) return;
+
+    const fetchDataSources = async () => {
+      const optionMap = new Map<
+        string,
+        Array<{ label: string; value: string | number | boolean }>
+      >();
+      const promises: Promise<void>[] = [];
+
+      fields.forEach((f) => {
+        if (!f.data_source) return;
+        if (typeof f.data_source === "string") {
+          if (f.data_source.startsWith("user.")) return;
+          if (f.data_source === "uuid_v4_gen") return;
+          if (!f.data_source.includes(".")) return;
+        }
+
+        promises.push(
+          (async () => {
+            try {
+              const ds = typeof f.data_source === "string"
+                ? {
+                  table: f.data_source.split(".")[0],
+                  value_column: undefined,
+                  label_column: undefined,
+                }
+                : f.data_source;
+              const table = ds?.table;
+              if (!table) return;
+              const conditions: Array<
+                { eq_column: string; eq_value: unknown }
+              > = [];
+              if (user?.organization_id) {
+                conditions.push({
+                  eq_column: "organization_id",
+                  eq_value: user.organization_id,
+                });
+              }
+
+              const result = await fetchData({
+                table_name: table,
+                conditions: conditions.map((c) => ({
+                  eq_column: String(c.eq_column),
+                  eq_value: c.eq_value as string | number | boolean | null,
+                })),
+                limit: 100,
+              });
+
+              if (result.error) return;
+              const rows = Array.isArray(result.data) ? result.data : [];
+              const valueCol = ds?.value_column || `${table}_id` || "id";
+              const labelCol = ds?.label_column || "name";
+
+              const pick = (row: Record<string, unknown>, key: string) => {
+                if (key in row) return row[key];
+                const camel = key.replace(
+                  /_([a-z])/g,
+                  (_, letter: string) => letter.toUpperCase(),
+                );
+                if (camel in row) return row[camel];
+                return undefined;
+              };
+
+              optionMap.set(
+                f.key,
+                rows.map((r) => {
+                  const row = r as Record<string, unknown>;
+                  return {
+                    label: String(
+                      pick(row, labelCol) ?? pick(row, valueCol) ?? "",
+                    ),
+                    value: pick(row, valueCol) as string | number | boolean,
+                  };
+                }),
+              );
+            } catch (e) {
+              console.error("Failed to fetch data_source options", e);
+            }
+          })(),
+        );
+      });
+
+      await Promise.all(promises);
+      setDataSourceOptions(optionMap);
+    };
+
+    fetchDataSources();
+  }, [open, fields, user?.user_id, user?.company_id, cacheEnabled]);
+
+  function handleSubmit() {
+    const out: Record<string, unknown> = {};
+    Object.entries(values).forEach(([k, v]) => {
+      if (!stripEmpty) {
+        out[k] = v as unknown;
+        return;
+      }
+      if (v === "" || v == null) return;
+      out[k] = v as unknown;
+    });
+    onSubmit(out);
+  }
+
+  const hasMissingRequired = useMemo(() => {
+    const keys = Array.isArray(requiredKeys) ? requiredKeys : [];
+    if (keys.length === 0) return false;
+    return keys.some((key) => {
+      const v = values[key];
+      return v == null || String(v).trim() === "";
+    });
+  }, [requiredKeys, values]);
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => !isOpen && onCloseAction()}
+    >
+      <DialogContent className="max-w-155">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <div
+          id="spec-driven-dialog-fields"
+          className="space-y-4"
+        >
+          {fields.map((col) => (
+            <label key={col.key} className="flex flex-col gap-1">
+              <span className="text-sm font-medium capitalize text-primary">
+                {col.label}
+              </span>
+              {col.type === "boolean"
+                ? (
+                  <label className="inline-flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      className="rounded-sm"
+                      checked={Boolean(values[col.key])}
+                      onChange={(e) =>
+                        setValues((s) => ({
+                          ...s,
+                          [col.key]: e.target.checked,
+                        }))}
+                    />
+                    <span className="text-xs text-primary">
+                      {values[col.key] ? "Yes" : "No"}
+                    </span>
+                  </label>
+                )
+                : col.type === "select" && col.data_source
+                ? (
+                  <div className="w-full">
+                    <ComboBox
+                      selectedKey={values[col.key]
+                        ? String(values[col.key])
+                        : null}
+                      shouldCloseOnBlur={false}
+                      inputValue={String(values[col.key])}
+                      closeOnReselect
+                      allowsEmptyCollection={false}
+                      keepAllItemsVisible={false}
+                      onSelectionChange={(key) =>
+                        setValues((s) => ({
+                          ...s,
+                          [col.key]: key == null ? "" : String(key),
+                        }))}
+                      onInputChange={(key) =>
+                        setValues((s) => ({
+                          ...s,
+                          [col.key]: key == null ? "" : String(key),
+                        }))}
+                    >
+                      <ComboBoxInput placeholder="Select..." />
+                      <ComboBoxContent
+                        className="max-w-none whitespace-nowrap pointer-events-auto"
+                        popover={{
+                          style: {
+                            width: "auto",
+                            minWidth: "var(--trigger-width)",
+                            maxWidth: "min(calc(100vw - 2rem), 500px)",
+                          },
+                        }}
+                      >
+                        {(dataSourceOptions.get(col.key) || []).map((opt) => (
+                          <ComboBoxItem
+                            key={String(opt.value)}
+                            id={String(opt.value)}
+                            textValue={opt.label}
+                          >
+                            {opt.label}
+                          </ComboBoxItem>
+                        ))}
+                      </ComboBoxContent>
+                    </ComboBox>
+                  </div>
+                )
+                : col.type === "select" && Array.isArray(col.options)
+                ? (
+                  <div className="w-full">
+                    <ComboBox
+                      selectedKey={values[col.key]
+                        ? String(values[col.key])
+                        : null}
+                      shouldCloseOnBlur={false}
+                      onSelectionChange={(key) =>
+                        setValues((s) => ({
+                          ...s,
+                          [col.key]: key == null ? "" : String(key),
+                        }))}
+                      onInputChange={() => {}}
+                    >
+                      <ComboBoxInput placeholder="Select..." />
+                      <ComboBoxContent
+                        className="max-w-none whitespace-nowrap"
+                        popover={{
+                          style: {
+                            width: "auto",
+                            minWidth: "var(--trigger-width)",
+                            maxWidth: "min(calc(100vw - 2rem), 500px)",
+                          },
+                        }}
+                      >
+                        {(col.options || []).map((opt) => (
+                          <ComboBoxItem
+                            key={String(opt.value)}
+                            id={String(opt.value)}
+                            textValue={String(opt.label ?? opt.value)}
+                          >
+                            {String(opt.label ?? opt.value)}
+                          </ComboBoxItem>
+                        ))}
+                      </ComboBoxContent>
+                    </ComboBox>
+                  </div>
+                )
+                : col.dateInputMode
+                ? (
+                  <Input
+                    className="h-8"
+                    type={col.dateInputMode === "datetime"
+                      ? "datetime-local"
+                      : col.dateInputMode === "unixtime"
+                      ? "number"
+                      : "date"}
+                    value={values[col.key] == null
+                      ? ""
+                      : String(values[col.key] ?? "")}
+                    onChange={(e) => {
+                      const nextValue = e.target.value;
+                      const parsed = col.dateInputMode === "unixtime" &&
+                          nextValue !== ""
+                        ? Number(nextValue)
+                        : nextValue;
+                      setValues((s) => ({
+                        ...s,
+                        [col.key]: col.dateInputMode === "unixtime" &&
+                            nextValue === ""
+                          ? ""
+                          : parsed,
+                      }));
+                    }}
+                  />
+                )
+                : (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      className="h-8"
+                      type={col.type === "number" ? "number" : "text"}
+                      value={values[col.key] == null
+                        ? ""
+                        : String(values[col.key] ?? "")}
+                      onChange={(e) =>
+                        setValues((s) => ({ ...s, [col.key]: e.target.value }))}
+                    />
+                  </div>
+                )}
+            </label>
+          ))}
+        </div>
+        <DialogFooter>
+          <div
+            id="spec-driven-dialog-footer"
+            className="flex justify-end gap-2 w-full "
+          >
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onCloseAction}
+              disabled={pending}
+            >
+              {cancelLabel}
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => handleSubmit()}
+              disabled={pending || hasMissingRequired}
+              className="rounded-sm"
+            >
+              {submitLabel}
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 }
-
-

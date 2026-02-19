@@ -1,35 +1,76 @@
 "use client";
 import type { ColumnDef, HeaderContext, Row } from "@tanstack/react-table";
 import type React from "react";
-import { Flag } from "../adapters/proxies";
-import { Badge } from "../adapters/proxies";
-import { Button } from "../adapters/proxies";
-import { formatUnixSecondsToDate, formatUnixSecondsToMonthDayTime, prettyString } from "../utils/format";
-import { AssigneesCell } from "../components/cells/AssigneesCell";
+import { Flag } from "@/components/ui/flag";
+import { Badge } from "@/components/ui/badge";
+import {
+  formatUnixSecondsToDate,
+  formatUnixSecondsToMonthDayTime,
+} from "@/lib/date-utils";
+import { prettyString } from "@/lib/format/string";
+import { AssigneesCell } from "@/packages/resource-framework/components/cells/AssigneesCell";
+import type {
+  ColumnRegistry,
+  LeanColumnSpec,
+  RegistryRenderer,
+} from "../resource-types";
 
-export type RegistryRenderer<TData> = {
-  build: (opts: {
-    key: Extract<keyof TData, string | number>;
-    header?: string;
-  }) => ColumnDef<TData>;
-  order?: number;
-  filterable?: boolean;
-  datatype?: "string" | "number" | "boolean" | "date" | "json" | "other";
-};
+export type { ColumnRegistry, LeanColumnSpec, RegistryRenderer };
 
-export type ColumnRegistry<TData> = Record<string, RegistryRenderer<TData>>;
+/**
+ * ===========================================================================================
+ * COLUMN BUILDER TYPE SAFETY
+ * ===========================================================================================
+ *
+ * All column builder functions (buildStatusColumn, buildCurrencyColumn, etc.) MUST return
+ * ColumnDef<TData> which is the TanStack Table column definition type.
+ *
+ * The RegistryRenderer<TData> type enforces this via its `build` property:
+ *   build: (opts: { key: ...; header?: string }) => ColumnDef<TData>
+ *
+ * This ensures type safety and prevents the error:
+ *   "Type '() => Element' is not assignable to type 'string'"
+ *
+ * Each ColumnDef MUST include:
+ *   - header: string | (() => JSX.Element)
+ *   - accessorKey: string
+ *   - cell: ({ row }) => JSX.Element
+ *   - column_name: string (custom property for identification)
+ *
+ * Optional properties include:
+ *   - size, minSize, maxSize: number
+ *   - enableSorting: boolean
+ *   - sortingFn: (rowA, rowB, columnId) => number
+ *   - filterFn: (row, columnId, filterValue) => boolean
+ *   - meta: { datatype, filterable, className, etc. }
+ *
+ * ===========================================================================================
+ */
 
-function defaultTextCell<TData>(key: keyof TData) {
-  return ({ row }: { row: { original: TData } }) => {
-    const value: any = (row.original as any)[key];
+/**
+ * Creates a default text cell renderer for a column
+ * @param key - The data key to display
+ * @returns Cell renderer function
+ */
+const defaultTextCell = <TData,>(key: keyof TData) => {
+  const CellRenderer = (
+    { row }: { row: { original: TData } },
+  ): React.ReactNode => {
+    const value: unknown =
+      (row.original as Record<string, unknown>)[key as string];
     return <span className="truncate text-primary">{String(value ?? "")}</span>;
   };
-}
+  CellRenderer.displayName = `DefaultTextCell_${String(key)}`;
+  return CellRenderer;
+};
 
+/**
+ * Renders a column header with standard styling
+ * @param header - Header text to display
+ * @returns Rendered header element
+ */
 function renderHeader(header: string) {
-  return (
-    <span className="text-[12px] capitalize text-secondary">{header}</span>
-  );
+  return <span className="text-[12px] capitalize text-primary">{header}</span>;
 }
 
 // Status -> Badge renderer with custom sort order
@@ -67,12 +108,22 @@ const MONTH_SORT_ORDER = [
   "DECEMBER",
 ];
 
+/**
+ * Gets the sort index for a status value based on predefined order
+ * @param status - Status string to get index for
+ * @returns Sort index number
+ */
 function getStatusSortIndex(status: string) {
   const idx = STATUS_SORT_ORDER.indexOf(status);
   return idx === -1 ? STATUS_SORT_ORDER.length : idx;
 }
 
 // Month -> Normal text renderer with custom sort order
+/**
+ * Builds a month column with custom sort order
+ * @param opts - Column options with key and header
+ * @returns Column definition
+ */
 function buildMonthColumn<TData>(opts: {
   key: Extract<keyof TData, string | number>;
   header?: string;
@@ -82,14 +133,14 @@ function buildMonthColumn<TData>(opts: {
     header: () => renderHeader(header ?? prettyString(String(key))),
     accessorKey: key as string,
     cell: ({ row }: { row: { original: TData } }) => {
-      const value = (row.original as any)[key];
+      const value = (row.original as Record<string, unknown>)[key as string];
       return (
         <span className="truncate text-primary">{String(value ?? "")}</span>
       );
     },
     size: 120,
     enableSorting: true,
-    sortingFn: (rowA, rowB, columnId) => {
+    sortingFn: (rowA: Row<TData>, rowB: Row<TData>, columnId: string) => {
       const a = rowA.getValue(columnId);
       const b = rowB.getValue(columnId);
       const aIdx = MONTH_SORT_ORDER.indexOf(String(a ?? "").toUpperCase());
@@ -102,10 +153,16 @@ function buildMonthColumn<TData>(opts: {
         (bIdx === -1 ? MONTH_SORT_ORDER.length : bIdx)
       );
     },
-  };
+    column_name: key as string,
+  } as unknown as ColumnDef<TData>;
 }
 
 // Status -> Badge renderer with custom sort order
+/**
+ * Builds a status column with badge rendering and custom sort order
+ * @param opts - Column options with key and header
+ * @returns Column definition
+ */
 function buildStatusColumn<TData>(opts: {
   key: Extract<keyof TData, string | number>;
   header?: string;
@@ -116,18 +173,23 @@ function buildStatusColumn<TData>(opts: {
     header: () => renderHeader(header ?? prettyString(String(key))),
     accessorKey: key as string,
     cell: ({ row }: { row: { original: TData } }) => {
-      const value = (row.original as any)[key];
+      const value = (row.original as Record<string, unknown>)[key as string];
       if (!value) return null;
-      const text = String(value);
+      // Trim whitespace including tabs, newlines, etc.
+      const text = String(value).trim();
+      // Use the actual value as variant to match badge variants like "active", "pending", etc.
+      // Convert to lowercase and replace spaces with underscores
+      const variant = text.toLowerCase().replace(/\s+/g, "_");
+
       return (
-        <Badge variant={text.toLowerCase() as any} size="sm">
+        <Badge variant={variant as unknown as "default"}>
           {prettyString(text)}
         </Badge>
       );
     },
     size: 120,
     enableSorting: true,
-    sortingFn: (rowA, rowB, columnId) => {
+    sortingFn: (rowA: Row<TData>, rowB: Row<TData>, columnId: string) => {
       const a = rowA.getValue(columnId);
       const b = rowB.getValue(columnId);
       const aIdx = getStatusSortIndex(String(a ?? "").toLowerCase());
@@ -137,45 +199,53 @@ function buildStatusColumn<TData>(opts: {
       }
       return aIdx - bIdx;
     },
-  };
+    column_name: key as string,
+  } as unknown as ColumnDef<TData>;
 }
 
 // Render a percentage column, formatting numbers (0.12 => '12%') and supporting sorting/filtering.
+/**
+ * Builds a percentage column with formatting and filtering support
+ * @param opts - Column options with key and header
+ * @returns Column definition
+ */
 function buildPercentageColumn<TData>(
   opts: {
     key?: Extract<keyof TData, string | number>;
     header?: string;
   } = {},
 ): ColumnDef<TData> {
-  const { key, header } = opts as any;
+  const { key, header } = opts as { key?: string; header?: string };
   const columnKey = key as string;
 
   return {
     header: () => renderHeader(header ?? prettyString(columnKey)),
     accessorKey: columnKey,
     cell: ({ row }: { row: { original: TData } }) => {
-      const value = (row.original as any)[columnKey];
-      if (value === undefined || value === null || isNaN(Number(value)))
-        return <span className="text-secondary">—</span>;
+      const value = (row.original as Record<string, unknown>)[columnKey];
+      if (value === undefined || value === null || isNaN(Number(value))) {
+        return <span className="text-primary">—</span>;
+      }
       let percentValue = Number(value);
       // If value is in decimals (e.g., 0.15), convert to percentage
-      if (percentValue > 0 && percentValue <= 1)
+      if (percentValue > 0 && percentValue <= 1) {
         percentValue = percentValue * 100;
+      }
       return (
         <div className="flex flex-row font-medium text-primary">
           {percentValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-          <div className="w-[1px]"></div>%
+          <div className="w-px"></div>%
         </div>
       );
     },
     size: 110,
     enableSorting: true,
-    sortingFn: (rowA, rowB, columnId) => {
+    sortingFn: (rowA: Row<TData>, rowB: Row<TData>, columnId: string) => {
       const a = Number(rowA.getValue(columnId));
       const b = Number(rowB.getValue(columnId));
       return (isNaN(a) ? -Infinity : a) - (isNaN(b) ? -Infinity : b);
     },
-    filterFn: (row, columnId, filterValue) => {
+    filterFn: (row: Row<TData>, columnId: string, filterValue: unknown) => {
       // basic filter for percentage: supports single value or range: "10" or "10-20"
       const raw = row.getValue(columnId);
       let val = Number(raw);
@@ -188,19 +258,30 @@ function buildPercentageColumn<TData>(
       const target = Number(filterValue);
       return !isNaN(target) ? val === target : true;
     },
-  };
+    column_name: columnKey,
+  } as unknown as ColumnDef<TData>;
 }
 
 // Time (unix ms or ISO date string) -> relative timestamp
 // MMM DD, HH:MM
 // Jan 12, 08:12
+/**
+ * Builds a time column with date formatting
+ * @param opts - Column options with key and header
+ * @returns Column definition
+ */
 function buildTimeColumn<TData>(opts: {
   key: Extract<keyof TData, string | number>;
   header?: string;
 }): ColumnDef<TData> {
   const { key, header } = opts;
 
-  function parseToUnixSeconds(val: any): number | null {
+  /**
+   * Parses various date formats to unix seconds
+   * @param val - Value to parse
+   * @returns Unix seconds or null
+   */
+  function parseToUnixSeconds(val: unknown): number | null {
     if (val == null) return null;
     if (typeof val === "number") {
       if (val > 1e12) return Math.floor(val / 1000);
@@ -215,9 +296,10 @@ function buildTimeColumn<TData>(opts: {
         }
       }
       const isoWithTimeMatch =
-        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?([+-]\d{2}:\d{2}|Z)?$/.test(
-          val,
-        );
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?([+-]\d{2}:\d{2}|Z)?$/
+          .test(
+            val,
+          );
       if (isoWithTimeMatch) {
         const date = new Date(val);
         if (!isNaN(date.getTime())) {
@@ -241,11 +323,11 @@ function buildTimeColumn<TData>(opts: {
     header: () => renderHeader(header ?? prettyString(String(key))),
     accessorKey: key as string,
     cell: ({ row }: { row: { original: TData } }) => {
-      const value = (row.original as any)[key];
+      const value = (row.original as Record<string, unknown>)[key as string];
       const unixSeconds = parseToUnixSeconds(value);
       if (unixSeconds == null) return null as unknown as React.ReactNode;
       return (
-        <span className="whitespace-nowrap text-secondary">
+        <span className="whitespace-nowrap text-primary">
           {formatUnixSecondsToMonthDayTime(unixSeconds)}
         </span>
       ) as unknown as React.ReactNode;
@@ -256,12 +338,18 @@ function buildTimeColumn<TData>(opts: {
       const b = parseToUnixSeconds(rowB.getValue(columnId));
       return Number(a ?? 0) - Number(b ?? 0);
     },
+    column_name: key as string,
   } as unknown as ColumnDef<TData>;
 }
 
 // Time (unix ms) -> relative timestamp
 // MMM DD
 // Jan 12
+/**
+ * Builds a day column with date formatting
+ * @param opts - Column options with key and header
+ * @returns Column definition
+ */
 function buildDayColumn<TData>(opts: {
   key: Extract<keyof TData, string | number>;
   header?: string;
@@ -271,10 +359,10 @@ function buildDayColumn<TData>(opts: {
     header: () => renderHeader(header ?? prettyString(String(key))),
     accessorKey: key as string,
     cell: ({ row }: { row: { original: TData } }) => {
-      const value = (row.original as any)[key];
+      const value = (row.original as Record<string, unknown>)[key as string];
       if (value == null) return null as unknown as React.ReactNode;
       return (
-        <span className="whitespace-nowrap text-secondary">
+        <span className="whitespace-nowrap text-primary">
           {formatUnixSecondsToDate(Number(value))}
         </span>
       ) as unknown as React.ReactNode;
@@ -286,9 +374,15 @@ function buildDayColumn<TData>(opts: {
       const b = rowB.getValue(columnId);
       return Number(a ?? 0) - Number(b ?? 0);
     },
+    column_name: key as string,
   } as unknown as ColumnDef<TData>;
 }
 
+/**
+ * Builds a boolean column with yes/no badge rendering
+ * @param opts - Column options with key and header
+ * @returns Column definition
+ */
 function buildBooleanYesNoColumn<TData>(opts: {
   key: Extract<keyof TData, string | number>;
   header?: string;
@@ -298,18 +392,29 @@ function buildBooleanYesNoColumn<TData>(opts: {
     header: () => renderHeader(header ?? prettyString(String(key))),
     accessorKey: key as string,
     cell: ({ row }: { row: { original: TData } }) => {
-      const value = Boolean((row.original as any)[key]);
+      const value = Boolean(
+        (row.original as Record<string, unknown>)[key as string],
+      );
       return (
-        <Badge variant={value} className="capitalize">
+        <Badge
+          variant={(value ? "true" : "false") as unknown as "default"}
+          className="capitalize"
+        >
           {value ? "yes" : "no"}
         </Badge>
       ) as unknown as React.ReactNode;
     },
     enableSorting: false,
+    column_name: key as string,
   } as unknown as ColumnDef<TData>;
 }
 
 // render country codes to country flag + code
+/**
+ * Builds a country code column with flag rendering
+ * @param opts - Column options with key and header
+ * @returns Column definition
+ */
 function buildCountryCodeColumn<TData>(opts: {
   key: Extract<keyof TData, string | number>;
   header?: string;
@@ -319,14 +424,14 @@ function buildCountryCodeColumn<TData>(opts: {
     header: () => renderHeader(header ?? prettyString(String(key))),
     accessorKey: key as string,
     cell: ({ row }: { row: { original: TData } }) => {
-      const value = (row.original as any)[key];
+      const value = (row.original as Record<string, unknown>)[key as string];
       if (!value) return null;
       // Always use the 2-letter ISO code
       return (
-        <span className="flex w-fit items-center gap-2 rounded-sm border bg-foreground p-0.5 px-1">
+        <span className="flex w-fit items-center gap-2 rounded-sm border bg-muted p-0.5 px-1">
           <Flag country={String(value)} size={20} includeCountryCode />
         </span>
-      );
+      ) as unknown as React.ReactNode;
     },
     enableSorting: true,
     sortingFn: (rowA: Row<TData>, rowB: Row<TData>, columnId: string) => {
@@ -335,10 +440,16 @@ function buildCountryCodeColumn<TData>(opts: {
       const b = String(rowB.getValue(columnId) ?? "");
       return a.localeCompare(b);
     },
+    column_name: key as string,
   } as unknown as ColumnDef<TData>;
 }
 
 // Duration in ms -> adds ms suffix
+/**
+ * Builds a duration column with millisecond suffix
+ * @param opts - Column options with key and header
+ * @returns Column definition
+ */
 function buildDurationMsColumn<TData>(opts: {
   key: Extract<keyof TData, string | number>;
   header?: string;
@@ -350,10 +461,8 @@ function buildDurationMsColumn<TData>(opts: {
     },
     accessorKey: key as string,
     cell: ({ row }: { row: { original: TData } }) => {
-      const value = (row.original as any)[key];
-      return (
-        <span className="text-secondary">{value ? `${value}ms` : ""}</span>
-      );
+      const value = (row.original as Record<string, unknown>)[key as string];
+      return <span className="text-primary">{value ? `${value}ms` : ""}</span>;
     },
     enableSorting: true,
     sortingFn: (rowA: Row<TData>, rowB: Row<TData>, columnId: string) => {
@@ -361,10 +470,16 @@ function buildDurationMsColumn<TData>(opts: {
       const b = Number(rowB.getValue(columnId) ?? 0);
       return a - b;
     },
+    column_name: key as string,
   } as unknown as ColumnDef<TData>;
 }
 
 // Seconds -> adds s suffix (e.g., expires_in)
+/**
+ * Builds a seconds column with second suffix
+ * @param opts - Column options with key and header
+ * @returns Column definition
+ */
 function buildSecondsColumn<TData>(opts: {
   key: Extract<keyof TData, string | number>;
   header?: string;
@@ -376,14 +491,20 @@ function buildSecondsColumn<TData>(opts: {
     },
     accessorKey: key as string,
     cell: ({ row }: { row: { original: TData } }) => {
-      const value = (row.original as any)[key];
-      return <span className="text-secondary">{value ? `${value}s` : ""}</span>;
+      const value = (row.original as Record<string, unknown>)[key as string];
+      return <span className="text-primary">{value ? `${value}s` : ""}</span>;
     },
     enableSorting: false,
+    column_name: key as string,
   } as unknown as ColumnDef<TData>;
 }
 
 // Long ids -> break-all styling
+/**
+ * Builds a text column with break-all styling for long IDs
+ * @param opts - Column options with key and header
+ * @returns Column definition
+ */
 function buildBreakAllTextColumn<TData>(opts: {
   key: Extract<keyof TData, string | number>;
   header?: string;
@@ -396,15 +517,23 @@ function buildBreakAllTextColumn<TData>(opts: {
     accessorKey: key as string,
     cell: function Cell({ row }: { row: { original: TData } }) {
       return (
-        <span className="break-all text-secondary">
-          {String((row.original as any)[key] ?? "")}
+        <span className="break-all text-primary">
+          {String(
+            (row.original as Record<string, unknown>)[key as string] ?? "",
+          )}
         </span>
       );
     },
+    column_name: key as string,
   } as unknown as ColumnDef<TData>;
 }
 
 // JSON -> stringified column
+/**
+ * Builds a JSON column with stringified rendering
+ * @param opts - Column options with key and header
+ * @returns Column definition
+ */
 function buildJsonStringColumn<TData>(opts: {
   key: Extract<keyof TData, string | number>;
   header?: string;
@@ -416,7 +545,7 @@ function buildJsonStringColumn<TData>(opts: {
     },
     accessorKey: key as string,
     cell: function Cell({ row }: { row: { original: TData } }) {
-      const value = (row.original as any)[key];
+      const value = (row.original as Record<string, unknown>)[key as string];
       let displayValue = "";
       if (value === null || value === undefined) {
         displayValue = "";
@@ -431,10 +560,16 @@ function buildJsonStringColumn<TData>(opts: {
       }
       return <span className="truncate text-primary">{displayValue}</span>;
     },
+    column_name: key as string,
   } as unknown as ColumnDef<TData>;
 }
 
 // Fallback generic column builder
+/**
+ * Builds a generic column with basic text rendering
+ * @param opts - Column options with key and header
+ * @returns Column definition
+ */
 function buildGenericColumn<TData>(opts: {
   key: Extract<keyof TData, string | number>;
   header?: string;
@@ -446,15 +581,21 @@ function buildGenericColumn<TData>(opts: {
     },
     accessorKey: key as string,
     cell: function Cell({ row }: { row: { original: TData } }) {
-      const value = (row.original as any)[key];
+      const value = (row.original as Record<string, unknown>)[key as string];
       return (
         <span className="truncate text-primary">{String(value ?? "")}</span>
       );
     },
     enableSorting: true,
+    column_name: key as string,
   } as unknown as ColumnDef<TData>;
 }
 
+/**
+ * Builds a column that displays text in uppercase
+ * @param opts - Column options with key and header
+ * @returns Column definition
+ */
 function buildUppercaseColumn<TData>(opts: {
   key: Extract<keyof TData, string | number>;
   header?: string;
@@ -466,17 +607,24 @@ function buildUppercaseColumn<TData>(opts: {
     },
     accessorKey: key as string,
     cell: function Cell({ row }: { row: { original: TData } }) {
-      const value: any = (row.original as any)[key];
+      const value: unknown =
+        (row.original as Record<string, unknown>)[key as string];
       return (
         <span className="truncate text-primary">
           {String(value ?? "").toUpperCase()}
         </span>
       ) as unknown as React.ReactNode;
     },
+    column_name: key as string,
   } as unknown as ColumnDef<TData>;
 }
 
 // Currency -> render using Intl.NumberFormat with currency from row (default EUR)
+/**
+ * Builds a currency column with Intl.NumberFormat rendering
+ * @param opts - Column options with key and header
+ * @returns Column definition
+ */
 function buildCurrencyColumn<TData>(opts: {
   key: Extract<keyof TData, string | number>;
   header?: string;
@@ -488,15 +636,14 @@ function buildCurrencyColumn<TData>(opts: {
     },
     accessorKey: key as string,
     cell: function Cell({ row }: { row: { original: TData } }) {
-      const value = (row.original as any)[key];
+      const value = (row.original as Record<string, unknown>)[key as string];
       if (value === null || value === undefined || value === "") {
         return (
-          <span className="text-secondary"></span>
+          <span className="text-primary"></span>
         ) as unknown as React.ReactNode;
       }
-      const rowObj = row.original as any;
-      const currencyCode =
-        (rowObj?.currency as string) ||
+      const rowObj = row.original as Record<string, unknown>;
+      const currencyCode = (rowObj?.currency as string) ||
         (rowObj?.currency_code as string) ||
         (rowObj?.currencyCode as string) ||
         "EUR";
@@ -523,42 +670,15 @@ function buildCurrencyColumn<TData>(opts: {
       const b = Number(rowB.getValue(columnId) ?? 0);
       return a - b;
     },
+    column_name: key as string,
   } as unknown as ColumnDef<TData>;
 }
 
-function buildLinkColumn<TData>(opts: {
-  key: Extract<keyof TData, string | number>;
-  header?: string;
-  label: React.ReactNode;
-  href: string;
-}): ColumnDef<TData> {
-  const { key, header, label, href } = opts;
-  return {
-    header: function Header(ctx: HeaderContext<TData, unknown>) {
-      return renderHeader(header ?? prettyString(String(key)));
-    },
-    accessorKey: key as string,
-    size: 200,
-    cell: function Cell({ row }: { row: { original: TData } }) {
-      const linkHref = href;
-      const linkLabel = label;
-      return linkHref ? (
-        <div className="truncate">
-          <Button
-            asChild
-            variant="link"
-            onClick={(e: React.MouseEvent) => e.stopPropagation()}
-          >
-            <a href={linkHref}>{linkLabel}</a>
-          </Button>
-        </div>
-      ) : (
-        <span>{linkLabel}</span>
-      );
-    },
-  } as unknown as ColumnDef<TData>;
-}
-
+/**
+ * Builds a link column with template-based href and label
+ * @param opts - Column options with key, header, href template, and label template
+ * @returns Column definition
+ */
 function buildMaskedLinkColumn<TData>(opts: {
   key: Extract<keyof TData, string | number>;
   header?: string;
@@ -573,15 +693,16 @@ function buildMaskedLinkColumn<TData>(opts: {
     accessorKey: key as string,
     size: 200,
     cell: function Cell({ row }: { row: { original: TData } }) {
-      const rowData = row.original as any;
+      const rowData = row.original as Record<string, unknown>;
 
       // Resolve href template
       const resolvedHref = href.replace(/\{\{(.*?)\}\}/g, (_, p1) => {
         const keyPath = String(p1 || "").trim();
         const v = keyPath.includes(".")
           ? keyPath
-              .split(".")
-              .reduce((obj: any, k: string) => obj?.[k], rowData)
+            .split(".")
+            .reduce((obj: Record<string, unknown>, k: string) =>
+              (obj?.[k] as Record<string, unknown>) ?? {}, rowData)
           : rowData[keyPath];
         return encodeURIComponent(String(v ?? ""));
       });
@@ -592,52 +713,73 @@ function buildMaskedLinkColumn<TData>(opts: {
           const keyPath = String(p1 || "").trim();
           const v = keyPath.includes(".")
             ? keyPath
-                .split(".")
-                .reduce((obj: any, k: string) => obj?.[k], rowData)
+              .split(".")
+              .reduce((obj: Record<string, unknown>, k: string) =>
+                (obj?.[k] as Record<string, unknown>) ?? {}, rowData)
             : rowData[keyPath];
           return String(v ?? "");
         },
       );
 
-      return resolvedHref ? (
-        <div className="truncate">
-          <a
-            href={resolvedHref}
-            onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            className="text-primary hover:underline"
-          >
-            {resolvedLabel}
-          </a>
-        </div>
-      ) : (
-        <span>{resolvedLabel}</span>
-      );
+      return resolvedHref
+        ? (
+          <div className="truncate">
+            <button
+              type="button"
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+                e.preventDefault();
+                window.location.href = resolvedHref;
+              }}
+              className="text-primary hover:underline bg-transparent border-0 p-0 cursor-pointer text-left"
+            >
+              {resolvedLabel}
+            </button>
+          </div>
+        )
+        : <span>{resolvedLabel}</span>;
     },
+    column_name: key as string,
   } as unknown as ColumnDef<TData>;
 }
-
-export const globalColumnRegistry: ColumnRegistry<any> = {
+export const globalColumnRegistry: ColumnRegistry<Record<string, unknown>> = {
   assignees: {
-    build: function buildAssigneesColumn<TData>(opts: {
-      key: Extract<keyof TData, string | number>;
+    build: function buildAssigneesColumn(opts: {
+      key: string;
       header?: string;
-    }): ColumnDef<TData> {
+    }) {
       const { key, header } = opts;
       return {
         header: () => renderHeader(header ?? prettyString(String(key))),
         accessorKey: key as string,
-        cell: ({ row }: { row: { original: TData } }) => {
-          const value = (row.original as any)[key];
+        cell: ({ row }: { row: { original: Record<string, unknown> } }) => {
+          const value =
+            (row.original as Record<string, unknown>)[key as string];
           const list = Array.isArray(value) ? value : [];
-          return <AssigneesCell assignees={list as any[]} />;
+          return (
+            <AssigneesCell
+              assignees={list as Array<
+                {
+                  email?: string;
+                  avatar?: string;
+                  user_id?: string;
+                  username?: string;
+                  display_name?: string;
+                  first_name?: string;
+                  last_name?: string;
+                }
+              >}
+            />
+          );
         },
         enableSorting: false,
         size: 160,
         meta: {
-          datatype: "json",
+          datatype: "json" as const,
           filterable: false,
-        } as any,
-      } as unknown as ColumnDef<TData>;
+        },
+        column_name: key as string,
+      } as ColumnDef<Record<string, unknown>>;
     },
     order: 1,
     filterable: false,
@@ -1444,40 +1586,23 @@ export const defaultEditorByColumn: Record<
   booked: { type: "boolean" },
 };
 
-export type LeanColumnSpec<TData> =
-  | keyof TData
-  | {
-      key: Extract<keyof TData, string | number>;
-      header?: string;
-      use?: string;
-      order?: number;
-      label?: string; // template like "{{recipient_company}}"
-      href?: string; // template for href like "/customers/{{customer}}"
-      cell_value_mask_label?: string; // template for display value when href is present
-      formatter?: (value: any, row: TData) => any;
-
-      minWidth?: number;
-      maxWidth?: number;
-      widthFit?: boolean;
-
-      // optional column-level attributes
-      // when true, prevent text selection in header and cells
-      enableNoSelect?: boolean;
-      // when true, prevent wrapping in header and cells
-      enableNoWrap?: boolean;
-
-      // fetch-and-render via a hook for view data (e.g., related entity)
-      // provide a hook and a renderer; the hook will be called inside a small React component cell
-      viewHook?: (row: TData) => any; // custom hook returning { data, isLoading, error, ... }
-      viewRender?: (viewResult: any, row: TData) => React.ReactNode;
-
-      // editor configuration for drilldown edit forms
-      editor?: {
-        type?: "text" | "number" | "boolean" | "select";
-        options?: Array<{ value: string | number | boolean; label: string }>;
-      };
-    };
-
+/**
+ * Builds TanStack Table column definitions from lean column specifications using the column registry.
+ * Automatically resolves column renderers, formatters, and configurations from the registry.
+ * Supports custom formatters, labels, hrefs, and view hooks for advanced rendering.
+ *
+ * @param specs - Array of LeanColumnSpec objects defining column behavior
+ * @returns Array of TanStack Table ColumnDef objects
+ *
+ * @example
+ * ```tsx
+ * const columns = buildColumnsFromRegistry<Customer>([
+ *   'name',
+ *   { key: 'email', header: 'Email Address' },
+ *   { key: 'status', use: 'status_badge', order: 1 }
+ * ]);
+ * ```
+ */
 export function buildColumnsFromRegistry<TData>(
   specs: Array<LeanColumnSpec<TData>>,
 ): ColumnDef<TData>[] {
@@ -1487,24 +1612,23 @@ export function buildColumnsFromRegistry<TData>(
     const useName = typeof spec === "object" ? spec.use : undefined;
     const specOrder = typeof spec === "object" ? spec.order : undefined;
     const minWidth = typeof spec === "object" ? spec.minWidth : undefined;
-    const maxWidth =
-      typeof spec === "object" ? (spec as any).maxWidth : undefined;
+    const maxWidth = typeof spec === "object" ? spec.maxWidth : undefined;
     const widthFit = typeof spec === "object" ? spec.widthFit : undefined;
-    const enableNoSelect =
-      typeof spec === "object" ? (spec as any).enableNoSelect : undefined;
-    const enableNoWrap =
-      typeof spec === "object" ? (spec as any).enableNoWrap : undefined;
+    const enableNoSelect = typeof spec === "object"
+      ? spec.enableNoSelect
+      : undefined;
+    const enableNoWrap = typeof spec === "object"
+      ? spec.enableNoWrap
+      : undefined;
     const labelTemplate = typeof spec === "object" ? spec.label : undefined;
     const href = typeof spec === "object" ? spec.href : undefined;
-    const cellValueMaskLabel =
-      typeof spec === "object" ? spec.cell_value_mask_label : undefined;
+    const cellValueMaskLabel = typeof spec === "object"
+      ? spec.cell_value_mask_label
+      : undefined;
     const formatter = typeof spec === "object" ? spec.formatter : undefined;
-    const viewHook =
-      typeof spec === "object" ? (spec as any).viewHook : undefined;
-    const viewRender =
-      typeof spec === "object" ? (spec as any).viewRender : undefined;
-    const editorCfg =
-      typeof spec === "object" ? (spec as any).editor : undefined;
+    const viewHook = typeof spec === "object" ? spec.viewHook : undefined;
+    const viewRender = typeof spec === "object" ? spec.viewRender : undefined;
+    const editorCfg = typeof spec === "object" ? spec.editor : undefined;
 
     const registryKeyRaw = (useName ?? String(key)).toLowerCase();
     // Support registry keys that cannot start with a number by allowing
@@ -1521,7 +1645,6 @@ export function buildColumnsFromRegistry<TData>(
       }
     }
     if (!renderer) {
-      // If key starts with "_" followed by a number, try without the underscore
       if (
         registryKeyRaw.startsWith("_") &&
         /^\d/.test(registryKeyRaw.slice(1))
@@ -1533,21 +1656,18 @@ export function buildColumnsFromRegistry<TData>(
     }
 
     const typedKey = key as Extract<keyof TData, string | number>;
-
-    // Check if we should use the masked link column renderer
     const shouldUseMaskedLink = href && cellValueMaskLabel;
-
     const colDef = (
       shouldUseMaskedLink
         ? buildMaskedLinkColumn<TData>({
-            key: typedKey,
-            header,
-            href,
-            cellValueMaskLabel,
-          })
+          key: typedKey,
+          header,
+          href,
+          cellValueMaskLabel,
+        })
         : renderer
-          ? renderer.build({ key: typedKey, header })
-          : buildGenericColumn<TData>({ key: typedKey, header })
+        ? renderer.build({ key: typedKey, header })
+        : buildGenericColumn<TData>({ key: typedKey, header })
     ) as ColumnDef<TData> & {
       size?: number;
       minSize?: number;
@@ -1560,34 +1680,36 @@ export function buildColumnsFromRegistry<TData>(
       };
     };
 
-    // Establish a plain header text for reuse in other UIs (view settings, drilldown)
-    let computedHeaderText =
-      (typeof header === "string" && header) || prettyString(String(key));
-
+    let computedHeaderText = (typeof header === "string" && header) ||
+      prettyString(String(key));
     if (typeof minWidth === "number") {
       colDef.minSize = minWidth;
       colDef.size = colDef.size ?? minWidth;
     }
     if (typeof maxWidth === "number") {
       colDef.maxSize = maxWidth;
-      colDef.meta = { ...(colDef.meta as any), maxWidth } as any;
+      colDef.meta = { ...(colDef.meta as Record<string, unknown>), maxWidth };
     }
     if (widthFit) {
-      colDef.meta = { ...(colDef.meta as any), widthFit: true } as any;
+      colDef.meta = {
+        ...(colDef.meta as Record<string, unknown>),
+        widthFit: true,
+      };
     }
     // Apply optional no-select / no-wrap classes via meta.className
     if (enableNoSelect || enableNoWrap) {
-      const existingClass = (colDef.meta as any)?.className as
-        | string
-        | undefined;
+      const existingClass = (colDef.meta as Record<string, unknown>)
+        ?.className as
+          | string
+          | undefined;
       const parts: string[] = [];
       if (existingClass) parts.push(existingClass);
       if (enableNoSelect) parts.push("select-none");
       if (enableNoWrap) parts.push("whitespace-nowrap");
       colDef.meta = {
-        ...(colDef.meta as any),
+        ...(colDef.meta as Record<string, unknown>),
         className: parts.join(" "),
-      } as any;
+      };
     }
     if (labelTemplate) {
       // use label as header text when provided
@@ -1596,77 +1718,84 @@ export function buildColumnsFromRegistry<TData>(
       computedHeaderText = headerText;
     }
 
-    // Apply masked label template even without href
     if (cellValueMaskLabel && !href) {
       const template = String(cellValueMaskLabel);
-      const OriginalCell = colDef.cell as any;
-      colDef.cell = (({ row }: { row: { original: TData } }) => {
-        const rowData = row.original as any;
+      const OriginalCell = colDef.cell;
+      colDef.cell = ({ row }: { row: { original: TData } }) => {
+        const rowData = row.original as Record<string, unknown>;
         const resolvedLabel = template.replace(/\{\{(.*?)\}\}/g, (_, p1) => {
           const keyPath = String(p1 || "").trim();
           const v = keyPath.includes(".")
             ? keyPath
-                .split(".")
-                .reduce((obj: any, k: string) => obj?.[k], rowData)
+              .split(".")
+              .reduce((obj: Record<string, unknown>, k: string) =>
+                (obj?.[k] as Record<string, unknown>) ?? {}, rowData)
             : rowData[keyPath];
           return String(v ?? "");
         });
         return (
           <span className="truncate text-primary">{resolvedLabel}</span>
         ) as unknown as React.ReactNode;
-      }) as any;
+      };
     }
-
-    // Persist the resolved header text in meta for external consumers
     colDef.meta = {
-      ...(colDef.meta as any),
+      ...(colDef.meta as Record<string, unknown>),
       headerText: computedHeaderText,
-      cellValueMaskLabel: cellValueMaskLabel,
-      // propagate registry metadata for external consumers (filters, etc.)
-      filterable: Boolean(renderer?.filterable),
-      datatype: (renderer?.datatype ?? undefined) as any,
-      editor: editorCfg,
-    } as any;
-
+    };
+    if (editorCfg) {
+      (colDef.meta as Record<string, unknown>).editor = editorCfg;
+    }
     if (formatter) {
       const originalCell = colDef.cell;
-      colDef.cell = (({ row }: { row: { original: TData } }) => {
-        const rowObj = row.original as any;
-        const value = rowObj[key as any];
-        const formatted = formatter(value, rowObj);
+      colDef.cell = ({ row }: { row: { original: TData } }) => {
+        const rowObj = row.original as Record<string, unknown>;
+        const value = rowObj[key as string];
+        const formatted = formatter(value, row.original);
 
         if (formatted === null || formatted === undefined) {
           return originalCell
-            ? (originalCell as any)({ row })
-            : (defaultTextCell<TData>(key) as any)({ row });
+            ? (originalCell as (
+              props: { row: { original: TData } },
+            ) => React.ReactNode)({ row })
+            : defaultTextCell<TData>(key)({ row });
         }
         return formatted as unknown as React.ReactNode;
-      }) as any;
+      };
     }
-
     if (typeof viewHook === "function") {
-      const OriginalCell = colDef.cell as any;
+      const OriginalCell = colDef.cell;
       const HookCell: React.FC<{ row: { original: TData } }> = ({ row }) => {
         // call user-provided hook
-        const result = (viewHook as any)(row.original);
+        const result = viewHook(row.original);
         if (typeof viewRender === "function") {
-          return viewRender(result, row.original) as any;
+          return viewRender(result, row.original) as React.ReactNode;
         }
-        return OriginalCell ? (
-          <>{OriginalCell({ row })}</>
-        ) : (
-          <>{String((row.original as any)[key as any] ?? "")}</>
-        );
+        return OriginalCell
+          ? (
+            <>
+              {(OriginalCell as (
+                props: { row: { original: TData } },
+              ) => React.ReactNode)({ row })}
+            </>
+          )
+          : (
+            <>
+              {String(
+                (row.original as Record<string, unknown>)[key as string] ?? "",
+              )}
+            </>
+          );
       };
-      colDef.cell = ((ctx: any) => <HookCell {...ctx} />) as any;
+      HookCell.displayName = `HookCell_${String(key)}`;
+      colDef.cell = (ctx: { row: { original: TData } }) => (
+        <HookCell {...ctx} />
+      );
     }
-
-    const order =
-      specOrder !== undefined
-        ? specOrder
-        : renderer && typeof renderer.order === "number"
-          ? renderer.order
-          : Number.POSITIVE_INFINITY;
+    const order = specOrder !== undefined
+      ? specOrder
+      : renderer && typeof renderer.order === "number"
+      ? renderer.order
+      : Number.POSITIVE_INFINITY;
 
     return { def: colDef as ColumnDef<TData>, order };
   });

@@ -1,0 +1,563 @@
+"use client";
+
+import { useCallback, useMemo, useState } from "react";
+import {
+  DrilldownFileExplorer,
+  type FileItem as DrilldownFileItem,
+} from "@/packages/resource-framework/components/drilldown/drilldown-file-explorer";
+import {
+  useApiClient,
+  UseApiClientMultiReturn,
+  UseApiClientSingleReturn,
+} from "@/packages/resource-framework/hooks/use-api-client";
+import {
+  resolveTemplate,
+  resolveTemplateValue as resolveTemplateValueNew,
+} from "@/packages/resource-framework/templating";
+import type { TemplateContext } from "@/packages/resource-framework/templating/types";
+import {
+  registerSectionWidget,
+  type SectionWidgetRendererProps,
+} from "./registry";
+import type {
+  FileExplorerWidgetSpec,
+  TableWidgetCondition,
+} from "@/packages/resource-framework/resource-types";
+import { Container } from "@/components/ui/container";
+import { useToast } from "@/hooks/use-toast";
+import { useUserStore } from "@/lib/stores";
+import { useFileUploadStatus } from "@/packages/resource-framework/notifications";
+
+type FileRow = Record<string, unknown> & {
+  file_id?: string;
+  id?: string;
+  filename?: string;
+  name?: string;
+  url?: string;
+  file_url?: string;
+  s3_bucket?: string;
+  size?: number | string;
+  mime_type?: string;
+  mimeType?: string;
+  created_at?: string;
+  createdAt?: string;
+  updated_at?: string;
+  updatedAt?: string;
+};
+
+const DEFAULT_TABLE = "files";
+const DEFAULT_COLUMNS = [
+  "file_id",
+  "filename",
+  "name",
+  "s3_bucket",
+  "url",
+  "size",
+  "mime_type",
+  "created_at",
+  "updated_at",
+];
+const DEFAULT_PROJECT_ID = "files";
+const DEFAULT_FILE_ID_COLUMN = "file_id";
+const DEFAULT_RESOURCE_COLUMN = "resource_id";
+const DEFAULT_ORGANIZATION_COLUMN = "organization_id";
+
+/**
+ * Build template context from entity and user data.
+ */
+const buildTemplateContext = (
+  entity: Record<string, unknown>,
+  user: Record<string, unknown> | undefined,
+  columns?: string[],
+  idColumn?: string,
+): TemplateContext => {
+  return {
+    entity,
+    user: user || {},
+    columns,
+    idColumn,
+  };
+};
+
+const buildConditions = (
+  conditions: TableWidgetCondition[] | undefined,
+  context: TemplateContext,
+): TableWidgetCondition[] => {
+  if (!conditions || conditions.length === 0) {
+    return [];
+  }
+  const built = conditions.map((condition) => {
+    const resolved = {
+      eq_column: condition.eq_column,
+      eq_value: resolveTemplateValueNew(condition.eq_value, context) ?? null,
+    };
+
+    return resolved;
+  });
+  return built;
+};
+
+const mapFileRows = (
+  rows: FileRow[],
+  fileIdColumn: string,
+): DrilldownFileItem[] => {
+  return rows.map((row, index) => {
+    const rawId = row[fileIdColumn] ??
+      row.id ??
+      row.filename ??
+      row.name ??
+      row.url ??
+      `file-${index}`;
+    const id = rawId ? String(rawId) : `file-${index}`;
+    const name = String(row.filename ?? row.name ?? `File ${index + 1}`);
+    const url = String(row.url ?? row.file_url ?? "");
+    const size = typeof row.size === "number"
+      ? row.size
+      : typeof row.size === "string"
+      ? Number(row.size)
+      : undefined;
+    const type = String(row.mime_type ?? row.mimeType ?? "");
+    const createdAt = String(row.created_at ?? row.createdAt ?? "");
+    const updatedAt = String(row.updated_at ?? row.updatedAt ?? "");
+    const mapped = {
+      id,
+      name: name,
+      file_name: name,
+      url,
+      size: Number.isNaN(size ?? 0) ? undefined : size,
+      type: type || undefined,
+      created_at: createdAt || undefined,
+      updated_at: updatedAt || undefined,
+    };
+
+    return mapped;
+  });
+};
+
+function resolveEntityValue(
+  entity: Record<string, unknown>,
+  column?: string,
+): unknown {
+  if (!column) {
+    return undefined;
+  }
+  const fallback = entity[column as keyof typeof entity];
+
+  return fallback;
+}
+
+function evaluateStringTemplate(
+  value: string | undefined,
+  context: TemplateContext,
+): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const resolved = resolveTemplate(value, context);
+  const result = typeof resolved === "string" ? resolved : undefined;
+  return result;
+}
+
+function getColumnValue(
+  entity: Record<string, unknown>,
+  column?: string,
+  fallback?: string,
+): string | undefined {
+  if (!column && !fallback) {
+    return undefined;
+  }
+  const key = column || fallback;
+  const resolved = resolveEntityValue(entity, key);
+  if (resolved === undefined || resolved === null) {
+    return undefined;
+  }
+  const result = String(resolved);
+  return result;
+}
+
+function getNumericValue(
+  entity: Record<string, unknown>,
+  column?: string,
+): number | undefined {
+  const resolved = resolveEntityValue(entity, column);
+  if (resolved === undefined || resolved === null) {
+    return undefined;
+  }
+  if (typeof resolved === "number") {
+    return resolved;
+  }
+  if (typeof resolved === "string" && /^\d+$/.test(resolved.trim())) {
+    const parsed = Number(resolved.trim());
+
+    return parsed;
+  }
+
+  return undefined;
+}
+
+function sanitizePathSegment(value?: string | null): string {
+  if (!value) {
+    return "";
+  }
+  const sanitized = value.trim().replace(/^\/+|\/+$/g, "");
+  return sanitized;
+}
+
+function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
+  type ApiClientResult =
+    | UseApiClientSingleReturn<FileRow>
+    | UseApiClientMultiReturn<FileRow>;
+  type MultiTableClient = UseApiClientMultiReturn<FileRow>;
+
+  const { toast } = useToast();
+  const { startUpload, finishUpload } = useFileUploadStatus();
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const isTarget = spec.type === "file_explorer";
+
+  const props: FileExplorerWidgetSpec["props"] = spec.props ?? {};
+
+  const tableName = props.table || DEFAULT_TABLE;
+  const columns = props.columns ?? DEFAULT_COLUMNS;
+  const fileIdColumn = props.fileIdColumn || DEFAULT_FILE_ID_COLUMN;
+  const organizationColumn = props.organizationIdColumn ||
+    DEFAULT_ORGANIZATION_COLUMN;
+  const resourceColumn = props.resourceIdColumn || DEFAULT_RESOURCE_COLUMN;
+  const storageBucket = props.bucket ?? "suitsconnect";
+  const { user } = useUserStore();
+  const organizationId = getColumnValue(entity, organizationColumn);
+
+  // This should actually not come
+  const resourceId = getColumnValue(entity, resourceColumn);
+
+  const resolvedOrganizationId = organizationId ?? user?.organization_id;
+
+  // Build template context with new templating system
+  const templateContext = useMemo(
+    () =>
+      buildTemplateContext(
+        entity,
+        user as Record<string, unknown> | undefined,
+        columns,
+        resourceColumn,
+      ),
+    [entity, user, columns, resourceColumn],
+  );
+
+  const uploadDir = evaluateStringTemplate(props.uploadDir, templateContext);
+  const resolvedProjectId =
+    evaluateStringTemplate(props.projectId, templateContext) ??
+      DEFAULT_PROJECT_ID;
+  const objectPath = evaluateStringTemplate(props.objectPath, templateContext);
+
+  const resourceNameFromTemplate = evaluateStringTemplate(
+    props.resourceName,
+    templateContext,
+  );
+  const resolvedResourceName = String(
+    resourceNameFromTemplate ?? props.resourceName ?? tableName,
+  ).trim() || tableName;
+
+  const hasResourceId = Boolean(resourceId);
+  const defaultObjectPathSegments = hasResourceId
+    ? [
+      "rsf",
+      sanitizePathSegment(resolvedOrganizationId),
+      sanitizePathSegment(resolvedResourceName),
+      sanitizePathSegment(resourceId),
+    ].filter(Boolean)
+    : [];
+  const defaultObjectPath = hasResourceId
+    ? defaultObjectPathSegments.join("/")
+    : undefined;
+  const evaluatedObjectPath = objectPath;
+  const resolvedObjectPath = evaluatedObjectPath ?? defaultObjectPath;
+
+  const resolvedConditions = useMemo(
+    () => {
+      const conditions = buildConditions(props.conditions, templateContext);
+
+      return conditions;
+    },
+    [props.conditions, templateContext],
+  );
+
+  const apiClient = useApiClient<FileRow>({
+    table: tableName,
+    conditions: resolvedConditions,
+    columns: columns,
+    limit: props.limit,
+    forceExternalApi: true,
+  }) as unknown as ApiClientResult;
+
+  const isMultiTableClient = (
+    value: ApiClientResult,
+  ): value is MultiTableClient => "clients" in value;
+
+  const isMulti = isMultiTableClient(apiClient);
+
+  const singleClient = isMulti
+    ? null
+    : (apiClient as Exclude<ApiClientResult, MultiTableClient>);
+
+  const data = singleClient?.data ?? [];
+  const isLoading = singleClient?.isLoading ?? false;
+  const insert = singleClient?.insert ?? (async () => Promise.reject());
+  const remove = singleClient?.remove ?? (async () => Promise.reject());
+
+  const files = useMemo(() => {
+    if (!Array.isArray(data)) {
+      console.warn("[FileExplorerWidget] data is not an array:", data);
+      return [];
+    }
+    const mapped = mapFileRows(data, fileIdColumn);
+
+    return mapped;
+  }, [data, fileIdColumn]);
+
+  const handleUpload = useCallback(
+    async (selectedFiles: File[]) => {
+      if (selectedFiles.length === 0) {
+        return;
+      }
+
+      setIsUploading(true);
+      
+      // Start upload status tracking
+      const uploadId = startUpload(selectedFiles.length);
+
+      let successCount = 0;
+      let failCount = 0;
+
+      try {
+        for (const file of selectedFiles) {
+          try {
+            const payload = new FormData();
+            payload.append("file", file);
+            if (resolvedOrganizationId) {
+              payload.append("resolvedOrganizationId", resolvedOrganizationId);
+            }
+
+            payload.append("projectId", resolvedProjectId);
+
+            if (uploadDir) {
+              payload.append("dir", uploadDir);
+            }
+            if (resolvedObjectPath) {
+              payload.append("objectPath", resolvedObjectPath);
+              payload.append("object_path", resolvedObjectPath);
+            }
+
+            if (props.s3_client) {
+              payload.append("s3_client", JSON.stringify(props.s3_client));
+            }
+
+            const response = await fetch("/api/upload", {
+              method: "POST",
+              body: payload,
+            });
+
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error(
+                "[FileExplorerWidget] handleUpload response not ok:",
+                {
+                  status: response.status,
+                  statusText: response.statusText,
+                  errorText,
+                },
+              );
+              throw new Error(errorText || "Upload failed");
+            }
+
+            const json = await response.json();
+
+            if (json?.error) {
+              console.error(
+                "[FileExplorerWidget] handleUpload server error:",
+                json.error,
+              );
+              throw new Error(`Upload failed: ${json.error}`);
+            }
+
+            const url = json?.data?.url;
+            if (!url) {
+              console.error(
+                "[FileExplorerWidget] handleUpload no url in response:",
+                json,
+              );
+              throw new Error("Upload returned no url");
+            }
+
+            const fileUrlFromResponse = json?.data?.file_url ?? url;
+            const storageKey = json?.data?.storage_key ??
+              resolvedObjectPath ??
+              defaultObjectPath ??
+              undefined;
+            const bucketPath = storageKey
+              ? `${storageBucket}/${storageKey}`
+              : undefined;
+            const minioBase = "https://console-production-a53c.up.railway.app";
+            const constructedUrl = bucketPath
+              ? `${minioBase}/${bucketPath}`
+              : url;
+            const finalUrl = fileUrlFromResponse ?? constructedUrl;
+            const currentTime = Number(
+              json?.data?.time ?? Math.floor(Date.now() / 1000),
+            );
+            // THIS CONTROLS THE FILES UPLOAD
+            const insertBody: Record<string, unknown> = {
+              file_name: file.name,
+              name: file.name,
+              url: finalUrl,
+              file_url: finalUrl,
+              mime_type: file.type,
+              file_size: file.size,
+              s3_bucket: storageBucket,
+              time: currentTime,
+              uploaded_by: user?.user_id,
+              storage_key: storageKey,
+              prefix_path: json?.data?.prefixPath,
+            };
+
+            if (resourceId) {
+              insertBody[resourceColumn] = resourceId;
+              insertBody.resource_id = resourceId;
+            }
+            if (resolvedOrganizationId) {
+              insertBody[organizationColumn] = resolvedOrganizationId;
+            }
+            const prefixPath = json.data?.prefixPath ?? resolvedObjectPath;
+            if (prefixPath) {
+              insertBody.prefix_path = prefixPath;
+            }
+
+            const result = await insert(insertBody);
+            successCount++;
+          } catch (error) {
+            console.error(
+              `[FileExplorerWidget] handleUpload failed to upload ${file.name}:`,
+              error,
+            );
+            failCount++;
+            toast({
+              title: "Upload failed",
+              description: `Failed to upload ${file.name}: ${
+                error instanceof Error ? error.message : "Unknown error"
+              }`,
+              variant: "destructive",
+            });
+          }
+        }
+
+        if (successCount > 0 && failCount === 0) {
+          toast({
+            title: "Upload successful",
+            description: `Successfully uploaded ${successCount} file${
+              successCount > 1 ? "s" : ""
+            }`,
+          });
+        } else if (successCount > 0 && failCount > 0) {
+          toast({
+            title: "Upload completed with errors",
+            description: `${successCount} file${
+              successCount > 1 ? "s" : ""
+            } uploaded successfully, but ${failCount} file${
+              failCount > 1 ? "s" : ""
+            } failed.`,
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error(
+          "[FileExplorerWidget] handleUpload unexpected error:",
+          error,
+        );
+        toast({
+          title: "Upload error",
+          description: error instanceof Error
+            ? error.message
+            : "An unexpected error occurred",
+          variant: "destructive",
+        });
+      } finally {
+        // Finish upload status tracking
+        finishUpload(uploadId);
+        setIsUploading(false);
+      }
+    },
+    [
+      resolvedOrganizationId,
+      resolvedProjectId,
+      uploadDir,
+      resolvedObjectPath,
+      storageBucket,
+      fileIdColumn,
+      insert,
+      organizationColumn,
+      resourceColumn,
+      resourceId,
+      toast,
+      user?.user_id,
+      startUpload,
+      finishUpload,
+    ],
+  );
+
+  const handleDelete = useCallback(
+    async (id: string) => {
+      setIsDeleting(true);
+
+      try {
+        await remove(fileIdColumn, id);
+
+        toast({
+          title: "File deleted",
+          description: "The file has been successfully deleted.",
+        });
+      } catch (error) {
+        console.error("[FileExplorerWidget] handleDelete error:", error);
+        toast({
+          title: "Delete failed",
+          description: error instanceof Error
+            ? error.message
+            : "Failed to delete file",
+          variant: "destructive",
+        });
+        throw error;
+      } finally {
+        setIsDeleting(false);
+      }
+    },
+    [remove, fileIdColumn, toast],
+  );
+
+  if (!isTarget || isMulti) {
+    return null;
+  }
+
+  return (
+    <Container>
+      <DrilldownFileExplorer
+        title={props.title}
+        files={files}
+        isLoading={isLoading || isUploading || isDeleting}
+        uploadDir={uploadDir}
+        resourceId={resourceId}
+        organizationId={String(resolvedOrganizationId)}
+        maxFileSize={props.maxFileSizeMB ?? 20}
+        acceptedTypes={props.acceptedTypes}
+        allowUpload={props.allowUpload ?? true}
+        allowDelete={props.allowDelete ?? true}
+        onUpload={props.allowUpload === false ? undefined : handleUpload}
+        onDelete={props.allowDelete === false ? undefined : handleDelete}
+        disableSectionWrapper
+      />
+    </Container>
+  );
+}
+
+registerSectionWidget("file_explorer", FileExplorerWidget);
+
+export { FileExplorerWidget };

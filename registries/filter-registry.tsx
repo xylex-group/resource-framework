@@ -1,28 +1,9 @@
 "use client";
 
-export type FilterOperator =
-  | "eq"
-  | "neq"
-  | "gt"
-  | "gte"
-  | "lt"
-  | "lte"
-  | "contains"
-  | "starts_with"
-  | "ends_with"
-  | "in"
-  | "not_in"
-  | "is_null"
-  | "is_not_null";
-
-export type FilterDefinition = {
-  operators: FilterOperator[];
-};
-
-export type FilterRegistry = Record<
-  "string" | "number" | "boolean" | "date" | "json" | "other",
-  FilterDefinition
->;
+import {
+  type FilterOption,
+  type FilterRegistry,
+} from "@/packages/resource-framework";
 
 export const filterRegistry: FilterRegistry = {
   string: {
@@ -56,7 +37,16 @@ export const filterRegistry: FilterRegistry = {
     operators: ["eq", "neq", "is_null", "is_not_null"],
   },
   date: {
-    operators: ["eq", "neq", "gt", "gte", "lt", "lte", "is_null", "is_not_null"],
+    operators: [
+      "eq",
+      "neq",
+      "gt",
+      "gte",
+      "lt",
+      "lte",
+      "is_null",
+      "is_not_null",
+    ],
   },
   json: {
     operators: ["is_null", "is_not_null"],
@@ -78,21 +68,19 @@ export const filterRegistry: FilterRegistry = {
  *   or make getFilterOptions logic aware of resource_routes (eg, columns[n].editable.options or a new filter_options field)
  */
 
-export type FilterOption = { label: string; value: string | number | boolean };
-
 // Static built-in options for common enums. Extend per resource/column as needed (ok to move to DB driven in future)
 const FILTER_OPTIONS: Record<string, Record<string, FilterOption[]>> = {
-	// Example for invoices table / status column
-	invoices: {
-		status: [
-			{ label: "Draft", value: "draft" },
-			{ label: "Pending", value: "pending" },
-			{ label: "Paid", value: "paid" },
-			{ label: "Overdue", value: "overdue" },
-			{ label: "Cancelled", value: "cancelled" },
-		],
-	},
-	// Add more resource/column combos or merge from DB in getFilterOptions in the future
+  // Example for invoices table / status column
+  invoices: {
+    status: [
+      { label: "Draft", value: "draft" },
+      { label: "Pending", value: "pending" },
+      { label: "Paid", value: "paid" },
+      { label: "Overdue", value: "overdue" },
+      { label: "Cancelled", value: "cancelled" },
+    ],
+  },
+  // Add more resource/column combos or merge from DB in getFilterOptions in the future
 };
 
 /**
@@ -102,10 +90,8 @@ const FILTER_OPTIONS: Record<string, Record<string, FilterOption[]>> = {
  * @returns array of {label, value} or undefined
  */
 export function getFilterOptions(
-	resourceName: string,
-	columnName: string,
+  resourceName: string,
+  columnName: string,
 ): FilterOption[] | undefined {
-	return FILTER_OPTIONS[resourceName]?.[columnName];
+  return FILTER_OPTIONS[resourceName]?.[columnName];
 }
-
-

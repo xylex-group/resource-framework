@@ -1,34 +1,187 @@
-import React, { useState, useEffect, useCallback } from "react";
+"use client";
 
-export type UserPreferences = {
-  viewSettings?: Record<string, unknown>;
-};
-const STORAGE_KEY = "resource-framework:preferences";
+import { useCallback, useEffect, useRef } from "react";
+import { fetchData, insertData, updateData } from "@/lib/actions/data";
+import type { ResourceRoute } from "../resource-types";
 
-export function useUserPreferences(): [
-  UserPreferences,
-  (next: UserPreferences) => void,
-] {
-  const [prefs, setPrefs] = useState<UserPreferences>({});
+interface UserPreferenceRow {
+  id?: number;
+  settings?: Record<string, unknown>;
+}
+
+/**
+ * Hook to load and persist user preferences for a specific resource table using Drizzle ORM.
+ * Automatically fetches preferences on mount and debounces updates to the database.
+ *
+ * @param user - The current user object
+ * @param resource - The resource route configuration
+ * @param displayContext - The display context identifier (e.g., "v2_customers")
+ * @param contextSettings - Current settings object to persist
+ * @param setDisplaySetting - Optional callback to update display settings in parent state
+ * @returns Object containing preference ID ref and fetch status ref
+ *
+ * @example
+ * ```tsx
+ * const { prefIdRef } = useUserPreferences(
+ *   user,
+ *   resource,
+ *   'v2_customers',
+ *   settings,
+ *   setDisplaySetting
+ * );
+ * ```
+ */
+export const useUserPreferences = (
+  user: {
+    user_id?: string | number | null;
+    company_id?: string | number | null;
+    organization_id?: string | number | null;
+  } | null,
+  resource: ResourceRoute | null,
+  displayContext: string,
+  contextSettings: Record<string, unknown>,
+  setDisplaySetting?: (context: string, key: string, value: unknown) => void,
+) => {
+  const prefIdRef = useRef<number | null>(null);
+  const initialPrefsFetchOkRef = useRef<boolean | null>(null);
+
+  const setDisplaySettingCallback = useCallback(
+    (context: string, key: string, value: unknown) => {
+      setDisplaySetting?.(context, key, value);
+    },
+    [setDisplaySetting],
+  );
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setPrefs(JSON.parse(raw));
-    } catch {
-      // ignore
+    let aborted = false;
+    async function loadPrefs() {
+      try {
+        if (!user?.user_id || !user?.company_id || !user?.organization_id) {
+          return;
+        }
+
+        const response = await fetchData({
+          table_name: "user_preferences",
+          conditions: [
+            { eq_column: "user_id", eq_value: user.user_id ?? null },
+            { eq_column: "table_name", eq_value: resource?.table || "" },
+          ],
+          limit: 1,
+        });
+
+        if (response.error || !response.data) {
+          initialPrefsFetchOkRef.current = false;
+          return;
+        }
+
+        initialPrefsFetchOkRef.current = true;
+        const rows = Array.isArray(response.data) ? response.data : [];
+
+        if (aborted) return;
+
+        if (rows.length > 0) {
+          const row = rows[0] as UserPreferenceRow;
+          prefIdRef.current = Number(row?.id) || null;
+          const settings = (row?.settings as Record<string, unknown>) || {};
+
+          Object.entries(settings).forEach(([k, v]) => {
+            try {
+              setDisplaySettingCallback(displayContext, String(k), v);
+            } catch {}
+          });
+        }
+      } catch {
+        initialPrefsFetchOkRef.current = false;
+      }
     }
-  }, []);
+    loadPrefs();
+    return () => {
+      aborted = true;
+    };
+  }, [
+    user?.user_id,
+    user?.company_id,
+    user?.organization_id,
+    resource?.table,
+    displayContext,
+    setDisplaySettingCallback,
+  ]);
 
-  const save = useCallback((next: UserPreferences) => {
-    setPrefs(next);
+  useEffect(() => {
+    if (!user?.user_id || !user?.company_id || !user?.organization_id) return;
+    if (!resource) return;
 
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      // ignore
-    }
-  }, []);
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const settings = contextSettings || {};
 
-  return [prefs, save];
-}
+        let idToUse = prefIdRef.current;
+
+        // If we don't have a preference ID yet, try to fetch it
+        if (idToUse == null) {
+          const response = await fetchData({
+            table_name: "user_preferences",
+            conditions: [
+              { eq_column: "user_id", eq_value: user.user_id ?? null },
+              { eq_column: "table_name", eq_value: resource.table },
+            ],
+            limit: 1,
+          });
+
+          if (!response.error && response.data) {
+            const rows = Array.isArray(response.data) ? response.data : [];
+            if (rows.length > 0) {
+              idToUse = Number((rows[0] as UserPreferenceRow)?.id) || null;
+            }
+          }
+        }
+
+        // Update existing preference
+        if (idToUse != null && user.user_id != null) {
+          await updateData({
+            table_name: "user_preferences",
+            x_column: "user_id",
+            x_id: user.user_id,
+            update_body: { settings },
+          });
+          prefIdRef.current = idToUse;
+        } // Insert new preference if initial fetch was successful (table exists)
+        else if (initialPrefsFetchOkRef.current === true) {
+          const response = await insertData({
+            table_name: "user_preferences",
+            insert_body: {
+              user_id: user.user_id,
+              table_name: resource.table,
+              settings,
+            },
+          });
+
+          if (!response.error && response.data) {
+            const row = Array.isArray(response.data)
+              ? response.data[0]
+              : response.data;
+            if (row && typeof row === "object" && "id" in row) {
+              prefIdRef.current = Number((row as UserPreferenceRow).id);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error saving user preferences:", error);
+      }
+    }, 800);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [
+    contextSettings,
+    user?.user_id,
+    user?.company_id,
+    user?.organization_id,
+    resource,
+  ]);
+
+  return { prefIdRef, initialPrefsFetchOkRef };
+};

@@ -1,17 +1,51 @@
-export type ResourceRouteEntry = {
-  name: string;
-  title?: string;
-  path?: string;
-  drilldownPathTemplate?: string; // e.g. `/v2/${name}/{{uuid}}`
-  columns?: Array<any>;
-};
+"use client";
 
-// Extended type used by ResourceDrilldown implementation
+import {
+  defineColumns,
+  defineDrizzleResourceRoute,
+  type ResourceFieldSpec,
+  type ResourceRoute,
+  type ResourceRouteEntry,
+  type ResourceRouteRegistry,
+} from "@/packages/resource-framework";
+import { type BuiltColumnSpec } from "@/packages/resource-framework/resource-types";
 
-export type ResourceRouteRegistry = Record<string, ResourceRouteEntry>;
-import type { ResourceFieldSpec, BuiltColumnSpec } from "../resource-types";
 export const resourceRoutes: ResourceRouteRegistry = {};
 
+import { countryCodes, timezoneKeys } from "@/lib/constants";
+import {
+  getDrizzleColumnInfo,
+  getDrizzleColumnMeta,
+} from "@/packages/resource-framework/utils/drizzle-editor";
+
+const customerJurisdictionDataSource = {
+  table: "customer_jurisdictions",
+  value_column: "customer_jurisdiction_id",
+  label_column: "name",
+  search_column: "name",
+} as const;
+
+const customersDataSource = {
+  table: "customers",
+  value_column: "customer_id",
+  label_column: "name",
+} as const;
+
+/**
+ * Retrieves a resource route entry by name from the resource registry.
+ * Performs case-insensitive lookup.
+ *
+ * @param name - The name of the resource to retrieve
+ * @returns The ResourceRouteEntry if found, null otherwise
+ *
+ * @example
+ * ```tsx
+ * const route = getResourceRoute('customers');
+ * if (route) {
+ *   console.log(route.title, route.path);
+ * }
+ * ```
+ */
 export function getResourceRoute(name: string): ResourceRouteEntry | null {
   const key = String(name || "").toLowerCase();
   return resourceRoutes[key] ?? null;
@@ -19,209 +53,272 @@ export function getResourceRoute(name: string): ResourceRouteEntry | null {
 
 // Compatibility constants expected by consumer components
 
-import { defineColumns } from "../constructors/define-columns";
-export type NewResourceContext = {
-  user: any;
-  router: any;
-  clearState?: () => void;
-  setInvoice?: (inv: any) => void;
-  setQuote?: (quote: any) => void;
-  setLineItems?: (li: any[]) => void;
-  setLoading?: (b: boolean) => void;
-  setError?: (err: string) => void;
-};
-
-export type ResourceCreateConfig = {
-  scope: string | string[];
-  showButtonScope?: string | string[];
-  required: string[]; // keep minimal implementation (array); schema support can be added later
-  optional?: string[];
-  dialog?: React.ComponentType<{
-    onSubmit(values: Record<string, unknown>): void;
-    onCancel(): void;
-    initial?: Partial<Record<string, unknown>>;
-  }>;
-};
-
-export type ResourceRoute = {
-  table: string;
-  idColumn: string;
-  // Optional path segment to use after /v2/, defaults to the resource route name
-  path?: string;
-  // Optional categories to group edit fields into tabs (order matters)
-  categories?: string[];
-  // Optional Postgres schema for this resource; defaults to 'public'
-  schema?: string;
-  // When true, drilldown is always in edit mode without an edit toggle
-  permanent_edit_state?: boolean;
-  // When true, the index page must clear the back button store
-  force_remove_back_button_store_on_index_resource?: boolean;
-  enableSearch?: boolean;
-  searchBy?: string;
-  // Optional: when set, the sidebar will scope/spoof to this route root (e.g. "/sf-formations")
-  sidebar_route?: string;
-  // Optional column name that contains an avatar/image URL to show on drilldown
-  avatar_column?: string;
-  // Optional lucide-react icon name to display on drilldown when no avatar
-  icon?: string;
-  // New: scoped creation config
-  create?: ResourceCreateConfig;
-  enableNewResourceCreation?: boolean;
-  newResourceButtonText?: string;
-  newResourceHref?: string;
-  // Optional: function to be invoked when clicking 'new resource' button. Use instead of newResourceHref for function-based navigation.
-  newResourceOnClick?: (ctx: NewResourceContext) => Promise<void> | void;
-  page_label?: string;
-  forceWrappingHeaderLabels?: boolean;
-  disableCompanyFilter?: boolean;
-  drilldownRoutePrefix?: string;
-  // Optional custom drilldown href. Can be a template string with {{column}}
-  // placeholders or a function receiving the row.
-  drilldownHref?: string | ((row: any) => string);
-  columns?: Array<
-    | string
-    | {
-        column_name: string;
-        header?: string;
-        header_label?: string;
-        use?: string;
-        order?: number;
-        href?: string;
-        hidden?: boolean;
-        label?: string;
-        cell_value_mask_label?: string;
-        formatter?: (value: any, row: any) => any;
-        minWidth?: number;
-        maxWidth?: number;
-        widthFit?: boolean;
-        editable?: {
-          type: "text" | "select" | "boolean";
-          update_table?: string;
-          update_id_column?: string;
-          update_column?: string;
-          options?: Array<{ label: string; value: string | number | boolean }>;
-          // Optional metadata for option resolution (e.g., "table.column" or { table, column })
-          data_source?: string | { table: string; column: string };
-        };
-      }
-  >;
-  companyIdColumn?: string;
-  edit?: {
-    enabled?: boolean; // master switch
-    // If provided, only these columns are editable (idColumn is always excluded)
-    allowedColumns?: string[];
-    // Columns never editable
-    deniedColumns?: string[];
-    // Optional scope string; if set, only users with this permission can edit
-    scope?: string;
-    // When true, skip the company_id check before allowing mutations
-    IgnoreCompanyCheckBeforeMutation?: boolean;
-  };
-  rowActions?: Array<
-    | {
-        label: string;
-        onClick: (row: any) => void;
-        destructive?: boolean;
-        disabled?: (row: any) => boolean | boolean;
-      }
-    | { type: "separator" }
-  >;
-  // Optional React component or element to render above the table on the list page
-  customComponent?: any;
-  // Optional React component or element to render inside the drilldown page
-  drilldownCustomComponent?: any;
-  // Optional chat configuration to render a generic chat in drilldown
-  chat?: {
-    table: string;
-    foreignKeyColumn: string;
-    messageColumn?: string;
-    authorUserIdColumn?: string;
-  };
-};
-
 export const RESOURCE_ROUTES: Record<string, ResourceRoute> = {
-  gl_account_templates: {
+  customer_jurisdictions: {
+    table: "customer_jurisdictions",
+    idColumn: "customer_jurisdiction_id",
+    companyIdColumn: "organization_id",
+    columns: defineColumns([
+      {
+        column_name: "organization_id",
+        hidden: true,
+        data_type: "string",
+      },
+      {
+        column_name: "customer_jurisdiction_id",
+        data_type: "uuid",
+        hidden: true,
+      },
+      {
+        column_name: "name",
+        data_type: "string",
+        order: 1,
+      },
+      {
+        column_name: "country_code",
+        data_type: "string",
+        order: 3,
+      },
+      {
+        column_name: "global",
+        data_type: "boolean",
+        field_type: "boolean",
+      },
+      {
+        column_name: "enabled",
+        data_type: "boolean",
+        order: 2,
+        field_type: "boolean",
+      },
+      {
+        column_name: "description",
+        data_type: "string",
+      },
+      {
+        column_name: "color",
+        data_type: "string",
+      },
+    ]),
+    drizzleTable: "customerJurisdictions",
+    enableNewResourceCreation: true,
+    create: {
+      required: ["name"],
+      scope: "",
+      columns: [{ column_name: "name" }],
+      optional: [],
+    },
+    schema: "public",
+  },
+  gl_accounts: {
     table: "gl_accounts",
     idColumn: "gl_account_id",
-    disableCompanyFilter: true,
+    companyIdColumn: "organization_id",
+    create: {
+      required: ["name"],
+      scope: "",
+
+      columns: ["name"],
+      optional: ["code", "is_ar", "is_ap", "is_vat_payable"],
+    },
+    drizzleTable: "glAccounts",
+    enableNewResourceCreation: true,
+    searchBy: "name,code",
+    deferNewButtonToHeader: true,
+    deferSubtitleToHeader: true,
+    deferTitleToHeader: true,
+    deferToHeader: true,
+
     enableSearch: true,
-    searchBy: "code,name,category,coa_provider,coa_version",
+    edit: {
+      enabled: true,
+      deniedColumns: [
+        "organization_id",
+        "gl_account_id",
+        "rid",
+        "created_at",
+        "time",
+        "id",
+      ],
+    },
+    force_remove_back_button_store_on_index_resource: true,
+    drilldown: {
+      autoHideEmptyColumns: true,
+    },
     columns: [
-      { column_name: "code" },
-      { column_name: "name" },
-      { column_name: "number" },
-      { column_name: "credit_or_debit" },
-      { column_name: "category" },
-      { column_name: "is_postable" },
-      { column_name: "country_code" },
-      { column_name: "coa_provider" },
-      { column_name: "coa_version" },
+      { column_name: "id", hidden: true },
+      { column_name: "gl_account_id", hidden: true },
+      { column_name: "code", order: 2 },
+      { column_name: "name", order: 1 },
+      { column_name: "description" },
+      { column_name: "category", order: 4 },
+      { column_name: "subcategory" },
+      { column_name: "currency", order: 3 },
+      {
+        column_name: "is_postable",
+        data_type: "boolean",
+        editable: {
+          type: "boolean",
+        },
+      },
+      {
+        column_name: "is_active",
+        data_type: "boolean",
+        editable: {
+          type: "boolean",
+        },
+      },
+      {
+        column_name: "credit_or_debit",
+        data_type: "string",
+        editable: {
+          type: "select",
+          options: [
+            { label: "Credit", value: "credit" },
+            { label: "Debit", value: "debit" },
+          ],
+        },
+      },
+      {
+        column_name: "is_ar",
+        data_type: "boolean",
+        editable: {
+          type: "boolean",
+        },
+      },
+      {
+        column_name: "is_ap",
+        data_type: "boolean",
+        editable: {
+          type: "boolean",
+        },
+      },
+      {
+        column_name: "is_revenue",
+        data_type: "boolean",
+        editable: {
+          type: "boolean",
+        },
+      },
+      {
+        column_name: "is_expense",
+        data_type: "boolean",
+        editable: {
+          type: "boolean",
+        },
+      },
+      {
+        column_name: "is_vat_payable",
+        data_type: "boolean",
+        editable: {
+          type: "boolean",
+        },
+      },
+      {
+        column_name: "is_vat_receivable",
+        data_type: "boolean",
+        editable: {
+          type: "boolean",
+        },
+      },
     ],
   },
+
   products: {
     table: "products",
     idColumn: "product_id",
-  },
-  journal_entries: {
-    table: "journal_entries",
-    idColumn: "journal_entry_id",
-    companyIdColumn: "company_id",
-    enableSearch: true,
-    searchBy: "journal_entry_id,transaction_id,description",
-    columns: [
-      { column_name: "journal_entry_id" },
-      { column_name: "entry_date" },
-      { column_name: "transaction_id" },
-      { column_name: "description" },
-    ],
-  },
-  journal_lines: {
-    table: "journal_lines",
-    idColumn: "journal_line_id",
-    disableCompanyFilter: true,
-    enableSearch: true,
-    searchBy: "journal_line_id,journal_entry_id,gl_account_id,debit,credit",
-  },
-  company_gl_accounts: {
-    table: "company_gl_accounts",
-    idColumn: "company_gl_account_id",
-    enableSearch: true,
-    searchBy: "company_gl_account_id,alias_name,template_id",
-    disableCompanyFilter: true,
-  },
-  coa_providers: {
-    table: "coa_providers",
-    idColumn: "coa_provider_id",
-    disableCompanyFilter: true,
-    enableSearch: true,
-    searchBy: "provider_code,provider_name,version,country_code",
-  },
-  v_gl_full_audit: {
-    table: "v_gl_full_audit",
-    idColumn: "journal_entry_id",
-    companyIdColumn: "company_id",
-    enableSearch: true,
-    searchBy: "invoice_number,merchant_name,tx_description,posting_status",
-    disableCompanyFilter: true,
+    companyIdColumn: "organization_id",
+    force_remove_back_button_store_on_index_resource: true,
+    drilldownRoutePrefix: "/v2/products",
+    page_label: "Products",
+    drizzleTable: "products",
+    schema: "public",
+    enableNewResourceCreation: true,
+    avatar_column: "image_thumbnail",
+    create: {
+      scope: "",
+      required: [],
+      optional: [],
+      columns: [{ column_name: "name" }],
+    },
+    columns: defineColumns([
+      {
+        column_name: "name",
+        data_type: "string",
+        order: 2,
+      },
+      {
+        column_name: "unit_label",
+        data_type: "string",
+      },
+      {
+        column_name: "description",
+        data_type: "string",
+      },
+      {
+        column_name: "image_thumbnail",
+        data_type: "string",
+        hidden: true,
+      },
+      { column_name: "statement_descriptor", data_type: "string" },
+      {
+        column_name: "price",
+        data_type: "number",
+        order: 3,
+      },
+      {
+        column_name: "price_id_primary",
+        data_type: "uuid",
+      },
+      {
+        column_name: "mrr",
+        data_type: "number",
+      },
+      {
+        column_name: "created_at",
+        data_type: "timestamp",
+      },
+    ]),
   },
   customers: {
     table: "customers",
+    deferNewButtonToHeader: true,
+    // searchBy: "name,email,contact_name,company_number,status",
+    deferSubtitleToHeader: true,
+    deferTitleToHeader: true,
+    deferToHeader: true,
+    drizzleTable: "customers",
+    
     idColumn: "customer_id",
     create: {
-      scope: "create:customers",
-      required: ["name", "email"],
+      scope: "",
+      required: [],
+      optional: [],
+      columns: [
+        { column_name: "name" },
+        { column_name: "email" },
+        {
+          column_name: "customer_id",
+          hidden: true,
+          default_value: "uuid_v4_gen",
+        },
+        {
+          column_name: "organization_id",
+          hidden: true,
+          default_value: "user.organization",
+        },
+      ],
     },
     edit: {
       enabled: true,
-      scope: "edit:customers",
       deniedColumns: ["customer_id"],
     },
-    drilldownRoutePrefix: "/customers",
+    drilldownRoutePrefix: "/v2/customers",
     force_remove_back_button_store_on_index_resource: true,
     avatar_column: "avatar",
     enableNewResourceCreation: true,
     page_label: "Customers",
-    categories: ["Basic", "Address", "Business", "Tax", "Dates"],
+    enableSearch: false,
+    categories: ["Basic", "Address", "Business", "Tax", "Legal", "Dates"],
     columns: defineColumns([
       {
         column_name: "name",
@@ -238,15 +335,32 @@ export const RESOURCE_ROUTES: Record<string, ResourceRoute> = {
       },
       { column_name: "phone", data_type: "text", category: "Basic" },
       { column_name: "website", data_type: "text", category: "Basic" },
+      { column_name: "contact_name", data_type: "text", category: "Basic"},
       {
         column_name: "status",
         data_type: "string",
         field_type: "select",
         order: 3,
-        data_source: { table: "customers", column: "status" },
+        update_column: "status",
+        update_table: "customers",
+        update_id_column: "customer_id",
+        options: [
+          { label: "Active", value: "active" },
+          { label: "Inactive", value: "inactive" },
+        ],
       },
       { column_name: "vat_id", data_type: "text", category: "Business" },
-      { column_name: "note", data_type: "text", category: "Basic" },
+      {
+        column_name: "company_number",
+        data_type: "text",
+        category: "Business",
+      },
+      {
+        column_name: "note",
+        data_type: "text",
+        category: "Basic",
+        field_type: "textarea",
+      },
       { column_name: "street_address", data_type: "text", category: "Address" },
       { column_name: "address_line_2", data_type: "text", category: "Address" },
       { column_name: "city", data_type: "text", category: "Address" },
@@ -256,9 +370,29 @@ export const RESOURCE_ROUTES: Record<string, ResourceRoute> = {
         category: "Address",
       },
       { column_name: "postal_code", data_type: "text", category: "Address" },
-      { column_name: "country", data_type: "text", category: "Address" },
+      {
+        column_name: "country",
+        data_type: "text",
+        category: "Address",
+        field_type: "select",
+        options: Object.entries(countryCodes).map(([label, value]) => ({
+          label,
+          value,
+        })),
+      },
       { column_name: "email", data_type: "text" },
-      { column_name: "size", data_type: "text", category: "Business" },
+      {
+        column_name: "size",
+        data_type: "text",
+        category: "Business",
+        field_type: "select",
+        options: [
+          { label: "1-9", value: "1-9" },
+          { label: "10-49", value: "10-49" },
+          { label: "50-99", value: "50-99" },
+          { label: "100+", value: "100+" },
+        ],
+      },
       {
         column_name: "customer_type_id",
         data_type: "text",
@@ -280,7 +414,7 @@ export const RESOURCE_ROUTES: Record<string, ResourceRoute> = {
       },
       { column_name: "cash_management", data_type: "text", category: "Tax" },
       { column_name: "subject_to_vat", data_type: "boolean" },
-      { column_name: "created_at", data_type: "timestamp" },
+      { column_name: "created_at", data_type: "timestamp", hidden: true },
       { column_name: "name", data_type: "text" },
       { column_name: "main_contact_id", data_type: "uuid" },
       { column_name: "company_id", data_type: "uuid" },
@@ -306,7 +440,24 @@ export const RESOURCE_ROUTES: Record<string, ResourceRoute> = {
       { column_name: "customer_jurisdiction", data_type: "text" },
       { column_name: "account_manager", data_type: "text" },
       { column_name: "archive_hash", data_type: "text" },
-      { column_name: "customer_jurisdiction_id", data_type: "uuid" },
+      {
+        column_name: "customer_jurisdiction_id",
+        data_type: "uuid",
+        category: "Business",
+        label: "Jurisdictions",
+        field_type: "select",
+        editor: {
+          type: "select",
+          data_source: customerJurisdictionDataSource,
+        },
+        editable: {
+          type: "select",
+          update_table: "customers",
+          update_id_column: "customer_id",
+          update_column: "customer_jurisdiction_id",
+          data_source: customerJurisdictionDataSource,
+        },
+      },
       { column_name: "status", data_type: "text" },
       { column_name: "allow_self_accounting", data_type: "boolean" },
       { column_name: "companies", data_type: "number" },
@@ -335,7 +486,7 @@ export const RESOURCE_ROUTES: Record<string, ResourceRoute> = {
       { column_name: "supported_languages", data_type: "json" },
       { column_name: "is_partner_domain", data_type: "text" },
       { column_name: "subject_to_reverse_vat_charge", data_type: "boolean" },
-      { column_name: "avatar", data_type: "text" },
+      { column_name: "avatar", data_type: "text", hidden: true },
       { column_name: "metadata", data_type: "json" },
       { column_name: "company_country_number", data_type: "text" },
       { column_name: "payment_method_invoice", data_type: "text" },
@@ -352,7 +503,33 @@ export const RESOURCE_ROUTES: Record<string, ResourceRoute> = {
       { column_name: "description", data_type: "text" },
       { column_name: "reverse_charged", data_type: "boolean" },
       { column_name: "awaiting_deletion", data_type: "boolean" },
-      { column_name: "data_residency", data_type: "text" },
+      {
+        column_name: "data_residency",
+        data_type: "text",
+        field_type: "select",
+        options: [
+          {
+            label: "EU-DE",
+            value: "EU-DE",
+          },
+          {
+            label: "EU-FI",
+            value: "EU-FI",
+          },
+          {
+            label: "EU-NL",
+            value: "EU-NL",
+          },
+          {
+            label: "CA",
+            value: "CA",
+          },
+          {
+            label: "US-NY",
+            value: "CA",
+          },
+        ],
+      },
       { column_name: "custom_tags", data_type: "json" },
       { column_name: "dpa_signed", data_type: "boolean" },
       { column_name: "dpa_signed_url", data_type: "text" },
@@ -380,7 +557,15 @@ export const RESOURCE_ROUTES: Record<string, ResourceRoute> = {
         column_name: "kyc_status",
         data_type: "text",
         field_type: "select",
-        data_source: "",
+        update_column: "kyc_status",
+        update_table: "customers",
+        update_id_column: "customer_id",
+        options: [
+          { label: "Complete", value: "complete" },
+          { label: "Incomplete", value: "incomplete" },
+          { label: "Awaiting review", value: "awaiting_review" },
+          { label: "Rejected", value: "rejected" },
+        ],
       },
       { column_name: "payroll_withholding_number", data_type: "text" },
       { column_name: "risk_rating", data_type: "text" },
@@ -406,7 +591,13 @@ export const RESOURCE_ROUTES: Record<string, ResourceRoute> = {
       { column_name: "has_source_of_wealth", data_type: "boolean" },
       { column_name: "has_source_of_funds", data_type: "boolean" },
       { column_name: "has_store_status", data_type: "boolean" },
-      { column_name: "timezone", data_type: "text", category: "Basic" },
+      {
+        column_name: "timezone",
+        data_type: "text",
+        category: "Basic",
+        field_type: "select",
+        options: timezoneKeys.map((key) => ({ label: key, value: key })),
+      },
       { column_name: "language", data_type: "text", category: "Basic" },
       {
         column_name: "sla_agreed_response",
@@ -428,177 +619,115 @@ export const RESOURCE_ROUTES: Record<string, ResourceRoute> = {
         data_type: "text",
         category: "Business",
       },
+      {
+        column_name: "signed_contract",
+        data_type: "text",
+        category: "Legal",
+      },
+      {
+        column_name: "rating_amount_questions",
+        data_type: "string",
+        category: "Client success",
+        label: "Rating questions amount",
+        field_type: "select",
+        options: [
+          {
+            label: "Low",
+            value: "low",
+          },
+          {
+            label: "Normal",
+            value: "normal",
+          },
+          {
+            label: "High",
+            value: "high",
+          },
+        ],
+      },
+      {
+        column_name: "rating_difficult_admin",
+        data_type: "string",
+        category: "Client success",
+        label: "Rating difficulty admin",
+        field_type: "select",
+        options: [
+          {
+            label: "Low",
+            value: "low",
+          },
+          {
+            label: "Normal",
+            value: "normal",
+          },
+          {
+            label: "High",
+            value: "high",
+          },
+        ],
+      },
+      {
+        column_name: "rating_responds_timely",
+        data_type: "string",
+        category: "Client success",
+        label: "Rating respond time",
+        field_type: "select",
+        options: [
+          {
+            label: "Low",
+            value: "low",
+          },
+          {
+            label: "Normal",
+            value: "normal",
+          },
+          {
+            label: "High",
+            value: "high",
+          },
+        ],
+      },
+      {
+        column_name: "rating_payments",
+        data_type: "string",
+        category: "Client success",
+        label: "Rating payments",
+        field_type: "select",
+        options: [
+          {
+            label: "Low",
+            value: "low",
+          },
+          {
+            label: "Normal",
+            value: "normal",
+          },
+          {
+            label: "High",
+            value: "high",
+          },
+        ],
+      },
     ] as ResourceFieldSpec[]),
   },
-  files: {
-    table: "files",
-    idColumn: "file_id",
-    enableSearch: true,
-    searchBy: "filename",
+  transactions: {
+    idColumn: "transaction_id",
+    table: "stargate_ponto_transactions",
+    companyIdColumn: "organization_id",
+    searchBy: "transaction_id,description",
+    force_remove_back_button_store_on_index_resource: true,
     columns: [
       {
-        column_name: "filename",
-        header_label: "File name",
+        column_name: "transaction_id",
       },
       {
-        column_name: "uploaded_at",
+        column_name: "time",
       },
       {
-        column_name: "file_id",
+        column_name: "ponto_account_id",
       },
       {
-        column_name: "upload_source",
-      },
-      {
-        column_name: "file_url",
-      },
-      {
-        column_name: "aurora_processed",
-      },
-      {
-        column_name: "aurora_should_process",
-      },
-      {
-        column_name: "aurora_errored",
-      },
-      {
-        column_name: "aurora_error",
-      },
-    ],
-  },
-  jortt_invoices: {
-    table: "jortt_invoices",
-    idColumn: "jortt_invoice_id",
-    enableSearch: false,
-    searchBy:
-      "mail_data_to, invoice_description, invoice_number, invoice_total, invoice_date",
-    columns: [
-      {
-        column_name: "amount_side",
-      },
-      {
-        column_name: "view_status",
-        cell_value_mask_label: "{{status}}",
-      },
-      {
-        column_name: "invoice_total",
-      },
-      {
-        column_name: "invoice_total_incl_vat",
-      },
-      {
-        column_name: "invoice_number",
-      },
-      {
-        column_name: "invoice_description",
-        maxWidth: 250,
-        widthFit: true,
-      },
-      {
-        column_name: "mail_data_to",
-        cell_value_mask_label: "{{email_customer}}",
-      },
-      {
-        column_name: "invoice_date",
-      },
-      {
-        column_name: "invoice_due_date",
-      },
-      {
-        column_name: "bookable_id",
-        href: "/v2/bookings/{{bookable_id}}",
-      },
-      {
-        column_name: "payment_term",
-      },
-      {
-        column_name: "credited_invoice_id",
-        cell_value_mask_label: "{{invoice_number}}",
-      },
-      {
-        column_name: "last_reminded_at",
-        label: "Last reminded at",
-      },
-      {
-        column_name: "number_of_reminders_sent",
-        label: "Reminders sent",
-      },
-      {
-        column_name: "creditor_address_city",
-        label: "City",
-      },
-      {
-        column_name: "creditor_address_country_code",
-        label: "Country",
-      },
-      {
-        column_name: "customer_record",
-        label: "Customer",
-      },
-    ],
-  },
-  documents_v2: {
-    table: "documents_v2",
-    idColumn: "document_id",
-    enableSearch: true,
-  },
-  resource_forms: {
-    table: "resource_forms",
-    idColumn: "resource_form_id",
-    disableCompanyFilter: true,
-    enableSearch: true,
-    searchBy: "entity,slug,version,tags",
-    columns: [
-      { column_name: "entity" },
-      { column_name: "slug" },
-      { column_name: "version" },
-      { column_name: "experimental" },
-      { column_name: "is_active" },
-      { column_name: "updated_at" },
-    ],
-  },
-  reconciliations_config: {
-    table: "reconciliations_config",
-    idColumn: "reconciliation_config_id",
-    disableCompanyFilter: true,
-  },
-  quotes: {
-    table: "quotes",
-    idColumn: "quote_id",
-    companyIdColumn: "author_company_id",
-    enableSearch: true,
-    searchBy: "quote_nr,recipient_company,status",
-    enableNewResourceCreation: true,
-    newResourceButtonText: "New quote",
-    newResourceOnClick: async (ctx) => {
-      const {
-        user,
-        clearState,
-        setQuote,
-        setLineItems,
-        setLoading,
-        setError,
-        router,
-      } = ctx;
-      const { handleCreateQuote } = await import(
-        "@/packages/invoicing/handlers/create-quote"
-      );
-      const { initQuote } = await import("@/lib/actions/quote");
-      return handleCreateQuote({
-        user,
-        clearState,
-        setQuote,
-        setLineItems,
-        setLoading,
-        setError,
-        router,
-        initQuoteFn: initQuote,
-      });
-    },
-    drilldownRoutePrefix: "/quotes",
-    columns: [
-      {
-        column_name: "quote_nr",
+        column_name: "description",
       },
       {
         column_name: "amount",
@@ -607,117 +736,206 @@ export const RESOURCE_ROUTES: Record<string, ResourceRoute> = {
         column_name: "currency",
       },
       {
-        column_name: "customer",
+        column_name: "counterpart_name",
+        label: "Name counterpart",
       },
       {
-        column_name: "signer_name",
+        column_name: "counterpart_reference",
+        label: "Reference counterpart",
       },
       {
-        column_name: "signed_date",
+        column_name: "remittance_information",
+        label: "Remittance information",
       },
       {
-        column_name: "amount_paid",
-      },
-      {
-        column_name: "amount_remaining",
-      },
-      {
-        column_name: "paid_at",
-      },
-      {
-        column_name: "status",
-      },
-      {
-        column_name: "recipient_company",
-      },
-      {
-        column_name: "recipient_name",
-      },
-      {
-        column_name: "recipient_email",
-      },
-      {
-        column_name: "recipient_first_name",
-      },
-      {
-        column_name: "recipient_last_name",
-      },
-      {
-        column_name: "recipient_country",
-      },
-      {
-        column_name: "contact",
-      },
-      {
-        column_name: "paid",
-      },
-      {
-        column_name: "author_email",
-      },
-      {
-        column_name: "subscription",
-      },
-      {
-        column_name: "subscription_id",
-      },
-      {
-        column_name: "reverse_charged",
-      },
-      {
-        column_name: "issue_date",
-      },
-      {
-        column_name: "subtotal",
-      },
-      {
-        column_name: "tax_amount",
-      },
-      {
-        column_name: "total",
-      },
-      {
-        column_name: "tax_rate",
-      },
-      {
-        column_name: "quote_nr",
+        column_name: "promoted_to_transaction",
+        label: "Promoted to transaction",
       },
     ],
   },
-  invoices: {
+  invoices: defineDrizzleResourceRoute({
     table: "invoices",
     idColumn: "invoice_id",
-    companyIdColumn: "author_company_id",
+    companyIdColumn: "organization_id",
     enableSearch: true,
     searchBy: "invoice_nr,recipient_company,status, ",
+    deferNewButtonToHeader: true,
+    deferTitleToHeader: true,
+    deferSubtitleToHeader: true,
+    deferToHeader: true,
+
+    force_external_api_updates: true,
     enableNewResourceCreation: true,
-    newResourceButtonText: "New invoice",
-    newResourceOnClick: async (ctx) => {
-      const {
-        user,
-        clearState,
-        setInvoice,
-        setLineItems,
-        setLoading,
-        setError,
-        router,
-      } = ctx;
-      const { handleCreateInvoice } = await import(
-        "@/packages/invoicing/handlers/create-invoice"
-      );
-      const { initInvoice } = await import("@/lib/actions/invoice");
-      return handleCreateInvoice({
-        user,
-        clearState,
-        setInvoice,
-        setLineItems,
-        setLoading,
-        setError,
-        router,
-        initInvoiceFn: initInvoice,
-      });
+    create: {
+      scope: "",
+
+      required: [],
+      optional: [],
+      columns: [
+        { column_name: "recipient_email" },
+        {
+          column_name: "customer_id",
+          header: "Customer",
+          nullable: true,
+          editor: {
+            type: "select",
+            data_source: customersDataSource,
+          },
+        },
+        {
+          column_name: "organization_id",
+          hidden: true,
+          default_value: "user.organization_id",
+        },
+        {
+          column_name: "status",
+          hidden: true,
+          default_value: "pending",
+        },
+        {
+          column_name: "ref_provider",
+          hidden: true,
+          default_value: "suitsbooks",
+        },
+      ],
     },
+    force_no_cache: false,
+    force_remove_back_button_store_on_index_resource: true,
     drilldownRoutePrefix: "/invoices",
+    edit: {
+      enabled: true,
+      allowedColumns: [
+        "recipient_name",
+        "recipient_email",
+        "invoice_nr",
+        "recipient_postal_code",
+        "recipient_phone",
+        "recipient_first_name",
+        "recipient_last_name",
+        "recipient_address",
+        "recipient_country",
+        "due_date",
+        "currency",
+        "contact",
+        "status",
+        "recipient_company",
+        "recipient_company_id",
+        "paid",
+        "author_name",
+        "link_tos",
+        "link_privacy_policy",
+        "memo",
+        "author_email",
+        "author_postal_code",
+        "author_phone",
+        "author_first_name",
+        "author_last_name",
+        "author_address",
+        "author_country",
+        "author_company_id",
+        "author_vat_id",
+        "author_tax_id",
+        "author_kvk",
+        "recipient_kvk",
+        "recipient_tax_id",
+        "recipient_vat_id",
+        "amount",
+        "amount_paid",
+        "amount_remaining",
+        "paid_at",
+        "payment_method",
+        "number_format",
+        "email_sent",
+        "email_id",
+        "email_sent_at",
+        "times_opened",
+        "times_opened_unique",
+        "company_logo",
+        "company_logo_href",
+        "discount_code",
+        "discount_total",
+        "discount",
+        "shipping_rate",
+        "shipping_total",
+        "send_as_email",
+        "subscription",
+        "subscription_id",
+        "relation_hash",
+        "scheduled_email_send_at",
+        "descriptor_global",
+        "descriptor_relation",
+        "number_global",
+        "number_relation",
+        "url",
+        "brand_color",
+        "pdf_generated",
+        "pdf_url",
+        "reverse_charged",
+        "invoice_template_id",
+        "custom_fields",
+        "tax_id_type_recipient",
+        "tax_id_type_author",
+        "descriptor_project",
+        "views",
+        "revenue",
+        "sales",
+        "note",
+        "url_link_deactivated",
+        "total_fmt",
+        "subtotal_fmt",
+        "tax_total_fmt",
+        "has_payment_callback",
+        "payment_method_count",
+        "invoice_age_days_past_due",
+        "payment_methods",
+        "creator_ip_address",
+        "author_tax_country",
+        "recipient_tax_country",
+        "issue_date",
+        "payment_method_ids",
+        "footer",
+        "slug",
+        "subtotal",
+        "tax_amount",
+        "total",
+        "idempotency_key",
+        "payment_method_configuration_id",
+        "language",
+        "amount_paid_fmt",
+        "amount_remaining_fmt",
+        "tax_rate",
+        "time_creation",
+        "recipient_billing_street",
+        "recipient_shipping_street",
+        "recipient_billing_house_number",
+        "recipient_shipping_house_number",
+        "recipient_billing_country",
+        "recipient_shipping_country",
+        "recipient_shipping_province",
+        "recipient_shipping_city",
+        "tax_exempt",
+        "tax_inclusive",
+        "receipt_url",
+        "awaiting_archival",
+        "reconciliation_id",
+        "quote_id",
+        "customer_id",
+        "global_company_id",
+        "amount_due_fmt",
+        "ref_identifier",
+        "ref_provider",
+        "total_incl_vat",
+        "document_type",
+        "cancelled_at",
+      ],
+    },
+    drizzleTable: "invoices",
+
     columns: [
+      {
+        column_name: "created_at",
+        maxWidth: 100,
+      },
       {
         column_name: "total",
         maxWidth: 100,
@@ -725,17 +943,31 @@ export const RESOURCE_ROUTES: Record<string, ResourceRoute> = {
       {
         column_name: "status",
         maxWidth: 100,
+        order: 1,
+        editable: {
+          type: "select",
+          options: [
+            { label: "Draft", value: "draft" },
+            { label: "Pending", value: "pending" },
+            { label: "Paid", value: "paid" },
+            { label: "Overdue", value: "overdue" },
+            { label: "Cancelled", value: "cancelled" },
+          ],
+          update_table: "invoices",
+          update_column: "status",
+          update_id_column: "invoice_id",
+        },
       },
       {
         column_name: "invoice_nr",
         header_label: "Invoice number",
         widthFit: true,
-        formatter: (value: any) =>
+        formatter: (value: unknown) =>
           typeof value === "string" ? value.toUpperCase() : value,
       },
       {
-        column_name: "customer",
-        href: "/customers/{{customer}}",
+        column_name: "customer_id",
+        href: "/v2/customers/{{customer_id}}",
         cell_value_mask_label: "{{recipient_company}}",
         header_label: "Customer",
         maxWidth: 100,
@@ -747,6 +979,7 @@ export const RESOURCE_ROUTES: Record<string, ResourceRoute> = {
       {
         column_name: "due_date",
       },
+
       {
         column_name: "invoice_id",
         cell_value_mask_label: "{{invoice_nr}}",
@@ -759,109 +992,120 @@ export const RESOURCE_ROUTES: Record<string, ResourceRoute> = {
         column_name: "recipient_company",
         hidden: true,
       },
+      {
+        column_name: "paid",
+        data_type: "boolean",
+        editable: {
+          type: "boolean",
+        },
+      },
+      {
+        column_name: "tax_exempt",
+        data_type: "boolean",
+        editable: {
+          type: "boolean",
+        },
+        hidden: true,
+      },
+      {
+        column_name: "awaiting_archival",
+        data_type: "boolean",
+        editable: {
+          type: "boolean",
+        },
+        hidden: true,
+      },
+      {
+        column_name: "tax_inclusive",
+        data_type: "boolean",
+        editable: {
+          type: "boolean",
+        },
+        hidden: true,
+      },
+      {
+        column_name: "reverse_charged",
+        data_type: "boolean",
+        editable: {
+          type: "boolean",
+        },
+        hidden: true,
+      },
+      {
+        column_name: "pdf_generated",
+        data_type: "boolean",
+        editable: {
+          type: "boolean",
+        },
+        hidden: true,
+      },
+      {
+        column_name: "has_payment_callback",
+        data_type: "boolean",
+        editable: {
+          type: "boolean",
+        },
+        hidden: true,
+      },
+      {
+        column_name: "subscription",
+        data_type: "boolean",
+        editable: {
+          type: "boolean",
+        },
+        hidden: true,
+      },
+      {
+        column_name: "send_as_email",
+        data_type: "boolean",
+        editable: {
+          type: "boolean",
+        },
+        hidden: true,
+      },
+      {
+        column_name: "shipping_rate",
+        data_type: "boolean",
+        editable: {
+          type: "boolean",
+        },
+        hidden: true,
+      },
+      {
+        column_name: "email_sent",
+        data_type: "boolean",
+        editable: {
+          type: "boolean",
+        },
+        hidden: true,
+      },
+      {
+        column_name: "url_link_deactivated",
+        data_type: "boolean",
+        editable: {
+          type: "boolean",
+        },
+        hidden: true,
+      },
+      {
+        column_name: "time_creation",
+        data_type: "date",
+        editable: {
+          type: "text",
+        },
+        hidden: true,
+      },
+      {
+        column_name: "slug",
+        data_type: "string",
+        editable: {
+          type: "text",
+        },
+        hidden: true,
+      },
     ],
-  },
+  }),
 
-  booking: {
-    table: "v_booking_staged",
-    idColumn: "bookable_hash",
-    companyIdColumn: "company_id",
-    enableSearch: true,
-    searchBy: "description,transaction_status,booking_status",
-    page_label: "Bookings staged",
-    drilldownRoutePrefix: "/v2/booking",
-    columns: [
-      {
-        column_name: "booking_status",
-      },
-      {
-        column_name: "amount",
-      },
-      {
-        column_name: "currency",
-      },
-      {
-        column_name: "description",
-      },
-      {
-        column_name: "transaction_status",
-      },
-      {
-        column_name: "transaction_id",
-        href: "/v2/transactions/{{transaction_id}}",
-      },
-      {
-        column_name: "reconciliation_id",
-        href: "/reconciliations/{{reconciliation_id}}",
-      },
-      {
-        column_name: "document_id",
-        href: "/documents/{{document_id}}",
-      },
-      {
-        column_name: "bookable_hash",
-        href: "/v2/booking/{{bookable_hash}}",
-      },
-    ],
-  },
-  stargate_mollie_webhook_events: {
-    table: "stargate_mollie_webhook_events",
-    idColumn: "stargate_mollie_webhook_event_id",
-    disableCompanyFilter: true,
-  },
-  mollie_payments: {
-    table: "mollie_payments",
-    idColumn: "mollie_payment_id",
-    disableCompanyFilter: true,
-  },
-  ibans: {
-    table: "ibans",
-    idColumn: "iban_id",
-    disableCompanyFilter: true,
-  },
-  income_types: {
-    table: "income_types",
-    idColumn: "income_type_id",
-    disableCompanyFilter: true,
-  },
-  incoming_emails: {
-    table: "incoming_emails",
-    idColumn: "incoming_email_id",
-    disableCompanyFilter: true,
-  },
-  integration_registry: {
-    table: "integration_registry",
-    idColumn: "integration_type_id",
-    disableCompanyFilter: true,
-  },
-  integrations: {
-    table: "integrations",
-    idColumn: "integration_type_id",
-  },
-  merchants: {
-    table: "merchants",
-    idColumn: "merchant_id",
-    disableCompanyFilter: true,
-  },
-  vat_quarterly_declaration: {
-    table: "vat_quarterly_declaration",
-    idColumn: "aggregate_id",
-  },
-  aurora_line_items: {
-    table: "aurora_line_items",
-    idColumn: "line_item_hash",
-    disableCompanyFilter: true,
-  },
-  sf_formations_payment_links: {
-    table: "sf_formations_payment_links",
-    disableCompanyFilter: true,
-    idColumn: "sf_formations_payment_link_id",
-  },
-  sf_formation_tickets: {
-    table: "sf_formation_tickets",
-    disableCompanyFilter: true,
-    idColumn: "sf_formation_ticket_id",
-  },
   cases: {
     table: "v_cases",
     idColumn: "ticket_id",
@@ -871,23 +1115,6 @@ export const RESOURCE_ROUTES: Record<string, ResourceRoute> = {
     enableSearch: true,
     searchBy: "title,status,ticket_id,description,ticket_number",
     drilldownRoutePrefix: "/cases",
-    customComponent: (() => {
-      try {
-        const Comp = require("@/features/formations/CaseListCustom").default;
-        return Comp;
-      } catch {
-        return null;
-      }
-    })(),
-    drilldownCustomComponent: (() => {
-      try {
-        const Comp =
-          require("@/features/drilldown/EntityDrilldownCustom").default;
-        return Comp;
-      } catch {
-        return null;
-      }
-    })(),
     chat: {
       table: "customer_messages",
       foreignKeyColumn: "message_id",
@@ -907,3 +1134,71 @@ export const RESOURCE_ROUTES: Record<string, ResourceRoute> = {
     ],
   },
 };
+
+const formatWarning = (
+  routeName: string,
+  columnName: string,
+  issue: string,
+) => {
+  // Suppressed: Schema validation warnings are too verbose and clutter the console
+  // Uncomment the line below if you need to debug schema mismatches
+  // console.warn(
+  //   `[resource-framework][${routeName}] Column "${columnName}" ${issue}`,
+  // );
+};
+
+const validateResourceColumns = (
+  routeName: string,
+  tableName: string | undefined,
+  columns?: ResourceRoute["columns"],
+) => {
+  if (!tableName || !columns) return;
+  const table = tableName;
+  columns.forEach((column) => {
+    const columnConfig = typeof column === "string"
+      ? { column_name: column }
+      : column;
+    const columnName = columnConfig.column_name;
+    if (!columnName) return;
+    const meta = getDrizzleColumnMeta(table, columnName);
+    if (!meta) {
+      formatWarning(routeName, columnName, "does not exist in schema");
+      return;
+    }
+    const columnInfo = getDrizzleColumnInfo(table, columnName);
+    const schemaFieldDataType = columnInfo.dataType;
+    const actualTypeLabel = meta.type ?? schemaFieldDataType;
+    const expectedType = columnConfig &&
+      typeof columnConfig !== "string" &&
+      "data_type" in columnConfig
+      ? columnConfig.data_type
+      : undefined;
+    if (schemaFieldDataType) {
+      const target = typeof column === "object"
+        ? (column as BuiltColumnSpec)
+        : undefined;
+      if (target && !target.data_type) {
+        target.data_type = schemaFieldDataType;
+      }
+    }
+    if (
+      expectedType &&
+      typeof expectedType === "string" &&
+      actualTypeLabel &&
+      expectedType.toLowerCase() !== String(actualTypeLabel).toLowerCase()
+    ) {
+      formatWarning(
+        routeName,
+        columnName,
+        `declares data_type "${expectedType}" but schema reports "${meta.type}"`,
+      );
+    }
+  });
+};
+
+Object.entries(RESOURCE_ROUTES).forEach(([name, route]) => {
+  const tableName = Array.isArray(route.table)
+    ? route.table[0]
+    : route.table || route.drizzleTable;
+  validateResourceColumns(name, tableName, route.columns);
+});

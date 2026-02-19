@@ -1,16 +1,13 @@
 "use client";
 
 import React, { FC } from "react";
-
-type Assignee = {
-  email?: string;
-  avatar?: string;
-  user_id?: string;
-  username?: string;
-  display_name?: string;
-  first_name?: string;
-  last_name?: string;
-};
+import UserId from "@/components/layouts/user-id";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import type { Assignee } from "../../resource-types";
 
 export const AssigneesCell: FC<{ assignees?: Assignee[] }> = ({
   assignees,
@@ -25,26 +22,57 @@ export const AssigneesCell: FC<{ assignees?: Assignee[] }> = ({
 
   return (
     <div className="flex items-center gap-2">
-      {visible.map((a, idx) => {
-        const key = (a.user_id || a.email || a.username || String(idx)) + "_assignee";
-        const label = a.display_name || a.username || a.email || "user";
-        return (
-          <div
-            key={key}
-            className="flex h-7 min-w-7 items-center justify-center rounded-full bg-foreground px-2 text-xs text-secondary"
-            title={label}
-          >
-            {String(label).slice(0, 2).toUpperCase()}
-          </div>
-        );
-      })}
-      {overflow.length > 0 && (
+      {visible.map((a, idx) => (
         <div
-          className="flex h-7 min-w-7 items-center justify-center rounded-sm bg-foreground px-1.5 text-xs text-secondary"
-          title={overflow.map((a) => a.display_name || a.username || a.email).join(", ")}
+          key={(a.user_id || a.email || a.username || String(idx)) +
+            "_assignee"}
         >
-          +{overflow.length}
+          <UserId
+            user_id={a.user_id}
+            email={a.email}
+            username={a.username}
+            display_name={a.display_name}
+            avatar={a.avatar}
+            first_name={a.first_name}
+            last_name={a.last_name}
+            variant="avatar-only"
+            avatarClassName="h-7 w-7"
+          />
         </div>
+      ))}
+      {overflow.length > 0 && (
+        <HoverCard>
+          <HoverCardTrigger asChild>
+            <div className="flex h-7 min-w-7 items-center justify-center rounded-sm bg-muted px-1.5 text-xs text-primary">
+              +{overflow.length}
+            </div>
+          </HoverCardTrigger>
+          <HoverCardContent
+            className="w-65 rounded-sm bg-card"
+            align="start"
+          >
+            <div className="flex flex-col gap-3">
+              {overflow.map((a, idx) => (
+                <div
+                  key={(a.user_id || a.email || a.username || String(idx)) +
+                    "_overflow"}
+                  className="flex items-center gap-2"
+                >
+                  <UserId
+                    user_id={a.user_id}
+                    email={a.email}
+                    username={a.username}
+                    display_name={a.display_name}
+                    avatar={a.avatar}
+                    first_name={a.first_name}
+                    last_name={a.last_name}
+                    variant="default"
+                  />
+                </div>
+              ))}
+            </div>
+          </HoverCardContent>
+        </HoverCard>
       )}
     </div>
   );

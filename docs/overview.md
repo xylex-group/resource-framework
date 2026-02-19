@@ -1,61 +1,35 @@
-## Resource framework overview
+## Resource Framework Overview
 
-Build database‑backed pages quickly with a small set of conventions and shared UI. Define a resource once, and get a list view, a drilldown view, and consistent forms.
+The `packages/resource-framework` package provides the UI primitives, data helpers, and configuration tools that drive the dashboard drilldowns, widgets, and table views across the Suitsbooks project. It is organized into the following layers:
 
-### Key concepts
+1. **Components** – shared React components (tables, drilldowns, widgets, edit state helpers) that can be composed inside resource pages and drilldowns.
+2. **Hooks** – reusable hooks such as `useResourceRoute`, `useTableConfiguration`, and `useApiClient` that coordinate API work, selection, and UI state.
+3. **Registries & Constructors** – resource route definitions, widget registries, and helpers like `defineColumns` that turn structured data into Cupertino-consistent grids.
+4. **Templating** – the new strategy-based `templating` system that resolves `{{…}}` tokens, powers conditional widget props, and allows extensions like `{{env.XXX}}` or `{{resource_id}}`. It exports `resolveTemplate`/`resolveTemplateValue` plus the `TemplateContext`/`TemplateStrategy` building blocks.
+5. **Utilities** – key-case helpers, formatting, CSV exports, and drilldown-specific helpers that the UI layers consume.
 
-- resource: a table or view you expose in the UI
-- routes: list and drilldown configuration for each resource
-- columns/renderers: how values display and edit
-- filters: consistent UX that maps to server‑friendly operators
-- hooks: fetching, updates, and cache behavior
-- forms: multi‑step, schema‑driven flows
+### Usage Snapshot
 
-### What you get out‑of‑the‑box
+- **Tables & Widgets** use `resource-types` for strongly-typed widget specs.
+- **Drilldowns** render sections via `components/sections`, each reaching into `templating` when they support `{{ }}` tokens.
+- **Hooks** such as `useResourceRoute` rely on the generator helpers in `constructors/` and the registries under `registries/`.
 
-- Resource lists with search, sorting, actions, and per‑user display preferences
-- Drilldowns with editable fields, sections, and custom components
-- Scoped “create” flows and optional custom dialogs
-- A shared form engine for schema‑driven pages
+### Directory Structure
 
-## Quick start
-
-1) Add a route in `packages/resource-framework/registries/resource-routes.ts` (table, id column, optional columns).  
-2) Navigate to `/v2/[resource]` for the list, `/v2/[resource]/[id]` for drilldown.  
-3) Optionally add a drilldown config in `registries/resource-drilldown-routes.ts` for sections, titles, and actions.
-
-Minimal route:
-
-```ts
-export const RESOURCE_ROUTES = {
-  invoices: { table: "invoices", idColumn: "invoice_id" },
-} as const;
+```
+packages/resource-framework/
+├── components/
+├── hooks/
+├── registries/
+├── constructors/
+├── handlers/
+├── utils/
+├── templating/
+│   ├── strategies/
+│   └── __tests__/
+├── resource-types.ts
+└── docs/
+    └── overview.md  ← this file
 ```
 
-## Configuration sources
-
-- Static: `RESOURCE_ROUTES` and `RESOURCE_DRILLDOWN_ROUTES` in the registries
-- Database overrides: the components will load a matching row from the `resource_routes` table when a static entry is not present
-
-## Caching at a glance
-
-- Default: caching depends on the user scope `xbp_cache_experimental_v2`
-- Per‑resource override: set `force_no_cache` on a route to always bypass (true) or always allow (false) cache
-
-See: caching.md
-
-## Forms (shared)
-
-The shared form module lives at `packages/resource-framework/components/form` and is re‑exported by suits‑formations. It renders multi‑step forms from JSON and supports both legacy (v1) and experimental (v2) schema shapes.
-
-## Where to go next
-
-- resource-routes.md — define list pages, search, edit policy, creation
-- drilldown-routes.md — titles, sections, actions, and path templates
-- columns-and-renderers.md — column meta and renderers
-- filter-registry.md — advanced filters and URL mapping
-- components.md — `ResourceTable`, `ResourceDrilldown`, and friends
-- hooks.md — data fetching, updating, and helpers
-- form.md and form-fields.md — schema‑driven forms
-
-All guides live in this folder. Form schemas are stored in `public.resource_forms` in Postgres.
+Add more markdown files in `docs/` as the framework evolves (API contracts, widget guides, template strategy extensions, etc.).

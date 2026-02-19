@@ -1,11 +1,25 @@
 import * as React from "react";
+import type { QueryFilter } from "../resource-types";
 
-export type QueryFilter = {
-  column: string;
-  op: string;
-  value?: string | number | boolean | null;
-};
+export type { QueryFilter };
 
+/**
+ * Hook to parse and manage query filters from URL search parameters.
+ * Extracts filters from the "filters" query parameter and validates the structure.
+ *
+ * @param searchParams - URLSearchParams object from the current URL
+ * @returns Array of validated QueryFilter objects
+ *
+ * @example
+ * ```tsx
+ * function FilteredTable() {
+ *   const searchParams = useSearchParams();
+ *   const filters = useQueryFilters(searchParams);
+ *
+ *   // filters = [{ column: 'status', op: 'eq', value: 'active' }]
+ * }
+ * ```
+ */
 export function useQueryFilters(searchParams: URLSearchParams | null) {
   const [filters, setFilters] = React.useState<QueryFilter[]>([]);
   React.useEffect(() => {

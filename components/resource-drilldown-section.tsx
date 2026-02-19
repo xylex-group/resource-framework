@@ -3,15 +3,20 @@
 import React, { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DrilldownSection } from "@/packages/ui-patterns/src";
-import { useApiClient } from "@/hooks/use-api-client";
+import { useApiClient } from "../hooks/use-api-client";
 import { CreateResourceDialog } from "./create-resource-dialog";
+import type { ColumnConfig, FieldValue } from "../resource-types";
 
+/**
+ * Section component for resource drilldown with create functionality
+ * @param props - Component props including resourceName, title, and create configuration
+ * @returns React component
+ */
 export function ResourceDrilldownSection({
 	resourceName,
 	title,
 	cacheEnabled = false,
-	onCreated,
+	onCreatedAction,
 	required,
 	optional,
 	columns,
@@ -22,17 +27,17 @@ export function ResourceDrilldownSection({
 	resourceName: string;
 	title?: string;
 	cacheEnabled?: boolean;
-	onCreated?: (row: any) => void;
+	onCreatedAction?: (row: Record<string, unknown> | null) => void;
 	required?: string[];
 	optional?: string[];
-	columns?: Array<any>;
+	columns?: Array<ColumnConfig>;
 	table?: string;
-	defaultValues?: Record<string, string | number | boolean | null>;
+	defaultValues?: Partial<Record<string, FieldValue>>;
 	children?: React.ReactNode;
 }) {
 	const [open, setOpen] = useState(false);
 
-	const { data: routeRow } = useApiClient<any>({
+	const routeRowResult = useApiClient<Record<string, unknown>>({
 		table: "resource_routes",
 		conditions: [{ eq_column: "resource_name", eq_value: resourceName }],
 		single: true,
@@ -40,21 +45,29 @@ export function ResourceDrilldownSection({
 		noCache: !cacheEnabled,
 	});
 
+	const routeRow = "data" in routeRowResult ? routeRowResult.data : null;
+
 	const resolvedTitle = useMemo(
-		() => title || (routeRow?.page_label as string) || resourceName,
-		[title, routeRow?.page_label, resourceName],
+		() => title || ((routeRow as Record<string, unknown>)?.page_label as string) || resourceName,
+		[title, routeRow, resourceName],
 	);
 
-	const canCreate = Boolean(routeRow?.enable_new_resource_creation === true);
+	const canCreate = Boolean((routeRow as Record<string, unknown>)?.enable_new_resource_creation === true);
 
 	return (
-		<DrilldownSection title={resolvedTitle}>
-			<div className="flex items-start justify-between">
-				<div className="flex-1">{children}</div>
+		<div
+			id="resource-drilldown-section-root"
+			className="space-y-4"
+		>
+			<div
+				id="resource-drilldown-section-header"
+				className="flex items-center justify-between"
+			>
+				<h3 className="text-lg font-semibold">{resolvedTitle}</h3>
 				{canCreate && (
 					<Button
-						variant="icon_v2"
-						size="icon_v2"
+						variant="ghost"
+						size="icon"
 						onClick={() => setOpen(true)}
 						className="ml-2 rounded-sm"
 						aria-label="Create"
@@ -64,24 +77,28 @@ export function ResourceDrilldownSection({
 					</Button>
 				)}
 			</div>
+			<div
+				id="resource-drilldown-section-body"
+				className="flex-1"
+			>
+				{children}
+			</div>
 			<CreateResourceDialog
 				open={open}
-				onClose={() => setOpen(false)}
-				title={`New ${String(routeRow?.page_label || resourceName)}`}
+				onCloseAction={() => setOpen(false)}
+				title={`New ${String((routeRow as Record<string, unknown>)?.page_label || resourceName)}`}
 				resourceName={resourceName}
 				required={required}
 				optional={optional}
-				columns={columns as any}
+				columns={columns}
 				table={table}
 				cacheEnabled={cacheEnabled}
 				defaultValues={defaultValues}
-				onCreated={(row) => {
+				onCreatedAction={(row) => {
 					setOpen(false);
-					onCreated?.(row);
+					onCreatedAction?.(row);
 				}}
 			/>
-		</DrilldownSection>
+		</div>
 	);
 }
-
-
