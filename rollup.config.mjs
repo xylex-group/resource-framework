@@ -2,6 +2,7 @@ import path from "node:path";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import typescript from "@rollup/plugin-typescript";
+import alias from "@rollup/plugin-alias";
 
 /** @type {import('rollup').RollupOptions[]} */
 const configs = [
@@ -29,6 +30,22 @@ const configs = [
       }
     ],
     external: (id) => {
+      const hostPrefixes = [
+        "@/components",
+        "@/lib",
+        "@/hooks",
+        "@/layouts",
+        "@/select",
+        "@/json",
+        "@/tabs",
+        "@/filters",
+        "@/inputs",
+        "@/ui",
+        "@/notifications",
+      ];
+      if (hostPrefixes.some((prefix) => id.startsWith(prefix))) {
+        return true;
+      }
       return (
         id.startsWith("react") ||
         id.startsWith("@tanstack/react-table") ||
@@ -38,6 +55,18 @@ const configs = [
       );
     },
     plugins: [
+      alias({
+        entries: [
+          {
+            find: "@/packages/resource-framework",
+            replacement: path.resolve(process.cwd(), "."),
+          },
+          {
+            find: "@/drizzle",
+            replacement: path.resolve(process.cwd(), "drizzle"),
+          },
+        ],
+      }),
       resolve({
         extensions: [".mjs", ".js", ".json", ".node", ".ts", ".tsx"]
       }),

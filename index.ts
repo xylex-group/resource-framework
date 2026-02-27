@@ -268,3 +268,6 @@ export {
   TablePaginationInfo,
   type TablePaginationInfoProps,
 } from "./components/table/table-pagination-info";
+
+export type { PlaygroundFormDefinition } from "./demo/playground-forms";
+export { playgroundFormDefinitions } from "./demo/playground-forms";

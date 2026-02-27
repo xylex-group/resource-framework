@@ -18,7 +18,13 @@
     "resource-types.ts",
     "components/index.ts",
     "components/cells/**/*.ts",
-    "components/cells/**/*.tsx"
+    "components/cells/**/*.tsx",
+    "lib/**/*.ts",
+    "lib/**/*.tsx",
+    "drizzle/**/*.ts",
+    "drizzle/**/*.tsx",
+    "types/**/*.ts",
+    "demo/**/*.ts"
   ],
   "exclude": ["dist", "node_modules"]
 }

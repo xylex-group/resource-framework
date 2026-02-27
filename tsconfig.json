@@ -10,6 +10,10 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@/packages/resource-framework/*": ["./*"]
+    },
     "types": ["react", "react-dom"]
   },
   "include": ["**/*.ts", "**/*.tsx"],

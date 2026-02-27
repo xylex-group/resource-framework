@@ -21,7 +21,8 @@
     "resource-types.ts",
     "components/index.ts",
     "components/cells/**/*.ts",
-    "components/cells/**/*.tsx"
+    "components/cells/**/*.tsx",
+    "demo/**/*.ts"
   ],
   "exclude": ["dist", "node_modules"]
 }
