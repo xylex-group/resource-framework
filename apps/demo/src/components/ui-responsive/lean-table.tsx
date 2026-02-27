@@ -6,6 +6,8 @@ import { useReactTable, flexRender } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+export type LeanTableTitleSize = "default" | "sm" | "md" | "lg";
+
 export interface LeanTableProps<TData> {
   columns: ColumnDef<TData>[];
   data: TData[];

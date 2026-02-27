@@ -5,6 +5,8 @@ export interface NotificationOptions {
   success?: boolean;
 }
 
+export type UseNotificationOptions = NotificationOptions;
+
 export function useNotification() {
   const notification = ({ message, success = true }: NotificationOptions) => {
     console.log(

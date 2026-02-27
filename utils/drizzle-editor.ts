@@ -1,12 +1,16 @@
 import type { FieldInputType, FieldDataType } from "../resource-types";
 import type { DrizzleTableName } from "../types/drizzle-schema";
 
-import schemaSnapshot from "@/drizzle/meta/0000_snapshot.json";
+import { schemaSnapshot } from "@/drizzle/meta/0000_snapshot";
 
 type SchemaSnapshot = typeof schemaSnapshot;
-type SnapshotTable = SchemaSnapshot["tables"][keyof SchemaSnapshot["tables"]];
-type SnapshotColumn = SnapshotTable["columns"][keyof SnapshotTable["columns"]] & {
+type SnapshotColumn = {
+  type: string;
+  notNull?: boolean;
   default?: string;
+};
+type SnapshotTable = {
+  columns: Record<string, SnapshotColumn>;
 };
 
 const TYPE_TO_FIELD_TYPE: Record<string, FieldInputType> = {

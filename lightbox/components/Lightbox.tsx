@@ -153,7 +153,14 @@ export function Lightbox({
   const Renderer = getRendererForFile(currentFile);
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open: boolean) => {
+        if (!open) {
+          onClose();
+        }
+      }}
+    >
       <DialogPortal>
         <DialogOverlay className="bg-foreground" />
         <DialogContent

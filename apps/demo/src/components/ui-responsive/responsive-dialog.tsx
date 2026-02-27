@@ -10,6 +10,10 @@ export interface ResponsiveDialogProps {
   disableMaxWidth?: boolean;
   className?: string;
   children: React.ReactNode;
+  classNames?: {
+    title?: string;
+    content?: string;
+  };
 }
 
 export function ResponsiveDialog({
@@ -18,6 +22,7 @@ export function ResponsiveDialog({
   title,
   disableMaxWidth,
   className,
+  classNames,
   children,
 }: ResponsiveDialogProps) {
   useEffect(() => {
@@ -41,11 +46,16 @@ export function ResponsiveDialog({
         )}
       >
         {title && (
-          <div className="mb-3 text-lg font-semibold text-slate-100">
+          <div
+            className={cn(
+              "mb-3 text-lg font-semibold text-slate-100",
+              classNames?.title,
+            )}
+          >
             {title}
           </div>
         )}
-        {children}
+        <div className={classNames?.content}>{children}</div>
         <div className="mt-4 flex justify-end">
           <button
             type="button"

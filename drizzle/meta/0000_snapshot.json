@@ -1,0 +1,47 @@
+{
+  "tables": {
+    "demo_contacts": {
+      "columns": {
+        "demo_contact_id": { "type": "text", "notNull": true },
+        "first_name": { "type": "text", "notNull": false },
+        "last_name": { "type": "text", "notNull": false },
+        "email_address": { "type": "text", "notNull": false },
+        "contact_number": { "type": "text", "notNull": false },
+        "company_id": { "type": "text", "notNull": false },
+        "organization_id": { "type": "text", "notNull": false },
+        "created_at": { "type": "timestamp", "notNull": false },
+        "updated_at": { "type": "timestamp", "notNull": false }
+      }
+    },
+    "customerJurisdictions": {
+      "columns": {
+        "id": { "type": "text", "notNull": true },
+        "name": { "type": "text", "notNull": false }
+      }
+    },
+    "glAccounts": {
+      "columns": {
+        "id": { "type": "text", "notNull": true },
+        "description": { "type": "text", "notNull": false }
+      }
+    },
+    "products": {
+      "columns": {
+        "id": { "type": "text", "notNull": true },
+        "name": { "type": "text", "notNull": false }
+      }
+    },
+    "customers": {
+      "columns": {
+        "id": { "type": "text", "notNull": true },
+        "company_name": { "type": "text", "notNull": false }
+      }
+    },
+    "invoices": {
+      "columns": {
+        "id": { "type": "text", "notNull": true },
+        "amount": { "type": "decimal", "notNull": false }
+      }
+    }
+  }
+}

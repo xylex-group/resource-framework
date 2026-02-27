@@ -12,9 +12,22 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@/packages/resource-framework/*": ["./*"]
+      "@/packages/resource-framework": ["./"],
+      "@/packages/resource-framework/*": ["./*"],
+      "@/components/*": ["apps/demo/src/components/*"],
+      "@/components/charts/*": ["apps/demo/src/components/charts/*"],
+      "@/components/ui-responsive/*": ["apps/demo/src/components/ui-responsive/*"],
+      "@/lib/*": ["apps/demo/src/lib/*"],
+      "@/hooks/*": ["apps/demo/src/hooks/*"],
+      "@/layouts/*": ["apps/demo/src/components/layouts/*"],
+      "@/select/*": ["apps/demo/src/components/select/*"],
+      "@/json/*": ["apps/demo/src/components/json/*"],
+      "@/tabs/*": ["apps/demo/src/components/tabs/*"],
+      "@/filters/*": ["apps/demo/src/components/filters/*"],
+      "@/inputs/*": ["apps/demo/src/components/inputs/*"],
+      "@/ui/*": ["apps/demo/src/components/ui/*"]
     },
-    "types": ["react", "react-dom"]
+    "types": ["node", "react", "react-dom"]
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["dist", "node_modules"]

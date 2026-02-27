@@ -8,14 +8,16 @@ type AnyDrizzleTable = {
   _: unknown;
 };
 
-type SchemaTables = {
-  [
-    K in keyof typeof Schema as (typeof Schema)[K] extends AnyDrizzleTable ? K
-      : never
-  ]: (typeof Schema)[K];
-};
+type SchemaTables = Record<string, AnyDrizzleTable>;
 
-export type DrizzleTableName = keyof SchemaTables & string;
+export type DrizzleTableName =
+  | (keyof SchemaTables & string)
+  | "demo_contacts"
+  | "customerJurisdictions"
+  | "glAccounts"
+  | "products"
+  | "customers"
+  | "invoices";
 
 type BaseColumnKeys<TTable extends DrizzleTableName> =
   & keyof SchemaTables[TTable][

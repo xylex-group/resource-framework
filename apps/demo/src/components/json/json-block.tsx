@@ -1,10 +1,16 @@
 "use client";
 
-import type { PropsWithChildren } from "react";
+import type { HTMLAttributes } from "react";
 
-export function JsonBlock({ data }: { data: unknown }) {
+export interface JsonBlockProps extends HTMLAttributes<HTMLElement> {
+  data: unknown;
+}
+
+export function JsonBlock({ data, className }: JsonBlockProps) {
   return (
-    <pre className="whitespace-pre-wrap break-words text-xs text-slate-200">
+    <pre
+      className={`whitespace-pre-wrap break-words text-xs text-slate-200 ${className ?? ""}`}
+    >
       {JSON.stringify(data, null, 2)}
     </pre>
   );

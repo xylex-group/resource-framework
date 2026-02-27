@@ -51,6 +51,11 @@ const configs = [
         id.startsWith("@tanstack/react-table") ||
         id.startsWith("date-fns") ||
         id.startsWith("lucide-react") ||
+        id.startsWith("next/navigation") ||
+        id.startsWith("@bprogress/core") ||
+        id.startsWith("motion/react") ||
+        id.startsWith("drizzle-orm") ||
+        id.startsWith("papaparse") ||
         id === "md5"
       );
     },
@@ -64,6 +69,46 @@ const configs = [
           {
             find: "@/drizzle",
             replacement: path.resolve(process.cwd(), "drizzle"),
+          },
+          {
+            find: "@/components",
+            replacement: path.resolve(process.cwd(), "apps/demo/src/components"),
+          },
+          {
+            find: "@/lib",
+            replacement: path.resolve(process.cwd(), "apps/demo/src/lib"),
+          },
+          {
+            find: "@/hooks",
+            replacement: path.resolve(process.cwd(), "apps/demo/src/hooks"),
+          },
+          {
+            find: "@/layouts",
+            replacement: path.resolve(process.cwd(), "apps/demo/src/components/layouts"),
+          },
+          {
+            find: "@/select",
+            replacement: path.resolve(process.cwd(), "apps/demo/src/components/select"),
+          },
+          {
+            find: "@/json",
+            replacement: path.resolve(process.cwd(), "apps/demo/src/components/json"),
+          },
+          {
+            find: "@/tabs",
+            replacement: path.resolve(process.cwd(), "apps/demo/src/components/tabs"),
+          },
+          {
+            find: "@/filters",
+            replacement: path.resolve(process.cwd(), "apps/demo/src/components/filters"),
+          },
+          {
+            find: "@/inputs",
+            replacement: path.resolve(process.cwd(), "apps/demo/src/components/inputs"),
+          },
+          {
+            find: "@/ui",
+            replacement: path.resolve(process.cwd(), "apps/demo/src/components/ui"),
           },
         ],
       }),

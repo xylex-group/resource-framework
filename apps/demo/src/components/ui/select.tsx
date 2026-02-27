@@ -30,15 +30,17 @@ export function Select({ value, onValueChange, children }: SelectProps) {
 export interface SelectTriggerProps {
   children: React.ReactNode;
   className?: string;
+  id?: string;
 }
 
-export function SelectTrigger({ className, children }: SelectTriggerProps) {
+export function SelectTrigger({ className, children, id }: SelectTriggerProps) {
   return (
     <div
       className={cn(
         "cursor-pointer rounded-sm border border-slate-700 bg-slate-900/80 px-3 py-2 text-sm text-slate-200",
         className,
       )}
+      id={id}
     >
       {children}
     </div>

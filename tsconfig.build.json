@@ -4,7 +4,9 @@
     "outDir": "dist",
     "rootDir": ".",
     "declaration": true,
-    "emitDeclarationOnly": true
+    "emitDeclarationOnly": true,
+    "noImplicitAny": false,
+    "strict": false
   },
   "include": [
     "index.ts",

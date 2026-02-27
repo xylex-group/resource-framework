@@ -50,12 +50,21 @@ export const useBackButtonStore = create<BackButtonState>((set) => ({
   },
 }));
 
+export type HeaderAction = {
+  id?: string;
+  label?: string;
+  icon?: ReactNode;
+  variant?: string;
+  size?: string;
+  onClick?: () => void;
+};
+
 type ContentState = {
   title?: string;
   subtitle?: string;
-  headerActions?: ReactNode[];
+  headerActions?: HeaderAction[];
   titleIcon?: ReactNode;
-  setHeaderActions: (actions: ReactNode[]) => void;
+  setHeaderActions: (actions: HeaderAction[]) => void;
   setTitle: (value: string | undefined) => void;
   setSubtitle: (value: string | undefined) => void;
   setTitleIcon: (icon: ReactNode | undefined) => void;

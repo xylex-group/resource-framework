@@ -6,7 +6,7 @@ import type { ResourceRoute } from "../resource-types";
 export type { DataSourceConfig };
 
 export interface FetchOptionsParams {
-    dataSource: DataSourceConfig;
+    dataSource: DataSourceConfig | string;
     user?: {
         organization_id?: string | null;
         user_id?: string | null;
@@ -25,7 +25,7 @@ export const fetchOptions = async ({
 }: FetchOptionsParams) => {
     setLoading(true);
     try {
-        const ds = typeof dataSource === "string"
+        const ds: DataSourceConfig = typeof dataSource === "string"
             ? { table: dataSource.split(".")[0] }
             : dataSource;
         const table = ds.table;
