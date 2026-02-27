@@ -84,7 +84,11 @@ const contactSchema: ResourceFormSchema = {
       },
     ],
   },
-  step_order: ["personal_information", "contact_preferences", "review_confirmation"],
+  step_order: [
+    "personal_information",
+    "contact_preferences",
+    "review_confirmation",
+  ],
 };
 
 const kycSchema: ResourceFormSchema = {
@@ -223,7 +227,8 @@ export const playgroundFormDefinitions: PlaygroundFormDefinition[] = [
   {
     id: "contact",
     title: "Contact intake form",
-    description: "Multi-step personal profile with contact preferences and a review note.",
+    description:
+      "Multi-step personal profile with contact preferences and a review note.",
     schema: contactSchema,
     defaultValues: {
       first_name: "Alex",
@@ -238,7 +243,8 @@ export const playgroundFormDefinitions: PlaygroundFormDefinition[] = [
   {
     id: "kyc",
     title: "Simplified KYC",
-    description: "Identity + document upload flow that ends with a compliance review step.",
+    description:
+      "Identity + document upload flow that ends with a compliance review step.",
     schema: kycSchema,
     defaultValues: {
       legal_name: "SuitsBooks LLC",
@@ -250,7 +256,8 @@ export const playgroundFormDefinitions: PlaygroundFormDefinition[] = [
   {
     id: "checkout",
     title: "Checkout + payment",
-    description: "Plan selection, payment capture, and review step for quick purchases.",
+    description:
+      "Plan selection, payment capture, and review step for quick purchases.",
     schema: checkoutSchema,
     defaultValues: {
       plan_choice: "growth",

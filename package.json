@@ -1,6 +1,6 @@
 {
-  "name": "resource-framework",
-  "version": "0.1.0",
+  "name": "@xylex-group/resource-framework",
+  "version": "0.2.0",
   "description": "Composable resource table/drilldown framework with adapter-based UI bindings.",
   "license": "MIT",
   "repository": {
