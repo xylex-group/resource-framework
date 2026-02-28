@@ -731,6 +731,7 @@ Part of the Suitsbooks project.
 
 ## Top Architecture Failure Modes
 
+This framework is a metadata-driven UI layer where the critical runtime path is: UI components (`ResourceTable`/`ResourceDrilldown`) -> `useApiClient`/server actions -> data API/DB, plus file flows via `/api/upload` and signed S3/MinIO URLs. The highest operational risk is concentrated in network dependency health and consistency between storage and metadata writes.
 
 - Failure mode: Data-plane dependency outage. Trigger: server-action/data API or fallback endpoint unavailability. Symptoms: tables fail to load, updates fail, repeated retries, user-facing errors. Detection: elevated client `isError`, higher mutation failure rate, API p95/p99 latency spikes. Mitigation: move all CRUD behind Athena gateway, add circuit breaking and bounded retries, and standardize error envelopes.
 - Failure mode: Read-after-write inconsistency. Trigger: update succeeds but immediate refetch returns stale/cached row. Symptoms: values appear reverted, duplicate save attempts, mismatch logs. Detection: compare update payload vs post-update read in telemetry. Mitigation: require canonical updated row in Athena write responses, enforce consistent cache policy per route, and use version/etag checks.
