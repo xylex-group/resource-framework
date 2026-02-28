@@ -729,3 +729,21 @@ Part of the Suitsbooks project.
 
 **Need help?** Check the docs folder for comprehensive guides.
 
+## Top Architecture Failure Modes
+
+
+- Failure mode: Data-plane dependency outage. Trigger: server-action/data API or fallback endpoint unavailability. Symptoms: tables fail to load, updates fail, repeated retries, user-facing errors. Detection: elevated client `isError`, higher mutation failure rate, API p95/p99 latency spikes. Mitigation: move all CRUD behind Athena gateway, add circuit breaking and bounded retries, and standardize error envelopes.
+- Failure mode: Read-after-write inconsistency. Trigger: update succeeds but immediate refetch returns stale/cached row. Symptoms: values appear reverted, duplicate save attempts, mismatch logs. Detection: compare update payload vs post-update read in telemetry. Mitigation: require canonical updated row in Athena write responses, enforce consistent cache policy per route, and use version/etag checks.
+- Failure mode: File upload two-phase gap. Trigger: object upload succeeds but metadata insert fails (or inverse). Symptoms: orphaned objects, missing files in UI, broken links. Detection: periodic reconciliation between object storage keys and file metadata table. Mitigation: transactional server workflow via Athena, idempotency keys, and compensating cleanup jobs.
+- Failure mode: Signed URL refresh dependency failures. Trigger: `/api/files/refresh-url` equivalent path unavailable or key extraction mismatch. Symptoms: 403 loops, preview/download failures, repeated refresh attempts. Detection: refresh failure-rate and 403-rate dashboards by renderer type. Mitigation: centralized Athena file URL refresh endpoint, proactive refresh with jitter, and resilient fallback UX.
+- Failure mode: Client-side privileged fallback exposure. Trigger: browser path uses direct privileged external update calls. Symptoms: secret leakage risk and unauthorized mutation attempts. Detection: secret scanning + anomaly detection on mutation traffic. Mitigation: remove client-embedded secrets and route all privileged operations through Athena with scoped server-side auth.
+
+### Confirmed vs Inferred
+
+- Confirmed from repo: UI layer, `useApiClient` data access, direct external fallback update path, `/api/upload` usage, and signed URL refresh flow.
+- Inferred due to missing backend internals here: exact DB topology, queueing/event infrastructure, and gateway-level HA posture.
+
+### Migration Target
+
+- Target gateway spec: `https://athena-db.com/openapi.yaml`
+- Implementation plan: see [TODO.md](./TODO.md).
