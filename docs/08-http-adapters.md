@@ -27,6 +27,7 @@ Athena requests are sent with:
 ```
 
 The API key is supplied through Athena config (`APP_CONFIG.athena.api_key` or environment fallback) inside the adapter layer, not from ad hoc browser call sites.
+Each adapter call also emits `X-Request-Id`; write and file-mutation paths emit `Idempotency-Key` and `X-Idempotency-Key`.
 
 ## Data Endpoints
 
@@ -76,7 +77,7 @@ const uploaded = await uploadFileViaAthena(formData);
 
 ## Legacy Note
 
-`execute-data-api.ts` remains in the package for backwards compatibility, but new code should not depend on it.
+`execute-data-api.ts` still exists in the repository for internal compatibility, but it is no longer exported from the public package surface.
 
 ## See Also
 

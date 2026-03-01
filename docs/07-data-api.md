@@ -1,6 +1,6 @@
 # Athena Data API
 
-The framework now uses Athena as its primary data plane. Package code should call the Athena-backed adapters or `useApiClient`, not the legacy `execute-data-api` helper.
+The framework now uses Athena as its primary data plane. Package code should call the Athena-backed adapters or `useApiClient`. The legacy `execute-data-api` helper is no longer part of the public package exports.
 
 ## Core Adapters
 
@@ -19,6 +19,18 @@ const result = await fetchDataViaAthena({
 });
 ```
 
+You can pass transport metadata through the optional config argument:
+
+```typescript
+await fetchDataViaAthena(
+  { table_name: "customers" },
+  {
+    requestId: "req-123",
+    headers: { "X-Organization-Id": "org-123" },
+  },
+);
+```
+
 ### Insert Data
 
 ```typescript
@@ -33,6 +45,8 @@ const result = await insertDataViaAthena({
   },
 });
 ```
+
+Mutations accept `idempotencyKey` in the optional config argument and propagate it as both `Idempotency-Key` and `X-Idempotency-Key`.
 
 ### Update Data
 

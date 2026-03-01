@@ -12,6 +12,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
+      "@xylex-group/resource-framework": ["./index.ts"],
+      "@xylex-group/resource-framework/*": ["./*"],
       "@/packages/resource-framework": ["./"],
       "@/packages/resource-framework/*": ["./*"],
       "@/components/*": ["apps/demo/src/components/*"],
@@ -32,5 +34,4 @@
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["dist", "node_modules"]
 }
-
 

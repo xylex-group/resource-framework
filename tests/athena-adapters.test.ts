@@ -55,7 +55,10 @@ describe("Athena adapters", () => {
       "test-key",
       expect.objectContaining({
         client: "railway_direct",
-        headers: { "X-Organization-Id": "org-1" },
+        headers: expect.objectContaining({
+          "X-Organization-Id": "org-1",
+          "X-Request-Id": expect.any(String),
+        }),
       }),
     );
     expect(fromMock).toHaveBeenCalledWith("customers");
@@ -138,6 +141,11 @@ describe("Athena adapters", () => {
       "https://athena-db.com/api/upload",
       expect.objectContaining({
         method: "POST",
+        headers: expect.objectContaining({
+          "X-Request-Id": expect.any(String),
+          "Idempotency-Key": expect.any(String),
+          "X-Idempotency-Key": expect.any(String),
+        }),
         body: formData,
       }),
     );
@@ -146,7 +154,12 @@ describe("Athena adapters", () => {
       "https://athena-db.com/api/files/refresh-url",
       expect.objectContaining({
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: expect.objectContaining({
+          "Content-Type": "application/json",
+          "X-Request-Id": expect.any(String),
+          "Idempotency-Key": expect.any(String),
+          "X-Idempotency-Key": expect.any(String),
+        }),
       }),
     );
     expect(uploadResult.storage_key).toBe("rsf/org-1/customers/cust-1/file.pdf");

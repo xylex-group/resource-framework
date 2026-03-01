@@ -67,7 +67,7 @@ Most of the public API is re-exported from `index.ts`. Highlights:
 | UI primitives | `ResourceTable`, `ResourceDrilldown`, `CreateResourceDialog`, `CreateResourceButton` |
 | Drilldown helpers | `ResourceDrilldownSection`, `DrilldownSection`, `DrilldownSummary`, `SectionWidgetGroup`, `ResourceDrilldownNoEditFields`, `DrilldownActivity` |
 | Table controls | `DisplaySettings`, `TableAddButton`, `TableSearchInput`, `TablePaginationControls`, `TableFullscreenToggle`, `TableDownloadButton`, `TableDeleteDialog`, `TableTopControls`, `TableHeaderCell`, `TableBodyCell` |
-| Adapters | `fetchDataViaAthena`, `insertDataViaAthena`, `updateDataViaAthena`, `deleteDataViaAthena`, `uploadFileViaAthena`, `refreshFileUrlViaAthena`, `drizzleInsertMany`, `withRetry`, `applyTransform` |
+| Adapters | `fetchDataViaAthena`, `insertDataViaAthena`, `updateDataViaAthena`, `deleteDataViaAthena`, `uploadFileViaAthena`, `refreshFileUrlViaAthena`, `applyTransform` |
 | Utilities | `buildCategoryByKey`, `coerceByDatatype`, `buildTableColumns`, `insertRow`, `coerceValue`, `applyClientFilters`, `parseQueryFilters`, `parseQuerySort` |
 | Hooks | `useResourceContext`, `useResourceRoute`, `useTableConfiguration`, `useFetchData`, etc. |
 | Types | `ResourceRoute`, `ResourceFieldSpec`, `ColumnConfig`, `DrilldownSectionConfig`, `DrizzleTableName`, `DrizzleColumnValue`, etc. |
@@ -78,7 +78,7 @@ Most of the public API is re-exported from `index.ts`. Highlights:
 
 - `athena-gateway.ts`: typed CRUD adapter that routes reads and mutations through the Athena SDK and gateway.
 - `athena-files.ts`: file upload + signed URL refresh helpers that target Athena-hosted file endpoints.
-- `execute-data-api.ts`: legacy helper kept for backwards compatibility; new work should use the Athena adapters.
+- `execute-data-api.ts`: legacy internal helper that is no longer exported from the public package surface.
 - `transforms.ts`: helpers for applying server-defined `data.transforms` onto fetch responses before they reach the UI.
 
 ### components
@@ -223,6 +223,7 @@ Use the exported hooks to keep UI synchronized:
 2. `adapters/athena-files.ts` handles file transfer endpoints hosted behind the Athena base URL:
    - `uploadFileViaAthena()` posts multipart form data to `/api/upload`.
    - `refreshFileUrlViaAthena()` refreshes signed file URLs via `/api/files/refresh-url`.
+   - each call carries `X-Request-Id`; mutations also carry `Idempotency-Key`.
 3. `handlers/handle-options.ts`, `handle-update.ts`, and the core hooks call these adapters so package consumers do not have to manage transport details themselves.
 
 ## Registries & constructors

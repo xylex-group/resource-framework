@@ -1,8 +1,10 @@
 import { APP_CONFIG } from "@/lib/config";
 
-interface AthenaFileConfig {
+export interface AthenaFileConfig {
   baseUrl?: string;
   headers?: Record<string, string>;
+  requestId?: string;
+  idempotencyKey?: string;
 }
 
 export interface AthenaUploadResponseData {
@@ -43,13 +45,44 @@ function buildAthenaUrl(path: string, config?: AthenaFileConfig): string {
   return `${(config?.baseUrl ?? getAthenaBaseUrl()).replace(/\/$/, "")}${path}`;
 }
 
+function createRequestId(): string {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    return `athena-file-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  }
+}
+
+function buildFileHeaders(
+  config: AthenaFileConfig | undefined,
+  options: { isMutation: boolean; includeJsonContentType?: boolean },
+): Record<string, string> {
+  const requestId = config?.requestId ?? createRequestId();
+  const headers: Record<string, string> = {
+    ...(config?.headers ?? {}),
+    "X-Request-Id": requestId,
+  };
+
+  if (options.includeJsonContentType) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  if (options.isMutation) {
+    const idempotencyKey = config?.idempotencyKey ?? requestId;
+    headers["Idempotency-Key"] = idempotencyKey;
+    headers["X-Idempotency-Key"] = idempotencyKey;
+  }
+
+  return headers;
+}
+
 export async function uploadFileViaAthena(
   payload: FormData,
   config?: AthenaFileConfig,
 ): Promise<AthenaUploadResponseData> {
   const response = await fetch(buildAthenaUrl("/api/upload", config), {
     method: "POST",
-    headers: config?.headers,
+    headers: buildFileHeaders(config, { isMutation: true }),
     body: payload,
   });
 
@@ -76,10 +109,10 @@ export async function refreshFileUrlViaAthena(
 ): Promise<RefreshFileUrlResponse> {
   const response = await fetch(buildAthenaUrl("/api/files/refresh-url", config), {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(config?.headers ?? {}),
-    },
+    headers: buildFileHeaders(config, {
+      isMutation: true,
+      includeJsonContentType: true,
+    }),
     body: JSON.stringify(params),
   });
 

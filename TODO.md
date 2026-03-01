@@ -15,7 +15,7 @@ Target: migrate all data and file operations in this package to Athena API Gatew
 - [x] Define a single adapter interface for framework operations (`fetch`, `insert`, `update`, `delete`, `upload`, `refreshFileUrl`).
 - [x] Normalize Athena error payloads to one internal error shape used by hooks/components.
 - [x] Map auth/tenant headers from current context (`company_id`, `organization_id`, `user_id`) to Athena requirements.
-- [ ] Add request id propagation (`x-request-id`) for tracing.
+- [x] Add request id propagation (`x-request-id`) for tracing.
 
 ## Phase 2: Replace mutation/read paths
 
@@ -23,7 +23,7 @@ Target: migrate all data and file operations in this package to Athena API Gatew
 - [x] Remove direct browser fallback calls to legacy external update endpoints.
 - [x] Migrate `handlers/handle-update.ts` and related handlers to Athena adapter.
 - [ ] Ensure all write operations return canonical updated rows and align refetch behavior.
-- [ ] Add idempotency key support for write endpoints where available.
+- [x] Add idempotency key support for write endpoints where available.
 
 ## Phase 3: File pipeline migration
 
@@ -52,7 +52,7 @@ Target: migrate all data and file operations in this package to Athena API Gatew
 ## Testing and acceptance criteria
 
 - [x] Unit tests for Athena adapter mappings and error normalization.
-- [ ] Integration tests for CRUD and file workflows against Athena.
+- [x] Integration tests for CRUD and file workflows against Athena (env-gated).
 - [x] Contract tests for the framework-facing Athena adapter contract.
 - [ ] Failure injection tests: timeout, 5xx, stale reads, partial file-write failures.
 - [ ] Acceptance: no critical regressions, stable latency, and full removal of legacy direct endpoint usage.

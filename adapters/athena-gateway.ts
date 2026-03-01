@@ -53,10 +53,12 @@ type AthenaGatewayCondition = {
   value: string | number | boolean | null;
 };
 
-interface AthenaGatewayConfig {
+export interface AthenaGatewayConfig {
   baseUrl?: string;
   client?: string;
   headers?: Record<string, string>;
+  requestId?: string;
+  idempotencyKey?: string;
 }
 
 const DEFAULT_ATHENA_BASE_URL = "https://athena-db.com";
@@ -80,15 +82,43 @@ function getAthenaApiKey(): string {
 }
 
 function createAthenaSdkClient(config: AthenaGatewayConfig = {}) {
+  const headers = buildAthenaHeaders(config, { isMutation: false });
   return createClient(
     config.baseUrl ?? getAthenaBaseUrl(),
     getAthenaApiKey(),
     {
       client: config.client ?? getAthenaClient(),
       backend: Backend.Athena,
-      headers: config.headers,
+      headers,
     },
   );
+}
+
+function createRequestId(): string {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    return `athena-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  }
+}
+
+function buildAthenaHeaders(
+  config: AthenaGatewayConfig = {},
+  options: { isMutation: boolean },
+): Record<string, string> {
+  const requestId = config.requestId ?? createRequestId();
+  const headers: Record<string, string> = {
+    ...(config.headers ?? {}),
+    "X-Request-Id": requestId,
+  };
+
+  if (options.isMutation) {
+    const idempotencyKey = config.idempotencyKey ?? requestId;
+    headers["Idempotency-Key"] = idempotencyKey;
+    headers["X-Idempotency-Key"] = idempotencyKey;
+  }
+
+  return headers;
 }
 
 function firstRow<T>(value: T | T[] | null | undefined): T | null {
@@ -139,7 +169,10 @@ export async function fetchDataViaAthena<T = unknown[]>(
   config?: AthenaGatewayConfig,
 ): Promise<DataResponse<T>> {
   try {
-    const athena = createAthenaSdkClient(config);
+    const athena = createAthenaSdkClient({
+      ...config,
+      headers: buildAthenaHeaders(config, { isMutation: false }),
+    });
     const columns = params.columns?.length ? params.columns.join(", ") : "*";
     let query = athena.from<T extends Array<infer Row> ? Row : T>(params.table_name);
 
@@ -173,7 +206,10 @@ export async function insertDataViaAthena<T = unknown>(
   config?: AthenaGatewayConfig,
 ): Promise<DataResponse<T>> {
   try {
-    const athena = createAthenaSdkClient(config);
+    const athena = createAthenaSdkClient({
+      ...config,
+      headers: buildAthenaHeaders(config, { isMutation: true }),
+    });
     const columns = params.columns?.length ? params.columns.join(", ") : "*";
     const response = await athena
       .from(params.table_name)
@@ -199,7 +235,10 @@ export async function updateDataViaAthena<T = unknown>(
   config?: AthenaGatewayConfig,
 ): Promise<DataResponse<T>> {
   try {
-    const athena = createAthenaSdkClient(config);
+    const athena = createAthenaSdkClient({
+      ...config,
+      headers: buildAthenaHeaders(config, { isMutation: true }),
+    });
     let query = athena.from(params.table_name).update(params.update_body ?? {});
 
     if (params.x_column && params.x_id !== undefined) {
@@ -228,7 +267,10 @@ export async function deleteDataViaAthena<T = unknown>(
   config?: AthenaGatewayConfig,
 ): Promise<DataResponse<T>> {
   try {
-    const athena = createAthenaSdkClient(config);
+    const athena = createAthenaSdkClient({
+      ...config,
+      headers: buildAthenaHeaders(config, { isMutation: true }),
+    });
     let query = athena.from(params.table_name);
 
     if (params.x_column && params.x_id !== undefined) {

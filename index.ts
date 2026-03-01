@@ -37,7 +37,6 @@ export {
   RESOURCE_DRILLDOWN_ROUTES,
 } from "./registries/resource-drilldown-routes";
 export { ResourceDrilldown } from "./components/ResourceDrilldown";
-export { drizzleInsertMany, withRetry } from "./adapters/execute-data-api";
 export {
   deleteDataViaAthena,
   fetchDataViaAthena,
