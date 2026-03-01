@@ -312,7 +312,7 @@ function PreviewActions({ file }: { file: LightboxFile }) {
 }
 ```
 
-`refreshFileUrl` is the low-level API that hits `/api/files/refresh-url` and returns a newly signed URL; `useAuthorizedFileUrl`
+`refreshFileUrl` is the low-level API that calls the Athena-backed refresh-url adapter and returns a newly signed URL; `useAuthorizedFileUrl`
 wraps it in a hook that keeps the current URL in sync with the active file, surfaces `isRefreshing`, and exposes a `refreshAuthorizedUrl`
 helper you can call before downloads, new-tab navigation, or when a renderer reports a 403/expired error. Do **not** cache the
 authorized URLs longer than the preview session—always refresh them again before a new action.

@@ -1,143 +1,141 @@
-# Data API
+# Athena Data API
 
-The data API provides methods for CRUD operations on resources.
+The framework now uses Athena as its primary data plane. Package code should call the Athena-backed adapters or `useApiClient`, not the legacy `execute-data-api` helper.
 
-## Core Methods
+## Core Adapters
 
 ### Fetch Data
 
 ```typescript
-import { executeDataApi } from '@/packages/resource-framework/adapters/execute-data-api';
+import { fetchDataViaAthena } from "@/packages/resource-framework/adapters";
 
-const data = await executeDataApi({
-  method: 'GET',
-  table_name: 'customers',
+const result = await fetchDataViaAthena({
+  table_name: "customers",
   conditions: [
-    { eq_column: 'status', eq_value: 'active' }
-  ]
+    { eq_column: "status", eq_value: "active" },
+  ],
+  columns: ["customer_id", "name", "email"],
+  limit: 50,
 });
 ```
 
 ### Insert Data
 
 ```typescript
-const result = await executeDataApi({
-  method: 'POST',
-  table_name: 'customers',
+import { insertDataViaAthena } from "@/packages/resource-framework/adapters";
+
+const result = await insertDataViaAthena({
+  table_name: "customers",
   insert_body: {
-    name: 'Acme Corp',
-    email: 'contact@acme.com',
-    status: 'active'
-  }
+    name: "Acme Corp",
+    email: "contact@acme.com",
+    status: "active",
+  },
 });
 ```
 
 ### Update Data
 
 ```typescript
-const result = await executeDataApi({
-  method: 'PUT',
-  table_name: 'customers',
-  x_id: 'customer_id',
-  x_column: '123',
+import { updateDataViaAthena } from "@/packages/resource-framework/adapters";
+
+const result = await updateDataViaAthena({
+  table_name: "customers",
+  x_column: "customer_id",
+  x_id: "cust-123",
   update_body: {
-    status: 'inactive'
-  }
+    status: "inactive",
+  },
 });
 ```
 
 ### Delete Data
 
 ```typescript
-const result = await executeDataApi({
-  method: 'DELETE',
-  table_name: 'customers',
-  x_id: 'customer_id',
-  x_column: '123'
+import { deleteDataViaAthena } from "@/packages/resource-framework/adapters";
+
+const result = await deleteDataViaAthena({
+  table_name: "customers",
+  x_column: "customer_id",
+  x_id: "cust-123",
 });
 ```
 
-## useApiClient Hook
+## `useApiClient`
 
-Recommended way to manage data:
+Recommended for most package consumers:
 
 ```typescript
-const { data, isLoading, insert, remove } = useApiClient({
-  table: 'customers',
-  conditions: [{ eq_column: 'status', eq_value: 'active' }],
-  columns: ['customer_id', 'name', 'email']
+const { data, isLoading, insert, update, remove } = useApiClient({
+  table: "customers",
+  conditions: [{ eq_column: "status", eq_value: "active" }],
+  columns: ["customer_id", "name", "email"],
 });
 
-// Insert
-await insert({ name: 'New Co', email: 'new@co.com' });
-
-// Delete
-await remove('customer_id', '123');
+await insert({ name: "New Co", email: "new@co.com" });
+await update("customer_id", "cust-123", { status: "inactive" });
+await remove("customer_id", "cust-123");
 ```
 
-## Request Format
+`useApiClient` injects the current user, company, and organization headers into the Athena transport automatically.
+
+## File Endpoints
+
+The package also exposes Athena-backed file helpers:
+
+```typescript
+import {
+  refreshFileUrlViaAthena,
+  uploadFileViaAthena,
+} from "@/packages/resource-framework/adapters";
+
+const formData = new FormData();
+formData.append("file", file);
+
+const upload = await uploadFileViaAthena(formData);
+
+const refreshed = await refreshFileUrlViaAthena({
+  fileKey: "rsf/org-123/customers/cust-456/invoice.pdf",
+  bucket: "suitsconnect",
+});
+```
+
+## Request Shape
+
+The framework-facing adapter contract remains:
 
 ```typescript
 {
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
   table_name: string,
-  
-  // For fetches:
   conditions?: [
     { eq_column: string, eq_value: string | number | boolean | null }
   ],
   columns?: string[],
-  
-  // For updates:
-  x_id?: string,           // column name
-  x_column?: string,       // column value
-  update_body?: object,
-  
-  // For inserts:
-  insert_body?: object
+  x_column?: string,
+  x_id?: string | number,
+  update_body?: Record<string, unknown>,
+  insert_body?: Record<string, unknown> | Record<string, unknown>[],
+  limit?: number,
+  offset?: number
 }
 ```
 
-## Response Format
-
-```typescript
-{
-  data: {
-    id?: string,
-    records?: Array<Record<string, unknown>>,
-    count?: number,
-    // ... operation-specific fields
-  },
-  error?: string
-}
-```
+The adapter maps this contract onto the Athena SDK/query builder.
 
 ## Error Handling
 
 ```typescript
 try {
-  const result = await executeDataApi({...});
+  const result = await fetchDataViaAthena({ table_name: "customers" });
   if (result.error) {
-    console.error('API Error:', result.error);
+    console.error("Athena error:", result.error);
   }
 } catch (error) {
-  console.error('Network Error:', error);
+  console.error("Transport error:", error);
 }
-```
-
-## Caching
-
-Data is cached by default. Disable with:
-
-```typescript
-const { data } = useApiClient({
-  table: 'customers',
-  // Force fresh data:
-  cache_enabled: false
-});
 ```
 
 ## See Also
 
 - [Hooks](./05-hooks.md)
-- [HTTP Adapters](./09-http-adapters.md)
+- [HTTP Adapters](./08-http-adapters.md)

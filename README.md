@@ -67,7 +67,7 @@ Most of the public API is re-exported from `index.ts`. Highlights:
 | UI primitives | `ResourceTable`, `ResourceDrilldown`, `CreateResourceDialog`, `CreateResourceButton` |
 | Drilldown helpers | `ResourceDrilldownSection`, `DrilldownSection`, `DrilldownSummary`, `SectionWidgetGroup`, `ResourceDrilldownNoEditFields`, `DrilldownActivity` |
 | Table controls | `DisplaySettings`, `TableAddButton`, `TableSearchInput`, `TablePaginationControls`, `TableFullscreenToggle`, `TableDownloadButton`, `TableDeleteDialog`, `TableTopControls`, `TableHeaderCell`, `TableBodyCell` |
-| Adapters | `drizzleInsertMany`, `withRetry`, `applyTransform` |
+| Adapters | `fetchDataViaAthena`, `insertDataViaAthena`, `updateDataViaAthena`, `deleteDataViaAthena`, `uploadFileViaAthena`, `refreshFileUrlViaAthena`, `drizzleInsertMany`, `withRetry`, `applyTransform` |
 | Utilities | `buildCategoryByKey`, `coerceByDatatype`, `buildTableColumns`, `insertRow`, `coerceValue`, `applyClientFilters`, `parseQueryFilters`, `parseQuerySort` |
 | Hooks | `useResourceContext`, `useResourceRoute`, `useTableConfiguration`, `useFetchData`, etc. |
 | Types | `ResourceRoute`, `ResourceFieldSpec`, `ColumnConfig`, `DrilldownSectionConfig`, `DrizzleTableName`, `DrizzleColumnValue`, etc. |
@@ -76,7 +76,9 @@ Most of the public API is re-exported from `index.ts`. Highlights:
 
 ### adapters
 
-- `execute-data-api.ts`: low-level wrappers around `fetch`/`axios` that call the Suitsbooks API with retry semantics. Exposes `drizzleInsertMany` for bulk inserts and `withRetry` for idempotent mutations.
+- `athena-gateway.ts`: typed CRUD adapter that routes reads and mutations through the Athena SDK and gateway.
+- `athena-files.ts`: file upload + signed URL refresh helpers that target Athena-hosted file endpoints.
+- `execute-data-api.ts`: legacy helper kept for backwards compatibility; new work should use the Athena adapters.
 - `transforms.ts`: helpers for applying server-defined `data.transforms` onto fetch responses before they reach the UI.
 
 ### components
@@ -101,7 +103,7 @@ Most of the public API is re-exported from `index.ts`. Highlights:
 ### handlers
 
 - `handle-options.ts`: exports `fetchOptions()` for populating select editors, resolves query filters, and respects `Cache-Control` headers.
-- `handle-update.ts`: mutation handler that calls the required `/update/data` API with the headers mandated in workspace rules.
+- `handle-update.ts`: mutation handler that writes through the Athena adapter.
 - `handle-csv-export.ts`: produces CSV downloads from current query state, infers column types, and exposes `handleDownloadCsv`.
 
 ### hooks
@@ -214,10 +216,14 @@ Use the exported hooks to keep UI synchronized:
 
 ## Adapters & network helpers
 
-1. `adapters/execute-data-api.ts` handles the network contracts mandated in the workspace rules:
-   - PUT to `{APP_CONFIG.api.suitsbooks}/update/data` with required headers.
-   - `drizzleInsertMany` for batch inserts and `withRetry` for safe retries.
-2. `handlers/handle-options.ts`, `handle-update.ts`, and `handle-csv-export.ts` call these adapters so every component goes through the same HTTP surface and caching controls.
+1. `adapters/athena-gateway.ts` is the primary data plane:
+   - Reads and writes go through the typed Athena SDK (`@xylex-group/athena`).
+   - Tenant/user headers are injected from framework context.
+   - Responses are normalized so the rest of the framework can stay stable during migration.
+2. `adapters/athena-files.ts` handles file transfer endpoints hosted behind the Athena base URL:
+   - `uploadFileViaAthena()` posts multipart form data to `/api/upload`.
+   - `refreshFileUrlViaAthena()` refreshes signed file URLs via `/api/files/refresh-url`.
+3. `handlers/handle-options.ts`, `handle-update.ts`, and the core hooks call these adapters so package consumers do not have to manage transport details themselves.
 
 ## Registries & constructors
 
@@ -552,7 +558,7 @@ type Amount = DrizzleColumnValue<"invoices", "amount">; // number
 
 ## Force External API Updates
 
-You can force all update operations to use the external API at `api.suitsbooks.com` instead of the local update action:
+The `force_external_api_updates` flag is still accepted for route compatibility, but it now routes through the Athena gateway adapter rather than a direct browser call to a legacy endpoint:
 
 ```typescript
 // In RESOURCE_ROUTES
@@ -561,17 +567,17 @@ export const RESOURCE_ROUTES = {
     table: "invoices",
     idColumn: "invoice_id",
     
-    // Force all updates to use external API
+    // Keep using the external Athena-backed mutation path
     force_external_api_updates: true, // default: false
   }
 };
 ```
 
 When enabled:
-- All edit/update operations bypass the local `updateData` action
-- Updates are sent directly to `https://api.suitsbooks.com/update/data`
-- Useful for testing, debugging, or when local updates are problematic
-- If `false` (default), uses local action with external API as fallback
+- All edit/update operations stay on the Athena adapter path.
+- No client-embedded legacy API secret is used.
+- Useful while migrating routes that still need the gateway-backed mutation contract.
+- If `false` (default), the same Athena adapter path is used without the compatibility flag.
 
 ## Header Actions Integration
 
@@ -731,7 +737,7 @@ Part of the Suitsbooks project.
 
 ## Top Architecture Failure Modes
 
-This framework is a metadata-driven UI layer where the critical runtime path is: UI components (`ResourceTable`/`ResourceDrilldown`) -> `useApiClient`/server actions -> data API/DB, plus file flows via `/api/upload` and signed S3/MinIO URLs. The highest operational risk is concentrated in network dependency health and consistency between storage and metadata writes.
+This framework is a metadata-driven UI layer where the critical runtime path is: UI components (`ResourceTable`/`ResourceDrilldown`) -> Athena SDK adapter -> Athena gateway/DB, plus file flows via Athena-hosted upload and signed S3/MinIO URL refresh endpoints. The highest operational risk is concentrated in network dependency health and consistency between storage and metadata writes.
 
 - Failure mode: Data-plane dependency outage. Trigger: server-action/data API or fallback endpoint unavailability. Symptoms: tables fail to load, updates fail, repeated retries, user-facing errors. Detection: elevated client `isError`, higher mutation failure rate, API p95/p99 latency spikes. Mitigation: move all CRUD behind Athena gateway, add circuit breaking and bounded retries, and standardize error envelopes.
 - Failure mode: Read-after-write inconsistency. Trigger: update succeeds but immediate refetch returns stale/cached row. Symptoms: values appear reverted, duplicate save attempts, mismatch logs. Detection: compare update payload vs post-update read in telemetry. Mitigation: require canonical updated row in Athena write responses, enforce consistent cache policy per route, and use version/etag checks.
@@ -741,7 +747,7 @@ This framework is a metadata-driven UI layer where the critical runtime path is:
 
 ### Confirmed vs Inferred
 
-- Confirmed from repo: UI layer, `useApiClient` data access, direct external fallback update path, `/api/upload` usage, and signed URL refresh flow.
+- Confirmed from repo: UI layer, `useApiClient` data access, Athena SDK adapter, Athena-configured file upload path, and signed URL refresh flow.
 - Inferred due to missing backend internals here: exact DB topology, queueing/event infrastructure, and gateway-level HA posture.
 
 ### Migration Target

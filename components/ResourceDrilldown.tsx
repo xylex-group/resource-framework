@@ -4,7 +4,7 @@ import React, { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useApiClient } from "@/packages/resource-framework/hooks/use-api-client";
 import { useUpdateData } from "@/packages/resource-framework/hooks/use-update-data";
-import { fetchData } from "@/lib/actions/data";
+import { fetchDataViaAthena } from "@/packages/resource-framework/adapters/athena-gateway";
 
 import { useNotification } from "@/hooks/use-notifications";
 import { Code2, Pencil, TextSelect, X } from "lucide-react";
@@ -144,7 +144,7 @@ export const ResourceDrilldown = ({
         }
         setResourceLoading(true);
         async function fetchRouteBy(column: "resource_name" | "table") {
-          const response = await fetchData({
+          const response = await fetchDataViaAthena({
             table_name: "resource_routes",
             schema: "public",
             conditions: [{ eq_column: column, eq_value: resource_name }],
@@ -578,7 +578,7 @@ export const ResourceDrilldown = ({
           promises.push(
             (async () => {
               try {
-                const response = await fetchData({
+                const response = await fetchDataViaAthena({
                   table_name: table,
                   schema: "public",
                   conditions: [

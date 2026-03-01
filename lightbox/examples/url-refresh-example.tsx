@@ -95,9 +95,10 @@ export function UrlRefreshExample() {
             this
           </li>
           <li>
-            The system automatically calls{" "}
+            The system automatically calls the Athena-backed refresh endpoint
+            via{" "}
             <code className="text-xs bg-hover px-1 py-0.5 rounded">
-              /api/files/refresh-url
+              refreshFileUrlViaAthena()
             </code>{" "}
             to get a fresh URL
           </li>

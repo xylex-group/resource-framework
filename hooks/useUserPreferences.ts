@@ -1,8 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { fetchData, insertData, updateData } from "@/lib/actions/data";
 import type { ResourceRoute } from "../resource-types";
+import {
+  fetchDataViaAthena,
+  insertDataViaAthena,
+  updateDataViaAthena,
+} from "../adapters/athena-gateway";
 
 interface UserPreferenceRow {
   id?: number;
@@ -60,7 +64,7 @@ export const useUserPreferences = (
           return;
         }
 
-        const response = await fetchData({
+        const response = await fetchDataViaAthena({
           table_name: "user_preferences",
           conditions: [
             { eq_column: "user_id", eq_value: user.user_id ?? null },
@@ -120,7 +124,7 @@ export const useUserPreferences = (
 
         // If we don't have a preference ID yet, try to fetch it
         if (idToUse == null) {
-          const response = await fetchData({
+          const response = await fetchDataViaAthena({
             table_name: "user_preferences",
             conditions: [
               { eq_column: "user_id", eq_value: user.user_id ?? null },
@@ -139,7 +143,7 @@ export const useUserPreferences = (
 
         // Update existing preference
         if (idToUse != null && user.user_id != null) {
-          await updateData({
+          await updateDataViaAthena({
             table_name: "user_preferences",
             x_column: "user_id",
             x_id: user.user_id,
@@ -148,7 +152,7 @@ export const useUserPreferences = (
           prefIdRef.current = idToUse;
         } // Insert new preference if initial fetch was successful (table exists)
         else if (initialPrefsFetchOkRef.current === true) {
-          const response = await insertData({
+          const response = await insertDataViaAthena({
             table_name: "user_preferences",
             insert_body: {
               user_id: user.user_id,

@@ -1,8 +1,8 @@
 "use client";
 
-import { fetchData } from "@/lib/actions/data";
 import { useUserStore } from "@/lib/stores";
 import { useEventsStream } from "@/packages/resource-framework/hooks/use-events-stream";
+import { fetchDataViaAthena } from "@/packages/resource-framework/adapters/athena-gateway";
 import React, {
   createContext,
   useCallback,
@@ -78,12 +78,12 @@ export const ResourceProvider: React.FC<ResourceProviderProps> = ({
       // Fetch all resources in parallel
       const [prefsRes, scopesRes, notificationsRes, flagsRes] = await Promise
         .all([
-          fetchData({
+          fetchDataViaAthena({
             table_name: "user_preferences",
             conditions: [{ eq_column: "user_id", eq_value: user.user_id }],
             limit: 100,
           }),
-          fetchData({
+          fetchDataViaAthena({
             table_name: "user_permission_scopes",
             conditions: [
               { eq_column: "user_id", eq_value: user.user_id },
@@ -91,7 +91,7 @@ export const ResourceProvider: React.FC<ResourceProviderProps> = ({
             ],
             limit: 1000,
           }),
-          fetchData({
+          fetchDataViaAthena({
             table_name: "notifications",
             conditions: [{
               eq_column: "company_id",
@@ -99,7 +99,7 @@ export const ResourceProvider: React.FC<ResourceProviderProps> = ({
             }],
             limit: 100,
           }),
-          fetchData({
+          fetchDataViaAthena({
             table_name: "v_flags",
             schema: "public",
             conditions: [{ eq_column: "user_id", eq_value: user.user_id }],

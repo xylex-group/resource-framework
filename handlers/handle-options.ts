@@ -1,7 +1,9 @@
-import type { DataCondition } from "@/lib/actions/data";
-import { fetchData } from "@/lib/actions/data";
 import type { DataSourceConfig, SelectOption } from "@/lib/types";
 import type { ResourceRoute } from "../resource-types";
+import {
+    fetchDataViaAthena,
+    type DataCondition,
+} from "../adapters/athena-gateway";
 
 export type { DataSourceConfig };
 
@@ -40,7 +42,7 @@ export const fetchOptions = async ({
             });
         }
 
-        const response = await fetchData({
+        const response = await fetchDataViaAthena({
             table_name: table,
             schema: "public",
             conditions,

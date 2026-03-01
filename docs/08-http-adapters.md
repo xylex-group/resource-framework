@@ -1,129 +1,84 @@
 # HTTP Adapters
 
-HTTP adapters handle communication with backend APIs.
+HTTP transport is centralized behind Athena-backed adapters.
 
-## Request Headers
+## Primary Adapters
 
-All requests include standard headers:
+- `fetchDataViaAthena`
+- `insertDataViaAthena`
+- `updateDataViaAthena`
+- `deleteDataViaAthena`
+- `uploadFileViaAthena`
+- `refreshFileUrlViaAthena`
 
-```typescript
-{
-  'X-Company-Id': user.company_id,
-  'X-Organization-Id': user.organization_id,
-  'X-User-Id': user.user_id,
-  'Content-Type': 'application/json'
-}
-```
+These adapters isolate the rest of the framework from the underlying SDK and endpoint details.
 
-## Endpoints
+## Headers
 
-### Fetch Data
-
-```
-POST /api/fetch/data
-
-Body: {
-  table_name: "customers",
-  conditions: [...],
-  columns: [...]
-}
-```
-
-### Insert Data
-
-```
-PUT /api/data/insert
-
-Body: {
-  table_name: "customers",
-  insert_body: { name: "...", ... }
-}
-```
-
-### Update Data
-
-```
-PUT /api/update/data
-
-Body: {
-  table_name: "customers",
-  x_id: "customer_id",
-  x_column: "123",
-  update_body: { status: "..." }
-}
-```
-
-### Delete Data
-
-```
-DELETE /api/data/delete
-
-Body: {
-  table_name: "customers",
-  x_id: "customer_id",
-  x_column: "123"
-}
-```
-
-## Custom Adapters
-
-Implement `HttpAdapter`:
-
-```typescript
-interface HttpAdapter {
-  fetch(request: FetchRequest): Promise<FetchResponse>;
-  insert(request: InsertRequest): Promise<InsertResponse>;
-  update(request: UpdateRequest): Promise<UpdateResponse>;
-  delete(request: DeleteRequest): Promise<DeleteResponse>;
-}
-
-class CustomAdapter implements HttpAdapter {
-  async fetch(request) {
-    const response = await fetch('/custom-api/fetch', {
-      method: 'POST',
-      body: JSON.stringify(request)
-    });
-    return response.json();
-  }
-  // ... implement other methods
-}
-```
-
-## Error Responses
+Athena requests are sent with:
 
 ```typescript
 {
-  error: "Unauthorized",
-  message: "User does not have permission to access this resource",
-  statusCode: 403
+  "X-User-Id": user.user_id,
+  "X-Company-Id": user.company_id,
+  "X-Organization-Id": user.organization_id,
+  "X-Athena-Client": APP_CONFIG.athena.standard_client,
 }
 ```
 
-## Response Transformation
+The API key is supplied through Athena config (`APP_CONFIG.athena.api_key` or environment fallback) inside the adapter layer, not from ad hoc browser call sites.
 
-Transform responses before use:
+## Data Endpoints
+
+The SDK-backed CRUD helpers map to Athena gateway routes:
+
+- `POST /gateway/fetch`
+- `PUT /gateway/insert`
+- `POST /gateway/update`
+- `DELETE /gateway/delete`
+
+## File Endpoints
+
+The file helpers target Athena-hosted file routes:
+
+- `POST /api/upload`
+- `POST /api/files/refresh-url`
+
+The base URL defaults to `APP_CONFIG.athena.db_api_url` and can be overridden in adapter config for testing.
+
+## Transformation
+
+Response shaping happens in the adapter layer:
+
+- single-row mutation results are normalized back to a single object
+- array fetches stay arrays
+- file upload responses are reduced to the returned `data` payload
+- refresh-url helpers throw on invalid or missing signed URLs
+
+## Custom Use
 
 ```typescript
-import { createTransformAdapter } from '@/packages/resource-framework/adapters/transforms';
+import {
+  fetchDataViaAthena,
+  uploadFileViaAthena,
+} from "@/packages/resource-framework/adapters";
 
-const adapter = createTransformAdapter({
-  fetch: (response) => {
-    // Transform fetch response
-    return response.data.map(normalizeRecord);
-  }
+const rows = await fetchDataViaAthena({
+  table_name: "customers",
+  limit: 25,
 });
+
+const formData = new FormData();
+formData.append("file", file);
+
+const uploaded = await uploadFileViaAthena(formData);
 ```
 
-## Authentication
+## Legacy Note
 
-All requests are authenticated via:
-- User context (from session)
-- Organization context
-- Company context
-
-Ensure proper scopes are set before making requests.
+`execute-data-api.ts` remains in the package for backwards compatibility, but new code should not depend on it.
 
 ## See Also
 
-- [Data API](./07-data-api.md)
-- [Hooks](./05-hooks.md)
+- [Athena Data API](./07-data-api.md)
+- [Testing](./25-testing.md)

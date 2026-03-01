@@ -117,6 +117,7 @@ The framework provides a specialized upload status notification that tracks mult
 ### Usage
 
 ```typescript
+import { uploadFileViaAthena } from "@/packages/resource-framework/adapters";
 import { useFileUploadStatus } from "@/packages/resource-framework/notifications/upload-status";
 
 function FileUploader() {
@@ -163,14 +164,7 @@ function FileExplorerWidget() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const response = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new Error("Upload failed");
-        }
+        await uploadFileViaAthena(formData);
       }
     } finally {
       finishUpload(uploadId);

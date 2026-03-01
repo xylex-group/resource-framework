@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchData } from "@/lib/actions/data";
 import { RESOURCE_ROUTES } from "../registries/resource-routes";
 import { type ResourceRoute } from "../resource-types";
+import { fetchDataViaAthena } from "../adapters/athena-gateway";
 
 /**
  * Hook to fetch and manage resource route configuration.
@@ -62,7 +62,7 @@ export const useResourceRoute = (
 
         // Helper function to fetch route by column
         async function fetchRouteBy(column: "resource_name" | "table") {
-          const response = await fetchData({
+          const response = await fetchDataViaAthena({
             table_name: "resource_routes",
             conditions: [{ eq_column: column, eq_value: resourceName || "" }],
             limit: 1,

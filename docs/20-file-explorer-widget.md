@@ -112,17 +112,17 @@ Example file record:
 Upload Flow:
 1. User selects file(s)
 2. Validate file size against maxFileSizeMB
-3. POST to /api/upload with:
+3. Call `uploadFileViaAthena()` which POSTs multipart form data to the Athena-hosted `/api/upload` route with:
    - file (multipart)
    - resolvedOrganizationId
    - projectId
    - objectPath (template resolved)
-4. Server:
+4. Athena-backed file service:
    - Constructs S3 path: rsf/[org_id]/[resource_name]/[resource_id]/[filename]
    - Uploads to S3 at: s3://suitsconnect/[path]
    - Returns presigned URL (24 hour expiry)
 5. Client:
-   - Stores file metadata in database
+   - Stores file metadata through the Athena CRUD adapter
    - Displays file in explorer
 ```
 

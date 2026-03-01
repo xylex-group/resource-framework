@@ -78,13 +78,31 @@ describe('ResourceTable', () => {
 ```typescript
 import { vi } from 'vitest';
 
-vi.mock('@/packages/resource-framework/adapters/execute-data-api', () => ({
-  executeDataApi: vi.fn().mockResolvedValue({
-    data: [{ id: 1, name: 'Test' }]
-  })
+vi.mock('@xylex-group/athena', () => ({
+  Backend: { Athena: { type: 'athena' } },
+  createClient: vi.fn(() => ({
+    from: vi.fn(),
+  })),
 }));
 
-// Now useApiClient will use mock data
+// Now Athena-backed adapters can be tested without a live gateway
+```
+
+## Adapter Contract Tests
+
+Use contract tests for the Athena adapter boundary:
+
+```typescript
+import { fetchDataViaAthena } from '@/packages/resource-framework/adapters';
+
+it('maps framework fetch requests onto Athena', async () => {
+  const result = await fetchDataViaAthena({
+    table_name: 'customers',
+    conditions: [{ eq_column: 'organization_id', eq_value: 'org-1' }],
+  });
+
+  expect(result.error).toBeNull();
+});
 ```
 
 ## Test Fixtures

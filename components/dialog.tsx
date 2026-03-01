@@ -17,8 +17,8 @@ import {
   ComboBoxItem,
 } from "@/components/ui/combo-box";
 import { useUserStore } from "@/lib/stores";
-import { fetchData } from "@/lib/actions/data";
 import type { FieldEditorSpec, FieldSpec, Primitive } from "../resource-types";
+import { fetchDataViaAthena } from "../adapters/athena-gateway";
 
 export type { FieldEditorSpec, FieldSpec, Primitive };
 
@@ -198,7 +198,7 @@ export function SpecDrivenDialog(props: {
                 });
               }
 
-              const result = await fetchData({
+              const result = await fetchDataViaAthena({
                 table_name: table,
                 conditions: conditions.map((c) => ({
                   eq_column: String(c.eq_column),

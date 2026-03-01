@@ -5,7 +5,10 @@ import {
   type LeanColumnSpec,
 } from "@/packages/resource-framework/constructors/column-registry";
 import { coerceByDatatype } from "@/packages/resource-framework/utils/coerce";
-import { insertData, updateData } from "@/lib/actions/data";
+import {
+  insertDataViaAthena,
+  updateDataViaAthena,
+} from "@/packages/resource-framework/adapters/athena-gateway";
 import { Dispatch, SetStateAction } from "react";
 
 interface HandleSaveAllParams {
@@ -218,7 +221,7 @@ async function syncProductPrice({
   try {
     if (priceIdPrimary) {
       // Update existing price record
-      await updateData({
+      await updateDataViaAthena({
         table_name: "prices",
         schema: "public",
         x_column: "price_id",
@@ -230,7 +233,7 @@ async function syncProductPrice({
     } else {
       // Create new price record and link to product
 
-      const insertResponse = await insertData({
+      const insertResponse = await insertDataViaAthena({
         table_name: "prices",
         schema: "public",
         insert_body: {
@@ -258,7 +261,7 @@ async function syncProductPrice({
 
       if (newPriceId) {
         // Link the new price to the product
-        await updateData({
+        await updateDataViaAthena({
           table_name: "products",
           schema: "public",
           x_column: "product_id",

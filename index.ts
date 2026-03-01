@@ -38,6 +38,14 @@ export {
 } from "./registries/resource-drilldown-routes";
 export { ResourceDrilldown } from "./components/ResourceDrilldown";
 export { drizzleInsertMany, withRetry } from "./adapters/execute-data-api";
+export {
+  deleteDataViaAthena,
+  fetchDataViaAthena,
+  insertDataViaAthena,
+  updateDataViaAthena,
+  uploadFileViaAthena,
+  refreshFileUrlViaAthena,
+} from "./adapters";
 export { applyTransform } from "./adapters/transforms";
 export { buildCategoryByKey } from "./utils/categories";
 export { coerceByDatatype } from "./utils/coerce";

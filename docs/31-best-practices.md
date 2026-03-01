@@ -139,7 +139,7 @@ it('handles empty data', () => {
 
 2. **Mock External Calls**
 ```typescript
-vi.mock('@/packages/resource-framework/adapters/execute-data-api');
+vi.mock('@xylex-group/athena');
 ```
 
 3. **Test Error States**

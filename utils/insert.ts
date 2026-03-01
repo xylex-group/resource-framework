@@ -1,6 +1,6 @@
 "use client";
 
-import { insertData } from "@/lib/actions/data";
+import { insertDataViaAthena } from "../adapters/athena-gateway";
 
 /**
  * Inserts a single row into a database table
@@ -12,7 +12,7 @@ export async function insertRow(
   table: string,
   insertBody: Record<string, unknown>,
 ): Promise<{ ok: boolean; data?: unknown; error?: string }> {
-  const resp = await insertData({
+  const resp = await insertDataViaAthena({
     table_name: table,
     insert_body: insertBody,
   });

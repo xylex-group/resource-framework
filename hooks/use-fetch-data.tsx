@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { fetchData } from "@/lib/actions/data";
+import { fetchDataViaAthena } from "../adapters/athena-gateway";
 import { applyCacheStateRegistry } from "@/lib/cache-state-registry";
 import { useUserStore } from "@/lib/stores";
 
@@ -97,7 +97,7 @@ export function useFetchData<T = unknown>({
 						: [conditionsRef.current]
 					: [];
 
-				const response = await fetchData({
+				const response = await fetchDataViaAthena({
 					table_name: table,
 					conditions: conditionsArray.map((c) => ({
 						eq_column: c.eq_column,

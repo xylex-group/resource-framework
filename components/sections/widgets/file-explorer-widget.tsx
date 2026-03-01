@@ -26,6 +26,7 @@ import type {
 import { Container } from "@/components/ui/container";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/lib/stores";
+import { uploadFileViaAthena } from "@/packages/resource-framework/adapters/athena-files";
 import { useFileUploadStatus } from "@/packages/resource-framework/notifications";
 
 type FileRow = Record<string, unknown> & {
@@ -353,45 +354,18 @@ function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
               payload.append("s3_client", JSON.stringify(props.s3_client));
             }
 
-            const response = await fetch("/api/upload", {
-              method: "POST",
-              body: payload,
-            });
-
-            if (!response.ok) {
-              const errorText = await response.text();
-              console.error(
-                "[FileExplorerWidget] handleUpload response not ok:",
-                {
-                  status: response.status,
-                  statusText: response.statusText,
-                  errorText,
-                },
-              );
-              throw new Error(errorText || "Upload failed");
-            }
-
-            const json = await response.json();
-
-            if (json?.error) {
-              console.error(
-                "[FileExplorerWidget] handleUpload server error:",
-                json.error,
-              );
-              throw new Error(`Upload failed: ${json.error}`);
-            }
-
-            const url = json?.data?.url;
+            const uploadResult = await uploadFileViaAthena(payload);
+            const url = uploadResult?.url;
             if (!url) {
               console.error(
                 "[FileExplorerWidget] handleUpload no url in response:",
-                json,
+                uploadResult,
               );
               throw new Error("Upload returned no url");
             }
 
-            const fileUrlFromResponse = json?.data?.file_url ?? url;
-            const storageKey = json?.data?.storage_key ??
+            const fileUrlFromResponse = uploadResult?.file_url ?? url;
+            const storageKey = uploadResult?.storage_key ??
               resolvedObjectPath ??
               defaultObjectPath ??
               undefined;
@@ -404,7 +378,7 @@ function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
               : url;
             const finalUrl = fileUrlFromResponse ?? constructedUrl;
             const currentTime = Number(
-              json?.data?.time ?? Math.floor(Date.now() / 1000),
+              uploadResult?.time ?? Math.floor(Date.now() / 1000),
             );
             // THIS CONTROLS THE FILES UPLOAD
             const insertBody: Record<string, unknown> = {
@@ -418,7 +392,7 @@ function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
               time: currentTime,
               uploaded_by: user?.user_id,
               storage_key: storageKey,
-              prefix_path: json?.data?.prefixPath,
+              prefix_path: uploadResult?.prefixPath,
             };
 
             if (resourceId) {
@@ -428,7 +402,7 @@ function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
             if (resolvedOrganizationId) {
               insertBody[organizationColumn] = resolvedOrganizationId;
             }
-            const prefixPath = json.data?.prefixPath ?? resolvedObjectPath;
+            const prefixPath = uploadResult?.prefixPath ?? resolvedObjectPath;
             if (prefixPath) {
               insertBody.prefix_path = prefixPath;
             }

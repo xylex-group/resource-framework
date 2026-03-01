@@ -2,6 +2,8 @@
  * Utility functions for handling expired S3/MinIO URLs
  */
 
+import { refreshFileUrlViaAthena } from "@/packages/resource-framework/adapters/athena-files";
+
 /**
  * Extract the file key (object path) from an S3/MinIO URL
  * Preserves URL encoding to avoid double-encoding issues
@@ -160,39 +162,19 @@ export async function refreshFileUrl(
     bucket,
   );
 
-  const response = await fetch("/api/files/refresh-url", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      fileKey,
-      bucket,
-    }),
-  });
+  const data = await refreshFileUrlViaAthena({
+    fileKey,
+    bucket,
+  }) as RefreshApiResponse;
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    console.error("[refreshFileUrl] API error:", error);
-    throw new Error(error.message || "Failed to refresh URL");
-  }
-
-  const data = (await response.json()) as RefreshApiResponse;
-
-  if (!data.success || !data.url) {
+  if (!data.url) {
     console.error("[refreshFileUrl] Invalid API response:", data);
     throw new Error("Invalid response from refresh API");
   }
 
   console.log("[refreshFileUrl] Successfully refreshed URL");
 
-  const headerExpires = EXPIRE_HEADER_KEYS.reduce<number | null>(
-    (prev, key) => prev ?? parseExpiresValue(response.headers.get(key)),
-    null,
-  );
-
   const expiresIn =
-    headerExpires ??
     parseExpiresValue(data.expiresIn?.toString()) ??
     extractExpiresFromUrl(data.url);
 
