@@ -791,12 +791,16 @@ export type ColumnMeta = {
 export type ResourceFormRow = {
   resource_form_id: string;
   slug: string;
+  title?: string;
+  description?: string;
   entity: string;
   source_schema_url?: string | null;
   source_schema?: Record<string, unknown>;
   source_schema_provider?: string | null;
   schema?: Record<string, unknown>;
+  default_values?: Record<string, unknown> | null;
   is_active?: boolean;
+  sort_order?: number | null;
 };
 
 /**

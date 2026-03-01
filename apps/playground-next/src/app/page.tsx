@@ -1,5 +1,5 @@
-import { PlaygroundClient } from "./playground-client";
+import { ResourceFormsPlaygroundClient } from "./resource-forms-playground-client";
 
 export default function Page() {
-  return <PlaygroundClient />;
+  return <ResourceFormsPlaygroundClient />;
 }

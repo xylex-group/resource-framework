@@ -2,8 +2,13 @@ import Link from "next/link";
 
 const sections = [
   {
+    title: "Resource forms demo",
+    description: "Inspect the `resource_forms` table contract and render each stored schema through the shared form runtime.",
+    href: "/demo/forms"
+  },
+  {
     title: "Form playground",
-    description: "Run the multi-step forms powered by EntityFormV2 and playground schemas.",
+    description: "Run the same forms from the `resource_forms` table in a playground-oriented layout.",
     href: "/playground"
   },
   {

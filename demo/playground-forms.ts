@@ -1,4 +1,4 @@
-import type { ResourceFormSchema } from "../resource-types";
+import type { ResourceFormRow, ResourceFormSchema } from "../resource-types";
 
 export type PlaygroundFormDefinition = {
   id: string;
@@ -267,3 +267,19 @@ export const playgroundFormDefinitions: PlaygroundFormDefinition[] = [
     },
   },
 ];
+
+export const playgroundResourceFormRows: ResourceFormRow[] =
+  playgroundFormDefinitions.map((definition, index) => ({
+    resource_form_id: `resource-form-${definition.id}`,
+    slug: definition.id,
+    title: definition.title,
+    description: definition.description,
+    entity: definition.schema.entity,
+    schema: definition.schema as Record<string, unknown>,
+    source_schema: definition.schema as Record<string, unknown>,
+    source_schema_provider: "resource-framework-demo",
+    default_values:
+      (definition.defaultValues as Record<string, unknown> | undefined) ?? null,
+    is_active: true,
+    sort_order: index,
+  }));

@@ -1,3 +1,5 @@
+import { playgroundResourceFormRows } from "@/lib/resource-forms";
+
 export type DataCondition = {
   eq_column: string;
   eq_value: string | number | boolean | null;
@@ -156,6 +158,9 @@ const initialTables: Record<string, TableData> = {
       sidebar_route: "/demo/contacts",
     },
   ],
+  resource_forms: playgroundResourceFormRows.map((row) => ({
+    ...row,
+  })),
 };
 
 const tableStore: Record<string, TableData> = {};

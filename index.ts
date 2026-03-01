@@ -238,6 +238,12 @@ export {
   isEmptyValue,
 } from "./components/resource_drilldown_helpers";
 export { EntityFormV2 } from "./components/form-v2/entity-form_v2";
+export {
+  parseResourceFormSchema,
+  resolveResourceFormRow,
+  resolveResourceFormRows,
+  type ResolvedResourceForm,
+} from "./utils/resource-forms";
 export { DisplaySettings } from "./components/table/display-settings";
 export { useAddResourceButton } from "./components/table/AddResourceButton";
 export { createActionsColumn } from "./components/table/ActionsColumn";
@@ -278,3 +284,4 @@ export {
 
 export type { PlaygroundFormDefinition } from "./demo/playground-forms";
 export { playgroundFormDefinitions } from "./demo/playground-forms";
+export { playgroundResourceFormRows } from "./demo/playground-forms";
