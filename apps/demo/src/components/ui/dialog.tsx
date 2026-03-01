@@ -36,6 +36,26 @@ export const DialogContent = ({
   </div>
 );
 
+export const DialogHeader = ({
+  children,
+  className,
+  ...props
+}: DialogPartProps) => (
+  <div className={className} {...props}>
+    {children}
+  </div>
+);
+
+export const DialogFooter = ({
+  children,
+  className,
+  ...props
+}: DialogPartProps) => (
+  <div className={className} {...props}>
+    {children}
+  </div>
+);
+
 export const DialogTitle = ({ children, className, ...props }: DialogPartProps) => (
   <h2 className={className} {...props}>
     {children}

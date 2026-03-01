@@ -1,6 +1,5 @@
 import { UseNotificationOptions } from "@/hooks/use-notifications";
-import type { DataCondition } from "@/lib/actions/data";
-import { fetchData, updateData } from "@/lib/actions/data";
+import { updateDataViaAthena } from "../adapters/athena-gateway";
 
 export const handleUpdate = async (
     newValue: unknown,
@@ -23,7 +22,7 @@ export const handleUpdate = async (
         resource_id !== "new"
     ) {
         try {
-            const response = await updateData({
+            const response = await updateDataViaAthena({
                 table_name: updateTable,
                 schema: "public",
                 x_column: updateIdColumn,

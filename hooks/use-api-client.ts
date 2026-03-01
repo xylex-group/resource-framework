@@ -8,12 +8,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  deleteDataViaAthena,
+  fetchDataViaAthena,
+  insertDataViaAthena,
   type DataCondition,
-  deleteData,
-  fetchData,
-  insertData,
-  updateData,
-} from "@/lib/actions/data";
+  updateDataViaAthena,
+} from "../adapters/athena-gateway";
+import { useUserStore } from "@/lib/stores";
 
 interface Condition {
   eq_column: string;
@@ -43,7 +44,12 @@ export interface UseApiClientMultiProps extends UseApiClientBaseProps {
 export type UseApiClientProps = UseApiClientSingleProps | UseApiClientMultiProps;
 
 // Helper to build client for a single table
-function buildClientFor<T>(tableName: string, schema: string, forceExternalApi: boolean = false) {
+function buildClientFor<T>(
+  tableName: string,
+  schema: string,
+  forceExternalApi: boolean = false,
+  athenaHeaders: Record<string, string> = {},
+) {
   const fetchWhere = async ({
     conditions: where = [],
     columns: cols,
@@ -63,13 +69,15 @@ function buildClientFor<T>(tableName: string, schema: string, forceExternalApi: 
     try {
       const effectiveLimit = one ? 1 : (lim ?? 100);
 
-      const response = await fetchData({
+      const response = await fetchDataViaAthena<T[]>({
         table_name: tableName,
         schema: sch || schema,
         conditions: where as DataCondition[],
         columns: cols,
         limit: effectiveLimit,
         offset: off ?? 0,
+      }, {
+        headers: athenaHeaders,
       });
 
       if (response.error) {
@@ -91,10 +99,12 @@ function buildClientFor<T>(tableName: string, schema: string, forceExternalApi: 
 
   const insert = async (insertBody: Partial<T>): Promise<T> => {
     try {
-      const response = await insertData({
+      const response = await insertDataViaAthena<T>({
         table_name: tableName,
         schema,
         insert_body: insertBody as Record<string, unknown>,
+      }, {
+        headers: athenaHeaders,
       });
 
       if (response.error) {
@@ -115,10 +125,12 @@ function buildClientFor<T>(tableName: string, schema: string, forceExternalApi: 
         return [];
       }
 
-      const response = await insertData({
+      const response = await insertDataViaAthena<T | T[]>({
         table_name: tableName,
         schema,
         insert_body: rows as Record<string, unknown>[],
+      }, {
+        headers: athenaHeaders,
       });
 
       if (response.error) {
@@ -141,42 +153,8 @@ function buildClientFor<T>(tableName: string, schema: string, forceExternalApi: 
     id: string | number,
     updateBody: Record<string, unknown>,
   ): Promise<T> => {
-    // If forced to use external API, skip local update and go straight to external API
     if (forceExternalApi) {
-      console.log("[apiClient.update] Forced to use external API");
-      try {
-        console.log("[apiClient.update] Calling external API at api.suitsbooks.com");
-        const fallbackResponse = await fetch('https://api.suitsbooks.com/update/data', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': '0bX3I2fTMACUNTHNJC0lChzGXWl_V6kXPI_i8b0153a5',
-            'x-athena-client': 'railway_direct',
-          },
-          body: JSON.stringify({
-            table_name: tableName,
-            x_id: id,
-            x_column: idColumn,
-            update_body: updateBody,
-          }),
-        });
-
-        if (!fallbackResponse.ok) {
-          const errorText = await fallbackResponse.text();
-          console.error("[apiClient.update] External API failed:", errorText);
-          throw new Error(`External API returned ${fallbackResponse.status}: ${errorText}`);
-        }
-
-        const fallbackData = await fallbackResponse.json();
-        console.log("[apiClient.update] External API successful:", fallbackData);
-        
-        return fallbackData as T;
-      } catch (externalError) {
-        console.error("[apiClient.update] External API error:", externalError);
-        throw new Error(
-          externalError instanceof Error ? externalError.message : "Failed to update via external API",
-        );
-      }
+      console.log("[apiClient.update] forceExternalApi is enabled; using Athena gateway SDK");
     }
 
     try {
@@ -188,12 +166,14 @@ function buildClientFor<T>(tableName: string, schema: string, forceExternalApi: 
         update_body: updateBody,
       });
 
-      const response = await updateData({
+      const response = await updateDataViaAthena<T | T[]>({
         table_name: tableName,
         schema,
         x_column: idColumn,
         x_id: id,
         update_body: updateBody,
+      }, {
+        headers: athenaHeaders,
       });
 
       console.log("[apiClient.update] updateData response:", response);
@@ -207,7 +187,7 @@ function buildClientFor<T>(tableName: string, schema: string, forceExternalApi: 
       
       // Verify the update by fetching the record
       try {
-        const verifyResponse = await fetchData({
+        const verifyResponse = await fetchDataViaAthena<T[]>({
           table_name: tableName,
           schema,
           conditions: [{
@@ -215,6 +195,8 @@ function buildClientFor<T>(tableName: string, schema: string, forceExternalApi: 
             eq_value: id as string | number | boolean | null,
           }],
           limit: 1,
+        }, {
+          headers: athenaHeaders,
         });
 
         console.log("[apiClient.update] Verification fetch response:", verifyResponse);
@@ -320,42 +302,9 @@ function buildClientFor<T>(tableName: string, schema: string, forceExternalApi: 
 
       return response.data as T;
     } catch (error) {
-      console.error("[apiClient.update] Primary update failed, trying fallback API:", error);
-      
-      // Fallback to external API
-      try {
-        console.log("[apiClient.update] Calling fallback API at api.suitsbooks.com");
-        const fallbackResponse = await fetch('https://api.suitsbooks.com/update/data', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': '0bX3I2fTMACUNTHNJC0lChzGXWl_V6kXPI_i8b0153a5',
-            'x-athena-client': 'railway_direct',
-          },
-          body: JSON.stringify({
-            table_name: tableName,
-            x_id: id,
-            x_column: idColumn,
-            update_body: updateBody,
-          }),
-        });
-
-        if (!fallbackResponse.ok) {
-          const errorText = await fallbackResponse.text();
-          console.error("[apiClient.update] Fallback API failed:", errorText);
-          throw new Error(`Fallback API returned ${fallbackResponse.status}: ${errorText}`);
-        }
-
-        const fallbackData = await fallbackResponse.json();
-        console.log("[apiClient.update] Fallback API successful:", fallbackData);
-        
-        return fallbackData as T;
-      } catch (fallbackError) {
-        console.error("[apiClient.update] Fallback API also failed:", fallbackError);
-        throw new Error(
-          error instanceof Error ? error.message : "Failed to update data",
-        );
-      }
+      throw new Error(
+        error instanceof Error ? error.message : "Failed to update data",
+      );
     }
   };
 
@@ -365,12 +314,14 @@ function buildClientFor<T>(tableName: string, schema: string, forceExternalApi: 
     updateBody: Record<string, unknown> = {},
   ): Promise<T> => {
     try {
-      const response = await deleteData({
+      const response = await deleteDataViaAthena<T>({
         table_name: tableName,
         schema,
         x_column: idColumn,
         x_id: id,
         update_body: updateBody,
+      }, {
+        headers: athenaHeaders,
       });
 
       if (response.error) {
@@ -444,6 +395,7 @@ export function useApiClient<T>({
   schema = "public",
   forceExternalApi = false,
 }: UseApiClientProps) {
+  const { user } = useUserStore();
   const [data, setData] = useState<T | T[] | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isError, setIsError] = useState<boolean>(false);
@@ -452,6 +404,22 @@ export function useApiClient<T>({
   // Determine if we're in multi-table mode
   const isMultiTable = Array.isArray(table);
   const tableName = isMultiTable ? (table as string[])[0] : (table as string);
+
+  const athenaHeaders = useMemo(() => {
+    const headers: Record<string, string> = {};
+
+    if (user?.user_id) {
+      headers["X-User-Id"] = user.user_id;
+    }
+    if (user?.company_id) {
+      headers["X-Company-Id"] = user.company_id;
+    }
+    if (user?.organization_id) {
+      headers["X-Organization-Id"] = user.organization_id;
+    }
+
+    return headers;
+  }, [user?.user_id, user?.company_id, user?.organization_id]);
 
   // Memoize stringified values to prevent unnecessary re-renders
   const conditionsStr = useMemo(() => JSON.stringify(conditions), [conditions]);
@@ -464,9 +432,9 @@ export function useApiClient<T>({
     return Object.fromEntries(
       (table as string[]).map((
         tName,
-      ) => [tName, buildClientFor<T>(tName, schema, forceExternalApi)]),
+      ) => [tName, buildClientFor<T>(tName, schema, forceExternalApi, athenaHeaders)]),
     );
-  }, [isMultiTable, table, schema, forceExternalApi]);
+  }, [isMultiTable, table, schema, forceExternalApi, athenaHeaders]);
 
   // Fetch data function
   const fetchDataFromApi = useCallback(async () => {
@@ -492,13 +460,15 @@ export function useApiClient<T>({
         return;
       }
 
-      const response = await fetchData({
+      const response = await fetchDataViaAthena<T[]>({
         table_name: tableName,
         schema,
         conditions: conditions as DataCondition[],
         columns,
         limit: effectiveLimit ?? 100,
         offset: offset ?? 0,
+      }, {
+        headers: athenaHeaders,
       });
 
       if (response.error) {
@@ -533,6 +503,7 @@ export function useApiClient<T>({
     single,
     noCache,
     schema,
+    athenaHeaders,
   ]);
 
   useEffect(() => {
@@ -563,13 +534,15 @@ export function useApiClient<T>({
       try {
         const effectiveLimit = one ? 1 : (lim ?? 100);
 
-        const response = await fetchData({
+        const response = await fetchDataViaAthena<T[]>({
           table_name: tableName,
           schema: sch || schema,
           conditions: where as DataCondition[],
           columns: cols,
           limit: effectiveLimit,
           offset: off ?? 0,
+        }, {
+          headers: athenaHeaders,
         });
 
         if (response.error) {
@@ -588,17 +561,19 @@ export function useApiClient<T>({
         );
       }
     },
-    [tableName, schema],
+    [tableName, schema, athenaHeaders],
   );
 
   // Insert function
   const insert = useCallback(
     async (insertBody: Partial<T>): Promise<T> => {
       try {
-        const response = await insertData({
+        const response = await insertDataViaAthena<T>({
           table_name: tableName,
           schema,
           insert_body: insertBody as Record<string, unknown>,
+        }, {
+          headers: athenaHeaders,
         });
 
         if (response.error) {
@@ -613,7 +588,7 @@ export function useApiClient<T>({
         );
       }
     },
-    [tableName, schema, mutate],
+    [tableName, schema, mutate, athenaHeaders],
   );
 
   // Bulk insert function
@@ -624,10 +599,12 @@ export function useApiClient<T>({
           return [];
         }
 
-        const response = await insertData({
+        const response = await insertDataViaAthena<T | T[]>({
           table_name: tableName,
           schema,
           insert_body: rows as Record<string, unknown>[],
+        }, {
+          headers: athenaHeaders,
         });
 
         if (response.error) {
@@ -648,13 +625,13 @@ export function useApiClient<T>({
         );
       }
     },
-    [tableName, schema, mutate],
+    [tableName, schema, mutate, athenaHeaders],
   );
 
   // Create a client instance for single-table update operations
   const singleTableClient = useMemo(
-    () => buildClientFor<T>(tableName, schema, forceExternalApi),
-    [tableName, schema, forceExternalApi]
+    () => buildClientFor<T>(tableName, schema, forceExternalApi, athenaHeaders),
+    [tableName, schema, forceExternalApi, athenaHeaders]
   );
 
   const update = useCallback(
@@ -683,12 +660,14 @@ export function useApiClient<T>({
       updateBody: Record<string, unknown> = {},
     ): Promise<T> => {
       try {
-        const response = await deleteData({
+        const response = await deleteDataViaAthena<T>({
           table_name: tableName,
           schema,
           x_column: idColumn,
           x_id: id,
           update_body: updateBody,
+        }, {
+          headers: athenaHeaders,
         });
 
         if (response.error) {
@@ -703,7 +682,7 @@ export function useApiClient<T>({
         );
       }
     },
-    [tableName, schema, mutate],
+    [tableName, schema, mutate, athenaHeaders],
   );
 
   // Return multi-table clients if in multi-table mode

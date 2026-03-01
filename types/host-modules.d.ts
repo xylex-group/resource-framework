@@ -89,10 +89,25 @@ declare module "@/lib/config" {
       suitsbooks: string;
       events_dms: string;
     };
+    athena?: {
+      db_api_url?: string;
+      standard_client?: string;
+      api_key?: string;
+    };
   };
   export const S3_CLIENT_CONFIG: {
     bucket: string;
     region: string;
+  };
+}
+
+declare module "@/lib/stores" {
+  export function useUserStore(): {
+    user?: {
+      user_id?: string;
+      company_id?: string;
+      organization_id?: string;
+    };
   };
 }
 
@@ -236,6 +251,8 @@ type DialogPartProps = HTMLAttributes<HTMLDivElement> & {
   export const DialogContent: React.ComponentType<DialogPartProps>;
   export const DialogOverlay: React.ComponentType<DialogPartProps>;
   export const DialogPortal: React.ComponentType<DialogPartProps>;
+  export const DialogHeader: React.ComponentType<DialogPartProps>;
+  export const DialogFooter: React.ComponentType<DialogPartProps>;
   export const DialogTitle: React.ComponentType<DialogPartProps>;
 }
 

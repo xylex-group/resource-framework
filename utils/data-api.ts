@@ -1,6 +1,6 @@
 "use server";
 
-import { APP_CONFIG } from "@/lib/config";
+import { insertDataViaAthena } from "../adapters/athena-gateway";
 
 export interface DataApiInsertParams {
   table: string;
@@ -16,26 +16,24 @@ export interface DataApiInsertParams {
 export async function insertViaDataApi(params: DataApiInsertParams) {
   const { table, insertBody, schema = "public", user } = params;
   try {
-    const response = await fetch(`${APP_CONFIG.api.suitsbooks}/data/insert`, {
-      method: "PUT",
+    const response = await insertDataViaAthena({
+      table_name: table,
+      schema,
+      insert_body: insertBody,
+    }, {
       headers: {
         "Content-Type": "application/json",
         "X-Company-Id": user?.company_id || "",
         "X-Organization-Id": user?.organization_id || "",
         "X-User-Id": user?.user_id || "",
       },
-      body: JSON.stringify({
-        table_name: table,
-        schema,
-        insert_body: insertBody,
-      }),
     });
 
-    const payload = await response.json();
-    if (!response.ok || payload?.error) {
-      return { ok: false, error: payload?.error ?? "Data API insert failed" };
+    if (response.error) {
+      return { ok: false, error: response.error };
     }
-    return { ok: true, data: payload?.data };
+
+    return { ok: true, data: response.data };
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : String(error) };
   }

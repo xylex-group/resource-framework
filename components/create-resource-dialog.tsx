@@ -7,11 +7,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { APP_CONFIG } from "@/lib/config";
 import { useApiClient } from "../hooks/use-api-client";
 import { useUserStore } from "@/lib/stores";
 import { useNotification } from "@/hooks/use-notifications";
 import { insertRow } from "../utils/insert";
+import { insertDataViaAthena } from "../adapters/athena-gateway";
 import { defaultEditorByColumn } from "@/packages/resource-framework/constructors/column-registry";
 import {
   getDrizzleColumnInfo,
@@ -779,7 +779,6 @@ async function insertRowViaDataApi(
 ): Promise<{ ok: boolean; data?: unknown; error?: string }> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    "X-Athena-Client": "railway_direct",
   };
   if (user?.company_id) headers["X-Company-Id"] = user.company_id;
   if (user?.organization_id) {
@@ -788,55 +787,16 @@ async function insertRowViaDataApi(
   if (user?.user_id) headers["X-User-Id"] = user.user_id;
 
   try {
-    const requestBody = {
+    const response = await insertDataViaAthena({
       table_name: table,
       insert_body: insertBody,
-    };
-
-    const response = await fetch(`${APP_CONFIG.api.suitsbooks}/data/insert`, {
-      method: "PUT",
+    }, {
       headers,
-      body: JSON.stringify(requestBody),
     });
 
-    let payload: { error?: string; data?: unknown; message?: string } = {};
-    let responseText = "";
-    try {
-      responseText = await response.text();
-      if (responseText) {
-        try {
-          payload = JSON.parse(responseText) as typeof payload;
-        } catch (parseError) {
-          console.error(
-            "Failed to parse JSON response:",
-            parseError,
-            "Response text:",
-            responseText,
-          );
-          // If response is not JSON, use the text as error message
-          payload = {
-            error: responseText ||
-              `HTTP ${response.status}: ${response.statusText}`,
-          };
-        }
-      }
-    } catch (textError) {
-      console.error("Failed to read response text:", textError);
-      payload = {
-        error: `Failed to read server response: ${response.statusText}`,
-      };
-    }
-
-    if (!response.ok) {
-      const errorMsg = payload?.error || payload?.message || responseText ||
-        `HTTP ${response.status}: ${response.statusText}`;
-      console.error("Data API insert failed:", errorMsg, {
-        payload,
-        responseText,
-        status: response.status,
-        statusText: response.statusText,
-        requestBody: JSON.stringify(requestBody, null, 2),
-        requestBodyKeys: Object.keys(requestBody),
+    if (response.error) {
+      console.error("Athena insert failed:", response.error, {
+        table,
         insertBodyKeys: Object.keys(insertBody),
         insertBodySample: Object.fromEntries(
           Object.entries(insertBody).slice(0, 5).map(([k, v]) => [
@@ -847,18 +807,13 @@ async function insertRowViaDataApi(
           ]),
         ),
       });
-      return { ok: false, error: errorMsg };
+      return { ok: false, error: response.error };
     }
 
-    if (payload.error) {
-      console.error("Data API returned error:", payload.error, { payload });
-      return { ok: false, error: payload.error };
-    }
-
-    return { ok: true, data: payload.data };
+    return { ok: true, data: response.data };
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    console.error("Failed to insert via data API", error);
+    console.error("Failed to insert via Athena SDK", error);
     return { ok: false, error: errorMsg };
   }
 }
