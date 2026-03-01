@@ -16,7 +16,6 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
-      "@xylex-group/resource-framework": ["../../index.ts"],
       "@xylex-group/resource-framework/*": ["../../*"]
     }
   },

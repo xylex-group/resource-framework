@@ -275,8 +275,8 @@ export const playgroundResourceFormRows: ResourceFormRow[] =
     title: definition.title,
     description: definition.description,
     entity: definition.schema.entity,
-    schema: definition.schema as Record<string, unknown>,
-    source_schema: definition.schema as Record<string, unknown>,
+    schema: definition.schema as unknown as Record<string, unknown>,
+    source_schema: definition.schema as unknown as Record<string, unknown>,
     source_schema_provider: "resource-framework-demo",
     default_values:
       (definition.defaultValues as Record<string, unknown> | undefined) ?? null,
