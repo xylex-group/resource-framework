@@ -111,7 +111,7 @@ export function LeanTable<TData>({
                 className="cursor-pointer hover:bg-slate-900"
                 onClick={() => {
                   if (hrefAction) {
-                    const href = hrefAction(row.original);
+                    const href = hrefAction(row.original as TData);
                     if (href) {
                       window.location.href = href;
                     }

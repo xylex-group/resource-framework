@@ -2,6 +2,7 @@ import { APP_CONFIG } from "@/lib/config";
 
 export interface AthenaFileConfig {
   baseUrl?: string;
+  apiKey?: string;
   headers?: Record<string, string>;
   requestId?: string;
   idempotencyKey?: string;
@@ -58,10 +59,21 @@ function buildFileHeaders(
   options: { isMutation: boolean; includeJsonContentType?: boolean },
 ): Record<string, string> {
   const requestId = config?.requestId ?? createRequestId();
+  const apiKey =
+    config?.apiKey ??
+    process.env.ATHENA_INTEGRATION_API_KEY ??
+    APP_CONFIG.athena?.api_key ??
+    process.env.NEXT_PUBLIC_ATHENA_API_KEY ??
+    process.env.ATHENA_API_KEY;
   const headers: Record<string, string> = {
     ...(config?.headers ?? {}),
     "X-Request-Id": requestId,
   };
+
+  if (apiKey) {
+    headers.apikey = apiKey;
+    headers["x-api-key"] = apiKey;
+  }
 
   if (options.includeJsonContentType) {
     headers["Content-Type"] = "application/json";

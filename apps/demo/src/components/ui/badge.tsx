@@ -12,6 +12,7 @@ export type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
 export function Badge({
   className,
   variant = "default",
+  size = "md",
   children,
   ...props
 }: BadgeProps) {
@@ -29,8 +30,9 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold uppercase tracking-wide",
+        "inline-flex items-center rounded-full border font-semibold uppercase tracking-wide",
         variantClasses,
+        sizeClasses,
         className,
       )}
       {...props}

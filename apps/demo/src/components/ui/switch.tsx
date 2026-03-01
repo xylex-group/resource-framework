@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 export interface SwitchProps
   extends Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "onChange"> {
   onCheckedChange?: (checked: boolean) => void;
+  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
 }
 
 export function Switch({

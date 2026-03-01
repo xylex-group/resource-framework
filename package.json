@@ -43,9 +43,10 @@
     "dev": "turbo run dev --parallel",
     "build": "rimraf dist && rollup -c && tsc -p tsconfig.build.json",
     "build:all": "turbo run build",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "node scripts/typecheck-workspaces.mjs",
     "prepare": "npm run build",
     "test": "vitest run",
+    "test:integration": "node scripts/run-athena-integration.mjs",
     "test:watch": "vitest"
   },
   "peerDependencies": {

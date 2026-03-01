@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "adapters/**/*.ts",
+    "handlers/handle-options.ts",
+    "handlers/handle-update.ts",
+    "hooks/use-api-client.ts",
+    "lightbox/utils/url-refresh.ts",
+    "tests/**/*.ts",
+    "types/**/*.d.ts",
+    "utils/data-api.ts",
+    "utils/insert.ts"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
+}

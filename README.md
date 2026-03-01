@@ -78,7 +78,6 @@ Most of the public API is re-exported from `index.ts`. Highlights:
 
 - `athena-gateway.ts`: typed CRUD adapter that routes reads and mutations through the Athena SDK and gateway.
 - `athena-files.ts`: file upload + signed URL refresh helpers that target Athena-hosted file endpoints.
-- `execute-data-api.ts`: legacy internal helper that is no longer exported from the public package surface.
 - `transforms.ts`: helpers for applying server-defined `data.transforms` onto fetch responses before they reach the UI.
 
 ### components
@@ -257,7 +256,9 @@ Expose consistent helpers for:
 
 - Unit tests live inside `packages/resource-framework/__tests__`.
 - They cover column builders, coercion helpers, filter parsing, drilldown helpers, display configuration, templates, and hooks (`build-columns.test.tsx`, `coerce.test.ts`, `use-table-configuration.test.ts`, etc.).
-- Run `pnpm test --filter resource-framework` or `pnpm vitest --run --filter resource-framework`.
+- Run `npm test` for contract/unit coverage.
+- Run `npm run test:integration` to execute the env-validated Athena CRUD/file integration suite.
+- Run `npm run typecheck` for the workspace-aware package/demo/playground TypeScript checks.
 
 ## Best practices & patterns
 

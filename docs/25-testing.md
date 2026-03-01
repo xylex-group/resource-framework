@@ -125,6 +125,14 @@ export const mockRoute = {
 
 ## Integration Testing
 
+Run the real Athena environment suite with:
+
+```bash
+npm run test:integration
+```
+
+The runner validates the required `ATHENA_INTEGRATION_*` variables before invoking `vitest` and applies a timeout via `ATHENA_INTEGRATION_TIMEOUT_MS` (defaults to `180000`).
+
 ```typescript
 import { render, screen, waitFor } from '@testing-library/react';
 import { ResourceProvider } from '@/packages/resource-framework/components/ResourceProvider';
@@ -149,6 +157,9 @@ describe('Integration', () => {
 ```bash
 # Run tests with coverage
 npm test -- --coverage
+
+# Run workspace typechecks
+npm run typecheck
 
 # Required coverage:
 # Statements: 80%

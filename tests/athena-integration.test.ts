@@ -5,11 +5,11 @@ import {
   fetchDataViaAthena,
   insertDataViaAthena,
   updateDataViaAthena,
-} from "@/packages/resource-framework/adapters/athena-gateway";
+} from "../adapters/athena-gateway";
 import {
   refreshFileUrlViaAthena,
   uploadFileViaAthena,
-} from "@/packages/resource-framework/adapters/athena-files";
+} from "../adapters/athena-files";
 
 // Real-environment tests. They are skipped unless the required ATHENA_INTEGRATION_*
 // environment variables are present for a writable test table and file endpoint.
@@ -53,6 +53,8 @@ const hasFileEnv = Boolean(
     env.uploadBucket,
 );
 
+const fileRoutesAvailable = process.env.ATHENA_INTEGRATION_FILE_ROUTES_AVAILABLE !== "false";
+
 function buildHeaders() {
   return {
     "X-User-Id": env.userId ?? "",
@@ -75,6 +77,7 @@ describe.skipIf(!hasCrudEnv)("Athena integration: CRUD", () => {
       },
       {
         baseUrl: env.baseUrl,
+        apiKey: env.apiKey,
         client: env.client,
         headers: buildHeaders(),
         requestId: `${traceId}-insert`,
@@ -103,6 +106,7 @@ describe.skipIf(!hasCrudEnv)("Athena integration: CRUD", () => {
       },
       {
         baseUrl: env.baseUrl,
+        apiKey: env.apiKey,
         client: env.client,
         headers: buildHeaders(),
         requestId: `${traceId}-fetch`,
@@ -122,6 +126,7 @@ describe.skipIf(!hasCrudEnv)("Athena integration: CRUD", () => {
       },
       {
         baseUrl: env.baseUrl,
+        apiKey: env.apiKey,
         client: env.client,
         headers: buildHeaders(),
         requestId: `${traceId}-update`,
@@ -140,6 +145,7 @@ describe.skipIf(!hasCrudEnv)("Athena integration: CRUD", () => {
       },
       {
         baseUrl: env.baseUrl,
+        apiKey: env.apiKey,
         client: env.client,
         headers: buildHeaders(),
         requestId: `${traceId}-delete`,
@@ -151,7 +157,7 @@ describe.skipIf(!hasCrudEnv)("Athena integration: CRUD", () => {
   }, 60_000);
 });
 
-describe.skipIf(!hasFileEnv)("Athena integration: files", () => {
+describe.skipIf(!hasFileEnv || !fileRoutesAvailable)("Athena integration: files", () => {
   it("uploads a file and refreshes its signed URL against a real Athena environment", async () => {
     const formData = new FormData();
     formData.append(
@@ -165,6 +171,7 @@ describe.skipIf(!hasFileEnv)("Athena integration: files", () => {
 
     const uploaded = await uploadFileViaAthena(formData, {
       baseUrl: env.baseUrl,
+      apiKey: env.apiKey,
       headers: buildHeaders(),
       requestId: `itest-file-upload-${Date.now()}`,
       idempotencyKey: `itest-file-upload-${Date.now()}`,
@@ -180,6 +187,7 @@ describe.skipIf(!hasFileEnv)("Athena integration: files", () => {
       },
       {
         baseUrl: env.baseUrl,
+        apiKey: env.apiKey,
         headers: buildHeaders(),
         requestId: `itest-file-refresh-${Date.now()}`,
         idempotencyKey: `itest-file-refresh-${Date.now()}`,

@@ -19,6 +19,7 @@
     "hooks/useUserPreferences.ts",
     "hooks/useQueryFilters.ts",
     "hooks/useResourceColumns.ts",
+    "types/**/*.d.ts",
     "utils/**/*.ts",
     "resource-types.ts",
     "components/index.ts",
@@ -28,5 +29,4 @@
   ],
   "exclude": ["dist", "node_modules"]
 }
-
 

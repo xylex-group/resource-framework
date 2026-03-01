@@ -2,6 +2,7 @@
 
 import {
   ReactElement,
+  MouseEvent,
   cloneElement,
   isValidElement,
   useState,
@@ -29,12 +30,15 @@ export function ResponsiveDropdownV2({
   triggerButton,
 }: ResponsiveDropdownV2Props) {
   const [isOpen, setIsOpen] = useState(false);
+  const typedTrigger = triggerButton as ReactElement<{
+    onClick?: (event: MouseEvent<HTMLButtonElement>) => void;
+  }> | undefined;
 
-  const renderTrigger = triggerButton && isValidElement(triggerButton)
-    ? cloneElement(triggerButton, {
-      onClick(event: React.MouseEvent<HTMLButtonElement>) {
+  const renderTrigger = typedTrigger && isValidElement(typedTrigger)
+    ? cloneElement(typedTrigger, {
+      onClick(event: MouseEvent<HTMLButtonElement>) {
         setIsOpen((open) => !open);
-        triggerButton.props.onClick?.(event);
+        typedTrigger.props.onClick?.(event);
       },
     })
     : (

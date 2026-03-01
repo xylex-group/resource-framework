@@ -46,13 +46,14 @@ Target: migrate all data and file operations in this package to Athena API Gatew
 - [ ] Gate migration with feature flags per resource route.
 - [ ] Run dual-read or shadow verification on selected resources.
 - [ ] Perform staged rollout (internal -> limited tenants -> full traffic).
-- [ ] Remove legacy adapters/endpoints and dead code.
-- [ ] Update docs (`README.md`, `docs/08-http-adapters.md`, `docs/07-data-api.md`).
+- [x] Remove legacy adapters/endpoints and dead code.
+- [x] Update docs (`README.md`, `docs/08-http-adapters.md`, `docs/07-data-api.md`).
 
 ## Testing and acceptance criteria
 
 - [x] Unit tests for Athena adapter mappings and error normalization.
 - [x] Integration tests for CRUD and file workflows against Athena (env-gated).
 - [x] Contract tests for the framework-facing Athena adapter contract.
+- [x] Add a dedicated `test:integration` runner with env validation and timeout handling.
 - [ ] Failure injection tests: timeout, 5xx, stale reads, partial file-write failures.
 - [ ] Acceptance: no critical regressions, stable latency, and full removal of legacy direct endpoint usage.

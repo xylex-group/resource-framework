@@ -1,7 +1,7 @@
 "use client";
 
 import { NumberField } from "@/components/ui/number-field";
-import type { ResourceFormField } from "@/packages/resource-framework/resource-types";
+import type { ResourceFormField } from "@xylex-group/resource-framework";
 import { cn } from "@/lib/utils";
 
 export interface ShareHolderCardProps {

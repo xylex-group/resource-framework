@@ -55,6 +55,7 @@ type AthenaGatewayCondition = {
 
 export interface AthenaGatewayConfig {
   baseUrl?: string;
+  apiKey?: string;
   client?: string;
   headers?: Record<string, string>;
   requestId?: string;
@@ -74,6 +75,7 @@ function getAthenaClient(): string {
 
 function getAthenaApiKey(): string {
   return (
+    process.env.ATHENA_INTEGRATION_API_KEY ??
     APP_CONFIG.athena?.api_key ??
     process.env.NEXT_PUBLIC_ATHENA_API_KEY ??
     process.env.ATHENA_API_KEY ??
@@ -85,7 +87,7 @@ function createAthenaSdkClient(config: AthenaGatewayConfig = {}) {
   const headers = buildAthenaHeaders(config, { isMutation: false });
   return createClient(
     config.baseUrl ?? getAthenaBaseUrl(),
-    getAthenaApiKey(),
+    config.apiKey ?? getAthenaApiKey(),
     {
       client: config.client ?? getAthenaClient(),
       backend: Backend.Athena,

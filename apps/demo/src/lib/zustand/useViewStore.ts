@@ -22,6 +22,7 @@ type ViewState = {
   setIsInLightbox: (value: boolean) => void;
   setIsInPopover: (value: boolean) => void;
   setIsInUserPopover: (value: boolean) => void;
+  setDebugMode: (value: boolean) => void;
   setStyling: (styling: StylingState) => void;
 };
 

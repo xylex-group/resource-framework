@@ -75,10 +75,6 @@ formData.append("file", file);
 const uploaded = await uploadFileViaAthena(formData);
 ```
 
-## Legacy Note
-
-`execute-data-api.ts` still exists in the repository for internal compatibility, but it is no longer exported from the public package surface.
-
 ## See Also
 
 - [Athena Data API](./07-data-api.md)

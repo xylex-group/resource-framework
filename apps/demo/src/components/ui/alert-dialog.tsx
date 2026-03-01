@@ -24,9 +24,10 @@ export function AlertDialogTrigger({
   ...props
 }: AlertDialogPartProps & HTMLAttributes<HTMLButtonElement> & { asChild?: boolean }) {
   if (asChild && isValidElement(children)) {
-    return cloneElement(children, {
+    const child = children as React.ReactElement<Record<string, unknown>>;
+    return cloneElement(child, {
       ...props,
-      ...children.props,
+      ...child.props,
     });
   }
   return (

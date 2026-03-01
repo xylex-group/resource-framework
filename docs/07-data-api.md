@@ -1,6 +1,6 @@
 # Athena Data API
 
-The framework now uses Athena as its primary data plane. Package code should call the Athena-backed adapters or `useApiClient`. The legacy `execute-data-api` helper is no longer part of the public package exports.
+The framework now uses Athena as its primary data plane. Package code should call the Athena-backed adapters or `useApiClient`.
 
 ## Core Adapters
 
