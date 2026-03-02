@@ -42,7 +42,8 @@
  */
 
 // Main component
-export { Lightbox, useLightboxScroll } from "./components/Lightbox";
+export { Lightbox } from "./components/Lightbox";
+export { useLightboxScroll } from "./context/scroll-context";
 
 // Sub-components for custom implementations
 export { LightboxNavigation } from "./components/LightboxNavigation";

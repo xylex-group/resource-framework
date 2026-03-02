@@ -1,9 +1,7 @@
 "use client";
 
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
@@ -22,15 +20,7 @@ import { LightboxToolbar } from "./LightboxToolbar";
 import { LightboxInfo } from "./LightboxInfo";
 import { cn } from "@/lib/utils";
 import { useViewStore } from "@/lib/zustand";
-
-// Context for sharing scroll state between Lightbox and renderers
-const LightboxScrollContext = createContext<{
-  setHasScrolled: (scrolled: boolean) => void;
-}>({
-  setHasScrolled: () => {},
-});
-
-export const useLightboxScroll = () => useContext(LightboxScrollContext);
+import { LightboxScrollContext } from "../context/scroll-context";
 
 /**
  * Main Lightbox component

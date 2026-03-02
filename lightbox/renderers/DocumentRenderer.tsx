@@ -13,7 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import JSZip from "jszip";
 import Papa from "papaparse";
-import { useLightboxScroll } from "../components/Lightbox";
+import { useLightboxScroll } from "../context/scroll-context";
 
 type ParsedContent = {
   type: "text" | "csv" | "docx";
