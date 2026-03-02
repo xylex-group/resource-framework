@@ -8,6 +8,8 @@ type DialogProps = {
 
 type DialogPartProps = HTMLAttributes<HTMLDivElement> & {
   children?: ReactNode;
+  forceFullScreen?: boolean;
+  onEscapeKeyDown?: (event: KeyboardEvent) => void;
 };
 
 export const Dialog = ({ children }: DialogProps) => (
@@ -29,12 +31,28 @@ export const DialogOverlay = ({
 export const DialogContent = ({
   children,
   className,
+  onEscapeKeyDown,
+  forceFullScreen,
   ...props
-}: DialogPartProps) => (
-  <div className={className} {...props}>
-    {children}
-  </div>
-);
+}: DialogPartProps) => {
+  const contentClassName = forceFullScreen
+    ? `${className ?? ""} fixed inset-0 z-50`
+    : className;
+
+  return (
+    <div
+      className={contentClassName}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          onEscapeKeyDown?.(event.nativeEvent);
+        }
+      }}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
 
 export const DialogHeader = ({
   children,

@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 export type FormStateData = Record<string, unknown>;
 
 export type EditorConfig = {
@@ -24,12 +26,29 @@ export type FetchCondition = {
   eq_value: string | number | boolean | null;
 };
 
+export type ApiResult<T> = {
+  data?: T;
+  isLoading: boolean;
+  isError: boolean;
+  error?: string | null;
+  mutate?: () => Promise<void>;
+};
+
+export type DrilldownField = {
+  key: string;
+  label: string;
+  hidden?: boolean;
+  render?: () => ReactNode;
+  href?: string;
+};
+
 export type RemoteResourceRouteResponse = Record<string, unknown>;
 export type ResourceData = Record<string, unknown>;
 export type SelectOption = {
   label: string;
   value: string | number | boolean;
 };
+
 export type DataSourceConfig = {
   table: string;
   value_column?: string;

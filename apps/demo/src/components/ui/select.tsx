@@ -6,22 +6,25 @@ import { cn } from "@/lib/utils";
 type SelectContextType = {
   value: string;
   onValueChange: (value: string) => void;
+  disabled: boolean;
 };
 
 const SelectContext = createContext<SelectContextType>({
   value: "",
   onValueChange: () => {},
+  disabled: false,
 });
 
 export interface SelectProps {
   value: string;
   onValueChange: (value: string) => void;
   children: React.ReactNode;
+  disabled?: boolean;
 }
 
-export function Select({ value, onValueChange, children }: SelectProps) {
+export function Select({ value, onValueChange, children, disabled = false }: SelectProps) {
   return (
-    <SelectContext.Provider value={{ value, onValueChange }}>
+    <SelectContext.Provider value={{ value, onValueChange, disabled }}>
       <div className="relative flex flex-col">{children}</div>
     </SelectContext.Provider>
   );
@@ -34,13 +37,17 @@ export interface SelectTriggerProps {
 }
 
 export function SelectTrigger({ className, children, id }: SelectTriggerProps) {
+  const { disabled } = useContext(SelectContext);
+
   return (
     <div
       className={cn(
         "cursor-pointer rounded-sm border border-slate-700 bg-slate-900/80 px-3 py-2 text-sm text-slate-200",
+        disabled && "cursor-not-allowed opacity-60",
         className,
       )}
       id={id}
+      aria-disabled={disabled}
     >
       {children}
     </div>
@@ -78,16 +85,25 @@ export interface SelectItemProps {
   value: string;
   children: React.ReactNode;
   className?: string;
+  disabled?: boolean;
 }
 
-export function SelectItem({ value, children, className }: SelectItemProps) {
-  const { onValueChange } = useContext(SelectContext);
+export function SelectItem({ value, children, className, disabled = false }: SelectItemProps) {
+  const { onValueChange, disabled: selectDisabled } = useContext(SelectContext);
+  const isDisabled = disabled || selectDisabled;
+
   return (
     <button
       type="button"
-      onClick={() => onValueChange(value)}
+      onClick={() => {
+        if (!isDisabled) {
+          onValueChange(value);
+        }
+      }}
+      disabled={isDisabled}
       className={cn(
         "w-full rounded-sm px-2 py-1 text-left text-sm text-slate-200 hover:bg-slate-800/60",
+        isDisabled && "cursor-not-allowed opacity-60",
         className,
       )}
     >

@@ -6,9 +6,16 @@ import { cn } from "@/lib/utils";
 export interface NumberFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "value"> {
   value: number;
   onValueChange: (value: number) => void;
+  label?: string;
 }
 
-export function NumberField({ value, onValueChange, className, ...rest }: NumberFieldProps) {
+export function NumberField({
+  value,
+  onValueChange,
+  className,
+  label: _label,
+  ...rest
+}: NumberFieldProps) {
   return (
     <input
       type="number"

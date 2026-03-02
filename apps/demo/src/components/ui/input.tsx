@@ -12,10 +12,11 @@ export type InputProps = Omit<
   "size"
 > & {
   size?: string | number;
+  label?: string;
 };
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { className, size, ...props },
+  { className, size, label: _label, ...props },
   ref,
 ) {
   return (

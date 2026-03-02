@@ -54,6 +54,7 @@ const configs = [
         id.startsWith("next/navigation") ||
         id.startsWith("@bprogress/core") ||
         id.startsWith("motion/react") ||
+        id.startsWith("class-variance-authority") ||
         id.startsWith("drizzle-orm") ||
         id.startsWith("papaparse") ||
         id === "md5"

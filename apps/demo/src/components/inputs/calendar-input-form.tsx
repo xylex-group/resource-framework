@@ -1,11 +1,10 @@
 "use client";
-import type { InputHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 import { Input } from "../ui/input";
 
 interface CalendarInputFormProps {
   id: string;
-  fieldKey: string;
+  fieldKey?: string;
   label?: string;
   value: string;
   onChangeAction: (value: string) => void;

@@ -3,7 +3,18 @@
 import type { HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 
-export function EmptyField({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+type EmptyFieldProps = HTMLAttributes<HTMLDivElement> & {
+  title?: string;
+  message?: string;
+};
+
+export function EmptyField({
+  className,
+  title,
+  message,
+  children,
+  ...props
+}: EmptyFieldProps) {
   return (
     <div
       className={cn(
@@ -12,7 +23,14 @@ export function EmptyField({ className, ...props }: HTMLAttributes<HTMLDivElemen
       )}
       {...props}
     >
-      <p>Nothing to show yet.</p>
+      {children ? (
+        children
+      ) : (
+        <>
+          {title ? <p className="font-medium text-slate-200">{title}</p> : null}
+          <p>{message || "Nothing to show yet."}</p>
+        </>
+      )}
     </div>
   );
 }

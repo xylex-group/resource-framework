@@ -194,13 +194,13 @@ export function DrilldownEntityRenderer<T extends Record<string, unknown>>({
 										</Button>
 									);
 								} else if (field.is_user_id) {
-									displayValue = (
-										<div className="flex flex-row items-center gap-x-2">
-											<AvatarCard
-												user_id={formattedValue as string}
-											/>
-										</div>
-									);
+								displayValue = (
+								<div className="flex flex-row items-center gap-x-2">
+								<AvatarCard>
+								{String(formattedValue ?? "")}
+								</AvatarCard>
+								</div>
+								);
 								} else if (
 									typeof formattedValue === "string" &&
 									formattedValue.length > 40

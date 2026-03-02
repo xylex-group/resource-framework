@@ -567,9 +567,19 @@ export const ResourceDrilldown = ({
           if (!value) return;
 
           const dsConfig = colConfig.editable?.data_source;
-          const ds = typeof dsConfig === "string"
-            ? { table: dsConfig.split(".")[0] }
-            : dsConfig;
+          const ds = (typeof dsConfig === "string"
+            ? {
+              table: dsConfig.split(".")[0],
+              value_column: undefined,
+              label_column: undefined,
+            }
+            : dsConfig) as
+            | {
+              table: string;
+              value_column?: string;
+              label_column?: string;
+            }
+            | undefined;
           if (!ds) return;
           const table = ds.table;
           const valueCol = ds.value_column || `${table}_id` || "id";
@@ -624,10 +634,12 @@ export const ResourceDrilldown = ({
       configured.forEach((c) => {
         if (
           typeof c === "object" &&
-          (c as ColumnConfigObject)?.column_name &&
-          typeof (c as ColumnConfigObject).href === "string" &&
-          ((c as ColumnConfigObject).href?.length || 0) > 0
+          (c as ColumnConfigObject)?.column_name
         ) {
+          const hrefValue = (c as { href?: unknown }).href;
+          if (typeof hrefValue !== "string" || hrefValue.length === 0) {
+            return;
+          }
           hrefByKey.set(
             String((c as ColumnConfigObject).column_name),
             String((c as ColumnConfigObject).href),
