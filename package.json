@@ -82,6 +82,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@xylex-group/athena": "^1.0.4",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "jszip": "^3.10.1",
     "media-chrome": "^4.18.0",
