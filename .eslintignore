@@ -1,0 +1,7 @@
+dist/
+node_modules/
+.cursor/
+.npm-cache/
+agent-tools/
+apps/**/.next/
+**/*.d.ts

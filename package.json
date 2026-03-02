@@ -43,6 +43,8 @@
     "build": "rimraf dist && rollup -c && tsc -p tsconfig.build.json",
     "build:all": "turbo run build",
     "typecheck": "node scripts/typecheck-workspaces.mjs",
+    "lint": "eslint . --ext .ts,.tsx,.mts,.cts --no-eslintrc -c .eslintrc.cjs",
+    "lint:fix": "eslint . --ext .ts,.tsx,.mts,.cts --no-eslintrc -c .eslintrc.cjs --fix",
     "prepare": "npm run build",
     "test": "vitest run",
     "test:integration": "node scripts/run-athena-integration.mjs",
@@ -64,6 +66,10 @@
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/node": "^22.19.1",
     "@types/papaparse": "^5.4.4",
+    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/parser": "^8.56.1",
+    "eslint": "^8.57.1",
+    "globals": "^17.4.0",
     "rimraf": "^6.0.1",
     "rollup": "^4.24.0",
     "rollup-plugin-dts": "^6.1.1",
@@ -76,8 +82,11 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@xylex-group/athena": "^1.0.4",
+    "clsx": "^2.1.1",
     "jszip": "^3.10.1",
+    "media-chrome": "^4.18.0",
     "papaparse": "^5.4.1",
-    "sonner": "^2.0.7"
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.5.0"
   }
 }
