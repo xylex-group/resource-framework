@@ -60,6 +60,18 @@ const configs = [
         id === "md5"
       );
     },
+    onwarn: (warning, warn) => {
+      const isModuleDirective = warning.code === "MODULE_LEVEL_DIRECTIVE";
+      const isUseClientDirective =
+        typeof warning.message === "string" &&
+        /["']use (client|server)["']/.test(warning.message);
+
+      if (isModuleDirective && isUseClientDirective) {
+        return;
+      }
+
+      warn(warning);
+    },
     plugins: [
       alias({
         entries: [
