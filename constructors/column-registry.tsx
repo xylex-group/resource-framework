@@ -456,7 +456,7 @@ function buildDurationMsColumn<TData>(opts: {
 }): ColumnDef<TData> {
   const { key, header } = opts;
   return {
-    header: function Header(ctx: HeaderContext<TData, unknown>) {
+    header: function Header(_ctx: HeaderContext<TData, unknown>) {
       return renderHeader(header ?? prettyString(String(key)));
     },
     accessorKey: key as string,
@@ -486,7 +486,7 @@ function buildSecondsColumn<TData>(opts: {
 }): ColumnDef<TData> {
   const { key, header } = opts;
   return {
-    header: function Header(ctx: HeaderContext<TData, unknown>) {
+    header: function Header(_ctx: HeaderContext<TData, unknown>) {
       return renderHeader(header ?? prettyString(String(key)));
     },
     accessorKey: key as string,
@@ -511,7 +511,7 @@ function buildBreakAllTextColumn<TData>(opts: {
 }): ColumnDef<TData> {
   const { key, header } = opts;
   return {
-    header: function Header(ctx: HeaderContext<TData, unknown>) {
+    header: function Header(_ctx: HeaderContext<TData, unknown>) {
       return renderHeader(header ?? prettyString(String(key)));
     },
     accessorKey: key as string,
@@ -540,7 +540,7 @@ function buildJsonStringColumn<TData>(opts: {
 }): ColumnDef<TData> {
   const { key, header } = opts;
   return {
-    header: function Header(ctx: HeaderContext<TData, unknown>) {
+    header: function Header(_ctx: HeaderContext<TData, unknown>) {
       return renderHeader(header ?? prettyString(String(key)));
     },
     accessorKey: key as string,
@@ -576,7 +576,7 @@ function buildGenericColumn<TData>(opts: {
 }): ColumnDef<TData> {
   const { key, header } = opts;
   return {
-    header: function Header(ctx: HeaderContext<TData, unknown>) {
+    header: function Header(_ctx: HeaderContext<TData, unknown>) {
       return renderHeader(header ?? prettyString(String(key)));
     },
     accessorKey: key as string,
@@ -602,7 +602,7 @@ function buildUppercaseColumn<TData>(opts: {
 }): ColumnDef<TData> {
   const { key, header } = opts;
   return {
-    header: function Header(ctx: HeaderContext<TData, unknown>) {
+    header: function Header(_ctx: HeaderContext<TData, unknown>) {
       return renderHeader(header ?? prettyString(String(key)));
     },
     accessorKey: key as string,
@@ -631,7 +631,7 @@ function buildCurrencyColumn<TData>(opts: {
 }): ColumnDef<TData> {
   const { key, header } = opts;
   return {
-    header: function Header(ctx: HeaderContext<TData, unknown>) {
+    header: function Header(_ctx: HeaderContext<TData, unknown>) {
       return renderHeader(header ?? prettyString(String(key)));
     },
     accessorKey: key as string,
@@ -687,7 +687,7 @@ function buildMaskedLinkColumn<TData>(opts: {
 }): ColumnDef<TData> {
   const { key, header, href, cellValueMaskLabel } = opts;
   return {
-    header: function Header(ctx: HeaderContext<TData, unknown>) {
+    header: function Header(_ctx: HeaderContext<TData, unknown>) {
       return renderHeader(header ?? prettyString(String(key)));
     },
     accessorKey: key as string,
@@ -1720,7 +1720,6 @@ export function buildColumnsFromRegistry<TData>(
 
     if (cellValueMaskLabel && !href) {
       const template = String(cellValueMaskLabel);
-      const OriginalCell = colDef.cell;
       colDef.cell = ({ row }: { row: { original: TData } }) => {
         const rowData = row.original as Record<string, unknown>;
         const resolvedLabel = template.replace(/\{\{(.*?)\}\}/g, (_, p1) => {

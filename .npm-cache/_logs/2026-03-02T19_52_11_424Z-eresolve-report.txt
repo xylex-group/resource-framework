@@ -1,0 +1,24 @@
+'Log files:
+/Users/floris/Documents/GitHub/resource-framework/.npm-cache/_logs/2026-03-02T19_52_11_424Z-debug-0.log
+
+# npm resolution error report
+
+While resolving: @xylex-group/resource-framework@0.2.0
+Found: @typescript-eslint/parser@6.21.0
+node_modules/@typescript-eslint/parser
+  @typescript-eslint/parser@"^5.4.2 || ^6.0.0" from eslint-config-next@14.0.4
+  node_modules/eslint-config-next
+  dev @typescript-eslint/parser@"^8.56.1" from the root project
+
+Could not resolve dependency:
+dev @typescript-eslint/eslint-plugin@"^8.56.1" from the root project
+
+Conflicting peer dependency: @typescript-eslint/parser@8.56.1
+node_modules/@typescript-eslint/parser
+  peer @typescript-eslint/parser@"^8.56.1" from @typescript-eslint/eslint-plugin@8.56.1
+  node_modules/@typescript-eslint/eslint-plugin
+    dev @typescript-eslint/eslint-plugin@"^8.56.1" from the root project
+
+Fix the upstream dependency conflict, or retry
+this command with --force or --legacy-peer-deps
+to accept an incorrect (and potentially broken) dependency resolution.

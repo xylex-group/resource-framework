@@ -101,7 +101,7 @@ export const AreaChartWidget = React.memo(function AreaChartWidget({
     strokeWidth: 2,
   },
   hideXAxis = true,
-  hideYAxis = true,
+  hideYAxis: _hideYAxis = true,
   yDomain = [0, "auto"],
   tooltipContent: CustomTooltipContent,
   formatDate,

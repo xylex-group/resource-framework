@@ -14,8 +14,8 @@ export function ToggleEdit({
   isEditing,
   setIsEditing,
   isSaving = false,
-  onSave,
-  pendingChanges = 0,
+  onSave: _onSave,
+  pendingChanges: _pendingChanges = 0,
 }: ToggleEditProps) {
   const handleClick = () => {
     if (isEditing) {

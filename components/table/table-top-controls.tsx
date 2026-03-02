@@ -56,7 +56,7 @@ export function TableTopControls<TData = unknown>({
 	displayConfig,
 	onDeleteRows,
 	selectedRowsCount,
-	hasExtraSidePadding,
+	hasExtraSidePadding: _hasExtraSidePadding,
 }: TableTopControlsProps<TData>): React.ReactElement {
 	const columnsToFilter =
 		Array.isArray(filterColumns) && filterColumns.length > 0

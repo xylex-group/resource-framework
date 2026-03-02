@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { EntityFormV2 } from "@xylex-group/resource-framework";
+import { EntityFormV2 } from "@rf/components/form-v2/entity-form_v2";
 import { fetchData } from "@/lib/actions/data";
 import {
   resolveResourceFormRows,

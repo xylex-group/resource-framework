@@ -31,9 +31,9 @@ export function Lightbox({
   currentIndex,
   isOpen,
   onClose,
-  onNavigate,
-  showNavigation = true,
-  showThumbnails = true,
+  onNavigate: _onNavigate,
+  showNavigation: _showNavigation = true,
+  showThumbnails: _showThumbnails = true,
   showDownload = true,
   showInfo = true,
   className,
@@ -89,21 +89,6 @@ export function Lightbox({
     },
     [infoVisible, showInfo],
   );
-
-  const handleNavigate = useCallback((newIndex: number) => {
-    if (newIndex >= 0 && newIndex < files.length) {
-      setActiveIndex(newIndex);
-      onNavigate?.(newIndex);
-    }
-  }, [files.length, onNavigate]);
-
-  const handlePrevious = useCallback(() => {
-    handleNavigate(activeIndex - 1);
-  }, [activeIndex, handleNavigate]);
-
-  const handleNext = useCallback(() => {
-    handleNavigate(activeIndex + 1);
-  }, [activeIndex, handleNavigate]);
 
   const handleToggleInfo = useCallback(() => {
     setInfoVisible((prev) => !prev);

@@ -89,7 +89,7 @@ describe("Integration Tests", () => {
 
   describe("Table Widget Scenarios", () => {
     it("should resolve table widget resourceName", () => {
-      const context: TemplateContext = {
+      const _context: TemplateContext = {
         resourceName: "invoices",
       };
 

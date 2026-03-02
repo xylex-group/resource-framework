@@ -830,28 +830,11 @@ export const ResourceDrilldown = ({
   ]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    let bProgress: { start: () => void; done: () => void } | null = null;
-    import("@bprogress/core" as unknown as string).then(
-      (mod: { BProgress: { start: () => void; done: () => void } }) => {
-        bProgress = mod.BProgress;
-        if (isLoading || resourceLoading) {
-          bProgress?.start();
-        } else {
-          bProgress?.done();
-        }
-      },
-    );
-    return () => {
-      if (bProgress) {
-        bProgress.done();
-      }
-    };
+    return undefined;
   }, [isLoading, resourceLoading]);
 
   // Set up edit button in header
   useEffect(() => {
-    const scope = resource?.edit?.scope;
     const enabled = resource?.edit?.enabled !== false;
 
     if (!enabled) {
@@ -1336,7 +1319,7 @@ export const ResourceDrilldown = ({
                       return (
                         <NumberField
                           className="flex-1"
-                          value={typeof value === "number" ? value : undefined}
+                          value={typeof value === "number" ? value : Number.NaN}
                           onValueChange={(val) =>
                             setFormState((s) => ({ ...s, [k]: val }))}
                         />
@@ -1361,7 +1344,6 @@ export const ResourceDrilldown = ({
                     );
                   };
 
-                  const colDef = colDefByKey.get(k);
                   const isAddedField = visibleFields.has(k);
 
                   // Helper to check if value is empty
@@ -1376,20 +1358,6 @@ export const ResourceDrilldown = ({
 
                   // Only show remove button if field is added AND currently empty
                   const isRemovable = isAddedField && isEmpty(value);
-
-                  const hasRegistryRenderer = colDef &&
-                    typeof (colDef as { cell?: unknown }).cell === "function";
-                  const registryDisplay = hasRegistryRenderer
-                    ? (
-                      colDef as {
-                        cell: (ctx: {
-                          row: { original: FormStateData };
-                        }) => ReactNode;
-                      }
-                    ).cell({
-                      row: { original: { ...formState, [k]: value } },
-                    })
-                    : null;
 
                   return (
                     <div

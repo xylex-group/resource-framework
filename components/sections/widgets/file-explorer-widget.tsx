@@ -176,26 +176,6 @@ function getColumnValue(
   return result;
 }
 
-function getNumericValue(
-  entity: Record<string, unknown>,
-  column?: string,
-): number | undefined {
-  const resolved = resolveEntityValue(entity, column);
-  if (resolved === undefined || resolved === null) {
-    return undefined;
-  }
-  if (typeof resolved === "number") {
-    return resolved;
-  }
-  if (typeof resolved === "string" && /^\d+$/.test(resolved.trim())) {
-    const parsed = Number(resolved.trim());
-
-    return parsed;
-  }
-
-  return undefined;
-}
-
 function sanitizePathSegment(value?: string | null): string {
   if (!value) {
     return "";
@@ -407,7 +387,7 @@ function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
               insertBody.prefix_path = prefixPath;
             }
 
-            const result = await insert(insertBody);
+            await insert(insertBody);
             successCount++;
           } catch (error) {
             console.error(

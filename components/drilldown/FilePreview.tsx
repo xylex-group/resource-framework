@@ -55,8 +55,6 @@ function isVideoFile(file: FilePreviewItem): boolean {
 
 function getFileIcon(file: FilePreviewItem) {
   const { ext, mime } = getExtAndMime(file);
-  const name = file.file_name ?? file.name;
-
   if (
     IMAGE_EXTS.includes(ext) ||
     mime.startsWith("image/")

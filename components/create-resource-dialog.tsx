@@ -158,8 +158,6 @@ const mapColumnConfigToFieldSpec = (
     const editorObject = editorSource && typeof editorSource !== "string"
       ? editorSource
       : undefined;
-    const configuredType = configObject?.data_type;
-
     return {
       column_name: columnName,
       header: configObject?.header,

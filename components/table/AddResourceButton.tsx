@@ -22,8 +22,8 @@ export const useAddResourceButton = (
   resource: ResourceRoute | null,
   user: User | null,
   hasScope: (scope: string | string[]) => boolean,
-  notification: (opts: { message: string; success: boolean }) => void,
-  setCreateOpen: (open: boolean) => void,
+  _notification: (_opts: { message: string; success: boolean }) => void,
+  _setCreateOpen: (_open: boolean) => void,
 ) => {
   const createCfg: ResourceCreateConfig | null = resource?.create || null;
   const createScope = Array.isArray(createCfg?.scope)

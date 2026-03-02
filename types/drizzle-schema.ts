@@ -1,8 +1,5 @@
 "use client";
 
-// type-only import to avoid pulling drizzle into the client bundle
-import type * as Schema from "@/drizzle/schema";
-
 type AnyDrizzleTable = {
   $inferSelect: unknown;
   _: unknown;

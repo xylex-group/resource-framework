@@ -64,24 +64,6 @@ export function DisplaySettings<TData>({
     return () => window.clearTimeout(id);
   }, [open, isMobile]);
 
-  // Count active settings to display in badge
-  const countActiveSettings = () => {
-    return config.reduce((count, option) => {
-      const value = getDisplaySetting(context, option.value);
-      if (option.type === "toggle" && value === true) {
-        return count + 1;
-      } else if (
-        (option.type === "sort" || option.type === "group") &&
-        value !== null
-      ) {
-        return count + 1;
-      }
-      return count;
-    }, 0);
-  };
-
-  const activeCount = countActiveSettings();
-
   // Group the config options by type
   const toggleOptions = config.filter((option) => option.type === "toggle");
   const sortOptions = config.filter((option) => option.type === "sort");

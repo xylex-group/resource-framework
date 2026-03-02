@@ -54,7 +54,6 @@ export const useAdvancedFilters = (
 
   // Parse filters from URL params
   const parsedFilters = React.useMemo(() => {
-    const searchParamsStr = searchParams?.toString();
     try {
       const next: AdvancedFilter[] = [];
       if (searchParams) {
@@ -65,10 +64,10 @@ export const useAdvancedFilters = (
           (filterFields || []).map((f) => String(f.key)),
         );
 
-        for (const [k, v] of searchParams.entries()) {
-          const key = String(k);
-          if (!fieldKeys.has(key)) continue;
-          const val = String(v ?? "");
+        searchParams.forEach((rawValue, rawKey) => {
+          const key = String(rawKey);
+          if (!fieldKeys.has(key)) return;
+          const val = String(rawValue ?? "");
           const m = val.match(operatorValueRegex);
           if (m) {
             const op = m[1];
@@ -81,7 +80,7 @@ export const useAdvancedFilters = (
             arr.push(val);
             eqGrouped.set(key, arr);
           }
-        }
+        });
 
         perColumnOps.forEach((pairs, field) => {
           const gte = pairs.find((p) => p.op === ">=");

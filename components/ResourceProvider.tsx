@@ -1,7 +1,6 @@
 "use client";
 
 import { useUserStore } from "@/lib/stores";
-import { useEventsStream } from "@/packages/resource-framework/hooks/use-events-stream";
 import { fetchDataViaAthena } from "@/packages/resource-framework/adapters/athena-gateway";
 import React, {
   createContext,
@@ -184,8 +183,8 @@ export const ResourceProvider: React.FC<ResourceProviderProps> = ({
   }, [fetchAllResources]);
 
   // Handle real-time updates from DMS events
-  const handleDMSEvent = useCallback(
-    (message: unknown) => {
+  const _handleDMSEvent = useCallback(
+    (_message: unknown) => {
       try {
         const eventData = (message as { data?: unknown })?.data;
         if (!eventData) return;

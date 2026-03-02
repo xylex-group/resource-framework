@@ -47,7 +47,7 @@ export function useFetchData<T = unknown>({
 	conditions,
 	config,
 	limit,
-	cached,
+	cached: _cached,
 }: UseFetchProps) {
 	const [state, setState] = useState<UseFetchState<T>>({
 		data: null,
@@ -57,8 +57,7 @@ export function useFetchData<T = unknown>({
 		error: "",
 	});
 
-	const { user, getCurrentCompany } = useUserStore();
-	const selectedCompany = getCurrentCompany();
+	const { user } = useUserStore();
 
 	const configRef = useRef(config);
 	const conditionsRef = useRef(conditions);

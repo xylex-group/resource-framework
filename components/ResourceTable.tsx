@@ -2,7 +2,6 @@
 
 import ErrorBlock from "@/components/ui/error";
 import { LeanTable } from "@/components/ui-responsive/lean-table";
-import { Filters as AdvancedFilters } from "@/components/filters/filters";
 import { useApiClient } from "@/packages/resource-framework/hooks/use-api-client";
 import {
   useBackButtonStore,
@@ -97,7 +96,7 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
   const searchParams = useSearchParams();
   const { user } = useUserStore();
   const { view, setDisplaySetting } = useViewStore();
-  const { clear: clearBackButton, setBackLink } = useBackButtonStore();
+  const { clear: clearBackButton } = useBackButtonStore();
   const {
     setHeaderActions,
     setTitle,
@@ -199,7 +198,6 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
   });
 
   const data = "data" in apiResult ? apiResult.data : null;
-  const isLoading = "isLoading" in apiResult ? apiResult.isLoading : false;
   const isError = "isError" in apiResult ? apiResult.isError : false;
   const error = "error" in apiResult ? apiResult.error : null;
 
@@ -263,7 +261,7 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
     }
   }, [columns]);
 
-  const { advFilters, handleAdvFiltersChange } = useAdvancedFilters(
+  const { advFilters: _advFilters, handleAdvFiltersChange: _handleAdvFiltersChange } = useAdvancedFilters(
     searchParams,
     filterFields
   );

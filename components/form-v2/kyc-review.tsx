@@ -9,7 +9,7 @@ interface KycReviewCardProps {
     values: Record<string, unknown>;
 }
 
-export function KycReviewCard({ schema, values }: KycReviewCardProps) {
+export function KycReviewCard({ schema: _schema, values }: KycReviewCardProps) {
     const shareholderCount = typeof values.shareholder_count === "number" &&
             Number.isFinite(values.shareholder_count)
         ? values.shareholder_count

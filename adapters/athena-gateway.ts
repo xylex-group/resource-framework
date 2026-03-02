@@ -45,14 +45,6 @@ export interface DeleteDataParams {
   update_body?: Record<string, unknown>;
 }
 
-type AthenaGatewayMethod = "POST" | "PUT" | "DELETE";
-
-type AthenaGatewayCondition = {
-  column: string;
-  operator: "eq";
-  value: string | number | boolean | null;
-};
-
 export interface AthenaGatewayConfig {
   baseUrl?: string;
   apiKey?: string;
@@ -129,41 +121,6 @@ function firstRow<T>(value: T | T[] | null | undefined): T | null {
   }
 
   return (value ?? null) as T | null;
-}
-
-function toAthenaConditions(
-  conditions: DataCondition[] | undefined,
-): AthenaGatewayCondition[] | undefined {
-  if (!conditions?.length) {
-    return undefined;
-  }
-
-  return conditions.map((condition) => ({
-    column: condition.eq_column,
-    operator: "eq",
-    value: condition.eq_value,
-  }));
-}
-
-function normalizePayload<T>(payload: unknown): DataResponse<T> {
-  const record =
-    payload && typeof payload === "object"
-      ? (payload as Record<string, unknown>)
-      : null;
-
-  const error =
-    record && typeof record.error === "string"
-      ? record.error
-      : record && typeof record.message === "string"
-        ? record.message
-        : null;
-
-  const data = record && "data" in record ? (record.data as T) : (payload as T);
-
-  return {
-    data: (data ?? null) as T | null,
-    error,
-  };
 }
 
 export async function fetchDataViaAthena<T = unknown[]>(

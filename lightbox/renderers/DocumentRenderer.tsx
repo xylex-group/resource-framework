@@ -1,10 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Download, ExternalLink, FileText, Loader2 } from "lucide-react";
+import { FileText, Loader2 } from "lucide-react";
 import type { LightboxRendererProps } from "../types";
 import { Button } from "@/components/ui/button";
-import { formatFileSize } from "../utils/format";
 import { useAuthorizedFileUrl } from "../hooks/useAuthorizedFileUrl";
 import {
   fetchS3FileAsArrayBuffer,
@@ -92,7 +91,7 @@ function parseCsv(text: string): Array<Record<string, string>> {
  */
 export function DocumentRenderer({
   file,
-  isActive,
+  isActive: _isActive,
   onLoad,
   onError,
 }: LightboxRendererProps) {
@@ -104,8 +103,7 @@ export function DocumentRenderer({
   );
   const { setHasScrolled } = useLightboxScroll();
   const setHasScrolledRef = useRef(setHasScrolled);
-  const { authorizedUrl, isRefreshing, refreshAuthorizedUrl } =
-    useAuthorizedFileUrl(file.url);
+  const { authorizedUrl, isRefreshing } = useAuthorizedFileUrl(file.url);
 
   // Keep ref up to date
   useEffect(() => {
@@ -136,7 +134,7 @@ export function DocumentRenderer({
               `[DocumentRenderer] Retrying fetch, attempt ${attempt}...`,
             );
           },
-          onUrlRefresh: (newUrl) => {
+          onUrlRefresh: (_newUrl) => {
             console.log("[DocumentRenderer] URL refreshed successfully");
           },
         });
@@ -149,7 +147,7 @@ export function DocumentRenderer({
               `[DocumentRenderer] Retrying fetch, attempt ${attempt}...`,
             );
           },
-          onUrlRefresh: (newUrl) => {
+          onUrlRefresh: (_newUrl) => {
             console.log("[DocumentRenderer] URL refreshed successfully");
           },
         });
@@ -162,7 +160,7 @@ export function DocumentRenderer({
               `[DocumentRenderer] Retrying fetch, attempt ${attempt}...`,
             );
           },
-          onUrlRefresh: (newUrl) => {
+          onUrlRefresh: (_newUrl) => {
             console.log("[DocumentRenderer] URL refreshed successfully");
           },
         });
@@ -193,33 +191,6 @@ export function DocumentRenderer({
       fetchAndParseDocument(authorizedUrl);
     }
   }, [authorizedUrl, isRefreshing, fetchAndParseDocument]);
-
-  const getFreshUrl = useCallback(async () => {
-    try {
-      return await refreshAuthorizedUrl();
-    } catch (error) {
-      console.error("[DocumentRenderer] Failed to refresh URL:", error);
-      return authorizedUrl;
-    }
-  }, [authorizedUrl, refreshAuthorizedUrl]);
-
-  const handleDownload = useCallback(async () => {
-    try {
-      const url = await getFreshUrl();
-      const { downloadS3File } = await import(
-        "@/packages/resource-framework/utils/s3-file-handler"
-      );
-      await downloadS3File(url, file.name);
-    } catch (error) {
-      console.error("[DocumentRenderer] Download failed:", error);
-      setErrorMessage("Failed to download file");
-    }
-  }, [file.name, getFreshUrl]);
-
-  const handleOpenNew = async () => {
-    const url = await getFreshUrl();
-    window.open(url, "_blank");
-  };
 
   const handleRetry = () => {
     fetchAndParseDocument(authorizedUrl);

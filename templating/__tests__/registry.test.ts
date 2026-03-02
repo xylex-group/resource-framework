@@ -173,7 +173,7 @@ describe("Strategy Registry", () => {
   describe("Strategy Execution", () => {
     it("should execute registered strategy", () => {
       class MockStrategy implements TemplateStrategy {
-        resolve(key: string, context: TemplateContext): unknown {
+        resolve(key: string, _context: TemplateContext): unknown {
           return `mock-${key}`;
         }
       }

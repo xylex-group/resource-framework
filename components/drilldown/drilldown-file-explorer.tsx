@@ -275,10 +275,10 @@ export function DrilldownFileExplorer({
   onDelete,
   onDownload,
   onPreview,
-  uploadDir,
-  organizationId,
-  resourceId,
-  resourceType,
+  uploadDir: _uploadDir,
+  organizationId: _organizationId,
+  resourceId: _resourceId,
+  resourceType: _resourceType,
   maxFileSize = 20,
   acceptedTypes,
   allowUpload = true,
@@ -702,7 +702,7 @@ export function DrilldownFileExplorer({
           currentIndex={lightboxState.currentIndex}
           isOpen={lightboxState.isOpen}
           onClose={closeLightbox}
-          onNavigate={(index) => {
+          onNavigate={(_index) => {
             // Navigation is handled by the lightbox internally
           }}
           showNavigation={false}
@@ -730,7 +730,7 @@ export function DrilldownFileExplorer({
         currentIndex={lightboxState.currentIndex}
         isOpen={lightboxState.isOpen}
         onClose={closeLightbox}
-        onNavigate={(index) => {
+        onNavigate={(_index) => {
           // Navigation is handled by the lightbox internally
         }}
         showNavigation={false}

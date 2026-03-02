@@ -1,10 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  ResourceDrilldown,
-  ResourceProvider,
-} from "@xylex-group/resource-framework";
+import { ResourceDrilldown } from "@rf/components/ResourceDrilldown";
 
 export default function ContactDrilldownPage({
   params,
@@ -29,9 +26,7 @@ export default function ContactDrilldownPage({
             Back to table
           </Link>
         </div>
-        <ResourceProvider resourceName="demo_contacts" resourceId={id}>
-          <ResourceDrilldown />
-        </ResourceProvider>
+        <ResourceDrilldown resourceName="demo_contacts" resourceId={id} />
       </div>
     </div>
   );

@@ -144,17 +144,6 @@ export function FormField({
         onChange(newRows);
     };
 
-    const generateYearOptions = () => {
-        const currentYear = new Date().getFullYear();
-        const startYear = currentYear - 100;
-        const endYear = currentYear - 18;
-        const years = [];
-        for (let year = endYear; year >= startYear; year--) {
-            years.push(year);
-        }
-        return years;
-    };
-
     const generateYearOptionsExtended = () => {
         // For DOB, last three years shouldn't be included
         const currentYear = new Date().getFullYear();
@@ -1190,11 +1179,6 @@ export function FormField({
 
                 const shareholderCount =
                     Number(formData?.shareholder_count || 1) || 1;
-
-                const base = typeof window !== "undefined"
-                    ? window.location.origin
-                    : process.env.NEXT_PUBLIC_APP_URL ||
-                        "http://localhost:3000";
 
                 const caseId = String(formData?.sf_formations_case_id || "")
                     .trim() ||

@@ -1,7 +1,8 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
-import { ResourceTable } from "@xylex-group/resource-framework";
+import { ResourceTable } from "@rf/components/ResourceTable";
 
 export default function DemoContactsPage() {
   return (
@@ -21,7 +22,15 @@ export default function DemoContactsPage() {
             Back to playground
           </Link>
         </div>
-        <ResourceTable resourceName="demo_contacts" />
+        <Suspense
+          fallback={
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 text-sm text-slate-400">
+              Loading contacts...
+            </div>
+          }
+        >
+          <ResourceTable resourceName="demo_contacts" />
+        </Suspense>
       </div>
     </div>
   );

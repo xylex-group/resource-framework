@@ -78,7 +78,7 @@ export function extractBucketName(url: string): string | null {
     }
 
     return null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -93,12 +93,6 @@ interface RefreshResult {
   url: string;
   expiresIn?: number;
 }
-
-const EXPIRE_HEADER_KEYS = [
-  "x-amz-expires",
-  "x-amz-expire",
-  "x-amz-expiration",
-];
 
 const EXPIRE_QUERY_KEYS = [
   "X-Amz-Expires",

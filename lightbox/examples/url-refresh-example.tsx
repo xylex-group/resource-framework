@@ -129,7 +129,7 @@ export function UrlRefreshExample() {
         currentIndex={state.currentIndex}
         isOpen={state.isOpen}
         onClose={closeLightbox}
-        onNavigate={(index) => {
+        onNavigate={(_index) => {
           // Optional: handle navigation
         }}
         showNavigation

@@ -13,11 +13,11 @@ import { useAuthorizedFileUrl } from "../hooks/useAuthorizedFileUrl";
  */
 export function ImageRenderer({
   file,
-  isActive,
+  isActive: _isActive,
   onLoad,
   onError
 }: LightboxRendererProps) {
-  const [isLoading, setIsLoading] = useState(true);
+  const [_isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [hasValidSize, setHasValidSize] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);

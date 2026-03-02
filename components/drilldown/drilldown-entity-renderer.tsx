@@ -56,7 +56,7 @@ export function DrilldownEntityRenderer<T extends Record<string, unknown>>({
 	isLoading = false,
 	autoHideEmptyFields,
 	autoHideEmptyColumns,
-	exposeToEditState,
+	exposeToEditState: _exposeToEditState,
 	widgets,
 }: EntityRendererProps<T>) {
 	const visibleFields = fields.filter((field) => !field.hidden);
@@ -83,7 +83,7 @@ export function DrilldownEntityRenderer<T extends Record<string, unknown>>({
 									<Skeleton className="h-4 w-full sm:flex-1" />
 								</div>
 							))
-							: visibleFields.map((field, idx) => {
+							: visibleFields.map((field) => {
 								const value = field.key.includes(".")
 									? field.key.split(".").reduce<unknown>(
 										(obj, key) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import type { LightboxRendererProps } from "../types";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { isExpiredUrlError } from "../utils/url-refresh";
  */
 export function PdfRenderer({
   file,
-  isActive,
+  isActive: _isActive,
   onLoad,
   onError,
 }: LightboxRendererProps) {

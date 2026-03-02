@@ -41,7 +41,7 @@ export const handleUpdate = async (
                     success: false,
                 });
             }
-        } catch (e) {
+        } catch {
             notification({
                 message: "Update failed",
                 success: false,

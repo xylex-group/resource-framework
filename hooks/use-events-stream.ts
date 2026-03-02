@@ -1,11 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-import { APP_CONFIG } from "@/lib/config";
-import { useUserStore } from "@/lib/stores";
-
-const base = APP_CONFIG?.api?.events_dms;
-const endpoint = "/ws";
-
-export function useEventsStream(onMessage?: (msg: unknown) => void) {
+export function useEventsStream(_onMessage?: (msg: unknown) => void) {
 	return null;
 	// const { user } = useUserStore();
 	// const [socket, setSocket] = useState<WebSocket | null>(null);

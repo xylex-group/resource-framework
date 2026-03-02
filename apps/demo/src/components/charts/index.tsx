@@ -1,7 +1,6 @@
 "use client";
 
 import { ChartContainer } from "../ui/chart";
-import { cn } from "@/lib/utils";
 
 export interface ChartDataPoint {
   [key: string]: unknown;

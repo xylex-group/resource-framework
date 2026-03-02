@@ -35,7 +35,6 @@ import {
   UserStrategy,
   ResourceStrategy,
   ResourceIdShorthandStrategy,
-  ColumnStrategy,
 } from "./strategies";
 
 /**

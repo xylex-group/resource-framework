@@ -9,8 +9,6 @@ import {
   VideoPlayerControlBar,
   VideoPlayerMuteButton,
   VideoPlayerPlayButton,
-  VideoPlayerSeekBackwardButton,
-  VideoPlayerSeekForwardButton,
   VideoPlayerTimeDisplay,
   VideoPlayerTimeRange,
   VideoPlayerVolumeRange,

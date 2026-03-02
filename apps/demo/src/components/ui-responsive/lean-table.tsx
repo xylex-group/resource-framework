@@ -34,7 +34,6 @@ export function LeanTable<TData>({
   onAddItemAction,
   addItemLabel,
   hrefAction,
-  filterColumns,
   filterPlaceholder,
 }: LeanTableProps<TData>) {
   const [globalFilter, setGlobalFilter] = useState("");

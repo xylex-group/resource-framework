@@ -206,7 +206,7 @@ export const MetricCard = React.memo(function MetricCard({
   listData: staticListData,
   isEditMode = false,
   queryId,
-  isSQLWidget = false,
+  isSQLWidget: _isSQLWidget = false,
   queryName,
   dateRange = "Last 7 days",
   frequency = "Daily",

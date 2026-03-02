@@ -1,5 +1,5 @@
-import "@/*/globals.css";
-import { ResourceProvider } from "@xylex-group/resource-framework";
+import "./globals.css";
+import { ResourceProvider } from "@rf/components/ResourceProvider";
 
 export const metadata = {
   title: "Resource Framework Demo",

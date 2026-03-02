@@ -1136,9 +1136,9 @@ export const RESOURCE_ROUTES: Record<string, ResourceRoute> = {
 };
 
 const formatWarning = (
-  routeName: string,
-  columnName: string,
-  issue: string,
+  _routeName: string,
+  _columnName: string,
+  _issue: string,
 ) => {
   // Suppressed: Schema validation warnings are too verbose and clutter the console
   // Uncomment the line below if you need to debug schema mismatches

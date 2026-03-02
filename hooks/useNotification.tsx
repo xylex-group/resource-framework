@@ -19,7 +19,7 @@ export function notify({
 	message,
 	icon,
 	idempotencyKey,
-	success = true,
+	success: _success = true,
 }: UseNotificationOptions) {
 	toast(message, {
 		...defaultNotificationConfig,

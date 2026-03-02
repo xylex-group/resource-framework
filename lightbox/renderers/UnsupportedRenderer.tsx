@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { FileQuestion, Download, ExternalLink } from "lucide-react";
 import type { LightboxRendererProps } from "../types";
 import { Button } from "@/components/ui/button";
