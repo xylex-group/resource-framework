@@ -21,6 +21,8 @@ Complete documentation for the Resource Framework.
 - [Components](./06-components.md) - Reusable React components
 - [Hooks](./05-hooks.md) - React hooks for resource operations
 - [ResourceProvider](./13-resource-provider.md) - Context wrapper
+- [Resource Forms](./38-resource-forms.md) - Persisted form contract and runtime model
+- [Form Builder And Renderer](./39-form-builder-renderer.md) - Builder-time vs runtime APIs
 
 ## Widgets
 
@@ -136,6 +138,8 @@ packages/resource-framework/
 │   ├── 29-s3-config.md
 │   ├── 30-templating.md
 │   ├── 31-best-practices.md
+│   ├── 38-resource-forms.md
+│   ├── 39-form-builder-renderer.md
 │   └── 32-index.md (you are here)
 ├── components/
 ├── hooks/

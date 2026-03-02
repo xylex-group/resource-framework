@@ -21,8 +21,9 @@ It ships both React UI primitives and non-UI helpers so the rest of the app can 
 8. [Registries & constructors](#registries--constructors)
 9. [Utilities](#utilities)
 10. [Types & schema](#types--schema)
-11. [Testing](#testing)
-12. [Best practices & patterns](#best-practices--patterns)
+11. [Resource Forms](#resource-forms)
+12. [Testing](#testing)
+13. [Best practices & patterns](#best-practices--patterns)
 
 ## Architecture overview
 
@@ -71,6 +72,7 @@ Most of the public API is re-exported from `index.ts`. Highlights:
 | Utilities | `buildCategoryByKey`, `coerceByDatatype`, `buildTableColumns`, `insertRow`, `coerceValue`, `applyClientFilters`, `parseQueryFilters`, `parseQuerySort` |
 | Hooks | `useResourceContext`, `useResourceRoute`, `useTableConfiguration`, `useFetchData`, etc. |
 | Types | `ResourceRoute`, `ResourceFieldSpec`, `ColumnConfig`, `DrilldownSectionConfig`, `DrizzleTableName`, `DrizzleColumnValue`, etc. |
+| Resource forms | `defineResourceFormSchema`, `defineResourceForm`, `createResourceFormRows`, `resolveResourceFormRows`, `useResourceFormRuntime`, `EntityFormV2` |
 
 ## Directories at a glance
 
@@ -89,6 +91,7 @@ Most of the public API is re-exported from `index.ts`. Highlights:
 - `components/sections/*`: building blocks for drilldown sections, widgets, summaries, and attachments.
 - `components/table/*`: portable table controls (search, add, delete, download, pagination, fullscreen) for consistent UI.
 - `components/form-v2/EntityFormV2.tsx`: shared form stack powering dialogs, drilldown actions, and card/plan selects.
+- `components/form-v2/*`: the shared resource-form renderer stack (`EntityFormV2`, `FormFieldV2`, review cards).
 - `components/edit-state`: helpers for inline edit indicators (`AddField`, `toggle-edit`, `SaveAll`).
 - `components/cells`: custom cell renderers (e.g., `ScopeCell`, `AssigneesCell`) used in table defaults.
 - `components/drilldown`: layout components (`DrilldownLayout`, `DrilldownTable`, `DrilldownActivity`) plus file explorer and action toolbar.
@@ -149,6 +152,7 @@ Most of the public API is re-exported from `index.ts`. Highlights:
 - `dork-query.ts`: parses filter/sort query strings (aka dork query) and syncs them with the URL.
 - `drizzle-editor.ts`: maps snapshot metadata to editor types (`getDrizzleEditorType`, `getDrizzleFieldType`, `getDrizzleColumnInfo`).
 - `insert.ts`: `insertRow()` applies defaults, resolves transforms, and posts via the adapter.
+- `resource-forms.ts`: validation, normalization, ordered-step helpers, builder DSL, and row-to-runtime resolution for persisted form contracts.
 - `key-case.ts`: normalizes camelCase/snake_case accessors used by query parsers.
 - `query-parser.ts`: helper for `parseQueryFilters` and `parseQuerySort`.
 - `render-functions.ts`: placeholder `noop` and other render helpers.
@@ -251,6 +255,19 @@ Expose consistent helpers for:
 - `resource-types.ts` defines shared config shapes (`ResourceRoute`, `ResourceFieldSpec`, `ColumnConfig`, `DrilldownSectionConfig`, `ResourceFormField`, etc.).
 - `types/drizzle-schema.ts` provides strongly typed table/column names (`DrizzleTableName`, `DrizzleColumnName`), column value types (`DrizzleColumnValue`), and metadata.
 - Always keep `meta/` and `types/` in sync with the Drizzle schema. Regenerate after schema changes (`npx drizzle-kit generate`).
+
+## Resource Forms
+
+`resource_forms` is now a first-class subsystem, not just a demo pattern.
+
+- Author form schemas with `defineResourceFormSchema()`.
+- Wrap them in `defineResourceForm()` to attach metadata and defaults.
+- Convert definitions into persisted rows with `createResourceFormRow()` / `createResourceFormRows()`.
+- Read rows back through `resolveResourceFormRow()` / `resolveResourceFormRows()`.
+- Use `useResourceFormRuntime()` to manage selected-form and value state.
+- Render the validated schema with `EntityFormV2`.
+
+Use this layer whenever a form should be driven by persisted metadata instead of hardcoded JSX.
 
 ## Testing
 

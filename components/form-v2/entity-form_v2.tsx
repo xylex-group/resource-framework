@@ -11,6 +11,7 @@ import type {
   ResourceFormField,
   ResourceFormSchema,
 } from "@/packages/resource-framework/resource-types";
+import { getOrderedResourceFormSteps } from "@/packages/resource-framework/utils/resource-forms";
 
 interface EntityFormV2Props {
   schema: ResourceFormSchema;
@@ -38,39 +39,7 @@ export function EntityFormV2({
       return 0;
     }
 
-    const stepsObj = schema.steps || {};
-    const baseEntries = Object.entries(stepsObj) as [
-      string,
-      ResourceFormField[],
-    ][];
-    const baseKeys = baseEntries.map(([name]) => name);
-
-    const order = schema.step_order;
-    let entries = baseEntries;
-
-    if (order && order.length > 0) {
-      const orderIndex = new Map<string, number>();
-      order.forEach((name, idx) => {
-        orderIndex.set(name, idx);
-      });
-
-      entries = baseEntries.slice().sort((a, b) => {
-        const aName = a[0];
-        const bName = b[0];
-
-        const aHas = orderIndex.has(aName);
-        const bHas = orderIndex.has(bName);
-
-        if (aHas && bHas) {
-          return (orderIndex.get(aName) ?? 0) - (orderIndex.get(bName) ?? 0);
-        }
-
-        if (aHas) return -1;
-        if (bHas) return 1;
-
-        return baseKeys.indexOf(aName) - baseKeys.indexOf(bName);
-      });
-    }
+    const entries = getOrderedResourceFormSteps(schema);
 
     const targetIndex = entries.findIndex(
       ([name]) => name === String(stepValue),
@@ -85,37 +54,7 @@ export function EntityFormV2({
 
   const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
-  const stepEntries = Object.entries(schema.steps || {});
-  const stepKeys = stepEntries.map(([name]) => name);
-
-  const orderedStepEntries = (() => {
-    const order = schema.step_order;
-    if (!order || order.length === 0) {
-      return stepEntries;
-    }
-
-    const orderIndex = new Map<string, number>();
-    order.forEach((name, idx) => {
-      orderIndex.set(name, idx);
-    });
-
-    return stepEntries.slice().sort((a, b) => {
-      const aName = a[0];
-      const bName = b[0];
-
-      const aHas = orderIndex.has(aName);
-      const bHas = orderIndex.has(bName);
-
-      if (aHas && bHas) {
-        return (orderIndex.get(aName) ?? 0) - (orderIndex.get(bName) ?? 0);
-      }
-
-      if (aHas) return -1;
-      if (bHas) return 1;
-
-      return stepKeys.indexOf(aName) - stepKeys.indexOf(bName);
-    });
-  })();
+  const orderedStepEntries = getOrderedResourceFormSteps(schema);
 
   const [currentStepName, currentStepFields] = orderedStepEntries[
     currentStepIndex

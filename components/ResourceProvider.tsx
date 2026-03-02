@@ -186,7 +186,7 @@ export const ResourceProvider: React.FC<ResourceProviderProps> = ({
   const _handleDMSEvent = useCallback(
     (_message: unknown) => {
       try {
-        const eventData = (message as { data?: unknown })?.data;
+        const eventData = (_message as { data?: unknown })?.data;
         if (!eventData) return;
 
         const { event, resource, body } = eventData as {

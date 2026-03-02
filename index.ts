@@ -239,11 +239,27 @@ export {
 } from "./components/resource_drilldown_helpers";
 export { EntityFormV2 } from "./components/form-v2/entity-form_v2";
 export {
+  createResourceFormRow,
+  createResourceFormRows,
+  defineResourceForm,
+  defineResourceFormSchema,
+  formatResourceFormIssues,
+  getOrderedResourceFormSteps,
+  getRequiredResourceFormFieldKeys,
+  getResourceFormFieldKeys,
   parseResourceFormSchema,
   resolveResourceFormRow,
   resolveResourceFormRows,
+  validateResourceFormSchema,
+  type ResourceFormDefinition,
+  type ResourceFormValidationIssue,
+  type ResourceFormValidationResult,
   type ResolvedResourceForm,
 } from "./utils/resource-forms";
+export {
+  useResourceFormRuntime,
+  type UseResourceFormRuntimeResult,
+} from "./hooks/use-resource-form-runtime";
 export { DisplaySettings } from "./components/table/display-settings";
 export { useAddResourceButton } from "./components/table/AddResourceButton";
 export { createActionsColumn } from "./components/table/ActionsColumn";
@@ -283,5 +299,8 @@ export {
 } from "./components/table/table-pagination-info";
 
 export type { PlaygroundFormDefinition } from "./demo/playground-forms";
-export { playgroundFormDefinitions } from "./demo/playground-forms";
-export { playgroundResourceFormRows } from "./demo/playground-forms";
+export {
+  playgroundFormDefinitions,
+  playgroundResourceFormRows,
+  resolveResourceFormRows as resolvePlaygroundResourceFormRows,
+} from "./demo/playground-forms";

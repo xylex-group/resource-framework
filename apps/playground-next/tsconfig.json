@@ -28,6 +28,9 @@
       "@xylex-group/resource-framework/*": [
         "../../*"
       ],
+      "@rf/*": [
+        "../../*"
+      ],
       "@/packages/resource-framework": [
         "../../"
       ],

@@ -13,7 +13,7 @@ import { useAuthorizedFileUrl } from "../hooks/useAuthorizedFileUrl";
  */
 export function ImageRenderer({
   file,
-  isActive: _isActive,
+  isActive,
   onLoad,
   onError
 }: LightboxRendererProps) {

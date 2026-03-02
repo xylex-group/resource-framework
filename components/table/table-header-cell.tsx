@@ -12,9 +12,13 @@ interface TableHeaderCellProps<TData, TValue> {
 export function TableHeaderCell<TData, TValue>({
 	header,
 }: TableHeaderCellProps<TData, TValue>): ReactElement {
-	const meta = header.column.columnDef.meta;
-	const widthFit = meta?.widthFit;
-	const maxWidth = (meta as { maxWidth?: number })?.maxWidth;
+	const meta = (header.column.columnDef.meta ?? {}) as {
+		widthFit?: boolean;
+		maxWidth?: number;
+		className?: string;
+	};
+	const widthFit = meta.widthFit;
+	const maxWidth = meta.maxWidth;
 
 	const headerStyle = widthFit
 		? {

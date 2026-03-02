@@ -1,8 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
-import { EntityFormV2 } from "@xylex-group/resource-framework/components/form-v2/entity-form_v2";
+import {
+  EntityFormV2,
+  formatResourceFormIssues,
+  getOrderedResourceFormSteps,
+  getRequiredResourceFormFieldKeys,
+  useResourceFormRuntime,
+  validateResourceFormSchema,
+} from "@xylex-group/resource-framework";
 import { useApiClient } from "@xylex-group/resource-framework/hooks/use-api-client";
 import {
   playgroundResourceFormRows,
@@ -30,8 +37,6 @@ const buttonStyle: CSSProperties = {
 };
 
 export function ResourceFormsPlaygroundClient() {
-  const [selectedFormId, setSelectedFormId] = useState<string | null>(null);
-  const [values, setValues] = useState<Record<string, unknown>>({});
   const [message, setMessage] = useState("Reading from `resource_forms`.");
   const [submittedPayload, setSubmittedPayload] = useState("");
 
@@ -53,28 +58,27 @@ export function ResourceFormsPlaygroundClient() {
     [data],
   );
 
-  useEffect(() => {
-    if (!forms.length) {
-      setSelectedFormId(null);
-      return;
-    }
+  const {
+    selectedForm,
+    selectedFormId,
+    setSelectedFormId,
+    values,
+    updateValue,
+    resetValues,
+  } = useResourceFormRuntime(forms);
 
-    setSelectedFormId((current) =>
-      current && forms.some((form) => form.id === current)
-        ? current
-        : forms[0]!.id,
-    );
-  }, [forms]);
-
-  const selected = useMemo(
-    () => forms.find((form) => form.id === selectedFormId) ?? forms[0] ?? null,
-    [forms, selectedFormId],
+  const selectedStepEntries = useMemo(
+    () => (selectedForm ? getOrderedResourceFormSteps(selectedForm.schema) : []),
+    [selectedForm],
   );
-
-  useEffect(() => {
-    setValues(selected?.defaultValues ? { ...selected.defaultValues } : {});
-    setSubmittedPayload("");
-  }, [selected]);
+  const selectedRequiredFields = useMemo(
+    () => selectedForm ? getRequiredResourceFormFieldKeys(selectedForm.schema) : [],
+    [selectedForm],
+  );
+  const selectedValidation = useMemo(
+    () => selectedForm ? validateResourceFormSchema(selectedForm.schema) : { ok: true, value: null, issues: [] },
+    [selectedForm],
+  );
 
   async function handleSeedForms() {
     setMessage("Seeding demo rows into `resource_forms`...");
@@ -131,13 +135,16 @@ export function ResourceFormsPlaygroundClient() {
               Resource forms runtime
             </h1>
             <p style={{ margin: 0, maxWidth: 760, color: "var(--muted)", lineHeight: 1.6 }}>
-              This page renders fully from the `resource_forms` table. Each row stores
-              display metadata plus a persisted `ResourceFormSchema`, which is then fed
-              directly into `EntityFormV2`.
+              The authoring workflow is now explicit: definitions are built with shared
+              helpers, converted into deterministic `resource_forms` rows, validated,
+              then rendered into `EntityFormV2` at runtime.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
               <button style={buttonStyle} onClick={handleSeedForms}>
                 Seed demo forms
+              </button>
+              <button style={{ ...buttonStyle, background: "transparent", color: "var(--ink)" }} onClick={resetValues}>
+                Reset active defaults
               </button>
               <Link href="/bench" style={{ ...buttonStyle, textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
                 Open Athena bench
@@ -169,60 +176,63 @@ export function ResourceFormsPlaygroundClient() {
               </p>
             ) : (
               <div style={{ display: "grid", gap: 10 }}>
-                {forms.map((form) => (
-                  <button
-                    key={form.id}
-                    type="button"
-                    onClick={() => setSelectedFormId(form.id)}
-                    style={{
-                      borderRadius: 18,
-                      border: form.id === selected?.id
-                        ? "1px solid var(--accent)"
-                        : "1px solid var(--line)",
-                      background: "rgba(255,255,255,0.45)",
-                      padding: 14,
-                      textAlign: "left",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                      <strong>{form.title}</strong>
-                      <span style={{ color: "var(--muted)", fontSize: 11, textTransform: "uppercase" }}>
-                        {form.slug}
-                      </span>
-                    </div>
-                    <p style={{ marginBottom: 0, color: "var(--muted)", lineHeight: 1.5 }}>
-                      {form.description || "No description stored on this row."}
-                    </p>
-                  </button>
-                ))}
+                {forms.map((form) => {
+                  const stepCount = getOrderedResourceFormSteps(form.schema).length;
+                  const requiredCount = getRequiredResourceFormFieldKeys(form.schema).length;
+                  return (
+                    <button
+                      key={form.id}
+                      type="button"
+                      onClick={() => setSelectedFormId(form.id)}
+                      style={{
+                        borderRadius: 18,
+                        border: form.id === selectedFormId
+                          ? "1px solid var(--accent)"
+                          : "1px solid var(--line)",
+                        background: "rgba(255,255,255,0.45)",
+                        padding: 14,
+                        textAlign: "left",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                        <strong>{form.title}</strong>
+                        <span style={{ color: "var(--muted)", fontSize: 11, textTransform: "uppercase" }}>
+                          {form.slug}
+                        </span>
+                      </div>
+                      <p style={{ marginBottom: 0, color: "var(--muted)", lineHeight: 1.5 }}>
+                        {form.description || "No description stored on this row."}
+                      </p>
+                      <div style={{ marginTop: 10, display: "flex", gap: 10, color: "var(--muted)", fontSize: 12 }}>
+                        <span>{stepCount} steps</span>
+                        <span>{requiredCount} required</span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
 
           <div style={{ ...sectionStyle, background: "rgba(255,255,255,0.58)" }}>
-            {selected ? (
+            {selectedForm ? (
               <>
                 <div style={{ marginBottom: 18 }}>
                   <div style={{ color: "var(--muted)", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.18em" }}>
                     Active form
                   </div>
-                  <h2 style={{ marginBottom: 6 }}>{selected.title}</h2>
+                  <h2 style={{ marginBottom: 6 }}>{selectedForm.title}</h2>
                   <p style={{ margin: 0, color: "var(--muted)" }}>
-                    Entity: {selected.entity}
+                    Entity: {selectedForm.entity}
                   </p>
                 </div>
                 <EntityFormV2
-                  schema={selected.schema}
+                  schema={selectedForm.schema}
                   values={values}
-                  onChange={(key, value) => {
-                    setValues((current) => ({
-                      ...current,
-                      [key]: value,
-                    }));
-                  }}
+                  onChange={updateValue}
                   onSubmit={() => {
-                    setMessage(`Captured submission for ${selected.slug}.`);
+                    setMessage(`Captured submission for ${selectedForm.slug}.`);
                     setSubmittedPayload(JSON.stringify(values, null, 2));
                   }}
                 />
@@ -244,12 +254,54 @@ export function ResourceFormsPlaygroundClient() {
   title,
   description,
   entity,
+  source_schema_url,
+  source_schema_provider,
   schema,
   default_values,
   is_active,
   sort_order
 }`}
               </pre>
+            </section>
+
+            <section style={sectionStyle}>
+              <h2 style={{ marginTop: 0 }}>Contract analysis</h2>
+              {!selectedForm ? (
+                <p style={{ color: "var(--muted)", margin: 0 }}>
+                  Select a form to inspect its ordered steps, required fields, and validation state.
+                </p>
+              ) : (
+                <div style={{ display: "grid", gap: 14 }}>
+                  <div>
+                    <div style={{ color: "var(--muted)", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em" }}>
+                      Validation
+                    </div>
+                    <p style={{ marginBottom: 0, color: selectedValidation.ok ? "#0f766e" : "#b91c1c" }}>
+                      {selectedValidation.ok ? "Schema valid" : formatResourceFormIssues(selectedValidation.issues)}
+                    </p>
+                  </div>
+                  <div>
+                    <div style={{ color: "var(--muted)", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em" }}>
+                      Ordered steps
+                    </div>
+                    <ol style={{ marginBottom: 0, paddingLeft: 18, color: "var(--muted)", lineHeight: 1.7 }}>
+                      {selectedStepEntries.map(([stepKey, fields]) => (
+                        <li key={stepKey}>{stepKey} ({fields.length} fields)</li>
+                      ))}
+                    </ol>
+                  </div>
+                  <div>
+                    <div style={{ color: "var(--muted)", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em" }}>
+                      Required fields
+                    </div>
+                    <p style={{ marginBottom: 0, color: "var(--muted)" }}>
+                      {selectedRequiredFields.length > 0
+                        ? selectedRequiredFields.join(", ")
+                        : "No required fields."}
+                    </p>
+                  </div>
+                </div>
+              )}
             </section>
 
             <section style={sectionStyle}>

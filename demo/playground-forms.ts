@@ -1,14 +1,13 @@
-import type { ResourceFormRow, ResourceFormSchema } from "../resource-types";
+import type { ResourceFormRow } from "../resource-types";
+import {
+  createResourceFormRows,
+  defineResourceForm,
+  defineResourceFormSchema,
+  resolveResourceFormRows,
+  type ResourceFormDefinition,
+} from "../utils/resource-forms";
 
-export type PlaygroundFormDefinition = {
-  id: string;
-  title: string;
-  description: string;
-  schema: ResourceFormSchema;
-  defaultValues?: Record<string, unknown>;
-};
-
-const contactSchema: ResourceFormSchema = {
+const contactSchema = defineResourceFormSchema({
   entity: "demo_contact",
   steps: {
     personal_information: [
@@ -89,9 +88,9 @@ const contactSchema: ResourceFormSchema = {
     "contact_preferences",
     "review_confirmation",
   ],
-};
+});
 
-const kycSchema: ResourceFormSchema = {
+const kycSchema = defineResourceFormSchema({
   entity: "demo_kyc",
   steps: {
     identity: [
@@ -142,9 +141,9 @@ const kycSchema: ResourceFormSchema = {
     ],
   },
   step_order: ["identity", "verification", "review_confirmation"],
-};
+});
 
-const checkoutSchema: ResourceFormSchema = {
+const checkoutSchema = defineResourceFormSchema({
   entity: "demo_checkout",
   steps: {
     plan_selection: [
@@ -221,10 +220,12 @@ const checkoutSchema: ResourceFormSchema = {
   },
   step_order: ["plan_selection", "billing", "review_confirmation"],
   show_submit_button: true,
-};
+});
+
+export type PlaygroundFormDefinition = ResourceFormDefinition;
 
 export const playgroundFormDefinitions: PlaygroundFormDefinition[] = [
-  {
+  defineResourceForm({
     id: "contact",
     title: "Contact intake form",
     description:
@@ -239,8 +240,8 @@ export const playgroundFormDefinitions: PlaygroundFormDefinition[] = [
       preferred_channel: "phone_email",
       notes: "Share product updates, but please avoid SMS on weekends.",
     },
-  },
-  {
+  }),
+  defineResourceForm({
     id: "kyc",
     title: "Simplified KYC",
     description:
@@ -252,8 +253,8 @@ export const playgroundFormDefinitions: PlaygroundFormDefinition[] = [
       nationality: "CA",
       compliance_note: "Approved for standard risk tier.",
     },
-  },
-  {
+  }),
+  defineResourceForm({
     id: "checkout",
     title: "Checkout + payment",
     description:
@@ -262,24 +263,15 @@ export const playgroundFormDefinitions: PlaygroundFormDefinition[] = [
     defaultValues: {
       plan_choice: "growth",
       card_choice: "visa_4242",
-      card_nickname: "Team card",
-      billing_comment: "Schedule billing on the 10th of the month.",
+      card_nickname: "Corporate card",
+      billing_comment: "Apply the annual subscription discount next cycle.",
     },
-  },
+  }),
 ];
 
 export const playgroundResourceFormRows: ResourceFormRow[] =
-  playgroundFormDefinitions.map((definition, index) => ({
-    resource_form_id: `resource-form-${definition.id}`,
-    slug: definition.id,
-    title: definition.title,
-    description: definition.description,
-    entity: definition.schema.entity,
-    schema: definition.schema as unknown as Record<string, unknown>,
-    source_schema: definition.schema as unknown as Record<string, unknown>,
-    source_schema_provider: "resource-framework-demo",
-    default_values:
-      (definition.defaultValues as Record<string, unknown> | undefined) ?? null,
-    is_active: true,
-    sort_order: index,
-  }));
+  createResourceFormRows(playgroundFormDefinitions, {
+    provider: "resource-framework-demo",
+  });
+
+export { resolveResourceFormRows };

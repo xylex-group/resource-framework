@@ -1,80 +1,13 @@
-import type { ResourceFormSchema } from "@rf/resource-types";
-import { playgroundFormDefinitions } from "@rf/demo/playground-forms";
+import type { ResourceFormRow } from "@rf/resource-types";
+import {
+  playgroundFormDefinitions,
+  playgroundResourceFormRows,
+  resolveResourceFormRows,
+} from "@rf/demo/playground-forms";
+import type { ResolvedResourceForm } from "@rf/utils/resource-forms";
 
-export type DemoResourceFormRow = {
-  resource_form_id: string;
-  slug: string;
-  title: string;
-  description: string;
-  entity: string;
-  schema: Record<string, unknown>;
-  source_schema: Record<string, unknown>;
-  source_schema_provider: string;
-  default_values: Record<string, unknown>;
-  is_active: boolean;
-  sort_order: number;
-};
+export type DemoResourceFormRow = ResourceFormRow;
+export type DemoResourceFormDefinition = (typeof playgroundFormDefinitions)[number];
+export type ResolvedDemoResourceForm = ResolvedResourceForm;
 
-export type ResolvedDemoResourceForm = {
-  id: string;
-  slug: string;
-  title: string;
-  description: string;
-  entity: string;
-  schema: ResourceFormSchema;
-  defaultValues: Record<string, unknown>;
-};
-
-export const playgroundResourceFormRows: DemoResourceFormRow[] =
-  playgroundFormDefinitions.map((definition, index) => ({
-    resource_form_id: `resource-form-${definition.id}`,
-    slug: definition.id,
-    title: definition.title,
-    description: definition.description,
-    entity: definition.schema.entity,
-    schema: definition.schema as unknown as Record<string, unknown>,
-    source_schema: definition.schema as unknown as Record<string, unknown>,
-    source_schema_provider: "resource-framework-demo",
-    default_values:
-      (definition.defaultValues as Record<string, unknown> | undefined) ?? {},
-    is_active: true,
-    sort_order: index,
-  }));
-
-function isSchema(
-  value: unknown,
-): value is ResourceFormSchema {
-  return Boolean(
-    value &&
-      typeof value === "object" &&
-      typeof (value as { entity?: unknown }).entity === "string" &&
-      typeof (value as { steps?: unknown }).steps === "object",
-  );
-}
-
-export function resolveResourceFormRows(
-  rows: Array<Record<string, unknown>>,
-): ResolvedDemoResourceForm[] {
-  return rows
-    .map((row) => {
-      const schema = isSchema(row.schema) ? row.schema : isSchema(row.source_schema) ? row.source_schema : null;
-      if (!schema || row.is_active === false) {
-        return null;
-      }
-
-      return {
-        id: String(row.resource_form_id ?? row.slug ?? row.entity ?? "resource-form"),
-        slug: String(row.slug ?? row.entity ?? "resource-form"),
-        title: String(row.title ?? row.slug ?? row.entity ?? "Resource form"),
-        description: typeof row.description === "string" ? row.description : "",
-        entity: String(row.entity ?? schema.entity),
-        schema,
-        defaultValues:
-          row.default_values && typeof row.default_values === "object"
-            ? row.default_values as Record<string, unknown>
-            : {},
-      };
-    })
-    .filter((row): row is ResolvedDemoResourceForm => row !== null)
-    .sort((a, b) => a.title.localeCompare(b.title));
-}
+export { playgroundFormDefinitions, playgroundResourceFormRows, resolveResourceFormRows };
