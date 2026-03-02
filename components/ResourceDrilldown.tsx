@@ -450,7 +450,7 @@ export const ResourceDrilldown = ({
     setSaveError(false);
     await handleSaveAll({
       resource,
-      data,
+      data: data ?? null,
       setIsEditing,
       formState,
       notification,
@@ -940,7 +940,7 @@ export const ResourceDrilldown = ({
 
   const drilldownTitle = getDrilldownTitle({
     drilldownTitle: drilldownCfg?.title,
-    data,
+    data: data ?? null,
     resourceLabel: resource?.page_label,
     resourceName: resource_name,
   });

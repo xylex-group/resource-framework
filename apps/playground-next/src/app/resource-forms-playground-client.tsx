@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
-import { EntityFormV2 } from "@xylex-group/resource-framework";
+import { EntityFormV2 } from "@xylex-group/resource-framework/components/form-v2/entity-form_v2";
 import { useApiClient } from "@xylex-group/resource-framework/hooks/use-api-client";
 import {
   playgroundResourceFormRows,
   resolveResourceFormRows,
   type PlaygroundResourceFormRow,
-} from "@/lib/resource-forms";
+} from "../lib/resource-forms";
 
 const sectionStyle: CSSProperties = {
   backdropFilter: "blur(18px)",

@@ -6,7 +6,7 @@ import {
   uploadFileViaAthena,
 } from "@xylex-group/resource-framework/adapters/athena-files";
 import { useApiClient } from "@xylex-group/resource-framework/hooks/use-api-client";
-import { useUserStore } from "@/lib/stores";
+import { useUserStore } from "../lib/stores";
 
 type PlaygroundRow = Record<string, unknown>;
 

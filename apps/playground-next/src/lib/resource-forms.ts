@@ -1,4 +1,5 @@
-import { playgroundFormDefinitions } from "@xylex-group/resource-framework";
+import { playgroundFormDefinitions } from "@xylex-group/resource-framework/demo/playground-forms";
+import type { ResourceFormSchema } from "@xylex-group/resource-framework/resource-types";
 
 export type PlaygroundResourceFormRow = {
   resource_form_id: string;
@@ -20,12 +21,7 @@ export type ResolvedPlaygroundResourceForm = {
   title: string;
   description: string;
   entity: string;
-  schema: {
-    entity: string;
-    steps: Record<string, unknown[]>;
-    step_order?: string[];
-    show_submit_button?: boolean;
-  };
+  schema: ResourceFormSchema;
   defaultValues: Record<string, unknown>;
 };
 
@@ -45,9 +41,7 @@ export const playgroundResourceFormRows: PlaygroundResourceFormRow[] =
     sort_order: index,
   }));
 
-function isSchema(
-  value: unknown,
-): value is ResolvedPlaygroundResourceForm["schema"] {
+function isSchema(value: unknown): value is ResourceFormSchema {
   return Boolean(
     value &&
       typeof value === "object" &&
