@@ -1,14 +1,14 @@
 "use client";
 
-import {
-  defineColumns,
-  defineDrizzleResourceRoute,
-  type ResourceFieldSpec,
-  type ResourceRoute,
-  type ResourceRouteEntry,
-  type ResourceRouteRegistry,
-} from "@/packages/resource-framework";
-import { type BuiltColumnSpec } from "@/packages/resource-framework/resource-types";
+import { defineColumns } from "../constructors/define-columns";
+import { defineDrizzleResourceRoute } from "../constructors/define-drizzle-resource-route";
+import type {
+  BuiltColumnSpec,
+  ResourceFieldSpec,
+  ResourceRoute,
+  ResourceRouteEntry,
+  ResourceRouteRegistry,
+} from "../resource-types";
 
 export const resourceRoutes: ResourceRouteRegistry = {};
 

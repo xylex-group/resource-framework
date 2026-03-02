@@ -1,11 +1,9 @@
 import type React from "react";
-import { AvatarCard } from "@/components/cards/avatar-card";
-import {
-	DrilldownSection,
-	DrilldownSummary,
-	DrilldownSummaryItem,
-} from "./index";
 import { MouseEvent, ReactNode } from "react";
+
+import { AvatarCard } from "@/components/cards/avatar-card";
+import { DrilldownSection } from "./drilldown-section";
+import { DrilldownSummary, DrilldownSummaryItem } from "../drilldown-summary";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -194,13 +192,13 @@ export function DrilldownEntityRenderer<T extends Record<string, unknown>>({
 										</Button>
 									);
 								} else if (field.is_user_id) {
-								displayValue = (
-								<div className="flex flex-row items-center gap-x-2">
-								<AvatarCard>
-								{String(formattedValue ?? "")}
-								</AvatarCard>
-								</div>
-								);
+									displayValue = (
+										<div className="flex flex-row items-center gap-x-2">
+											<AvatarCard>
+												{String(formattedValue ?? "")}
+											</AvatarCard>
+										</div>
+									);
 								} else if (
 									typeof formattedValue === "string" &&
 									formattedValue.length > 40
@@ -218,13 +216,7 @@ export function DrilldownEntityRenderer<T extends Record<string, unknown>>({
 								return (
 									<DrilldownSummaryItem
 										key={field.key}
-										label={
-											<span className="flex items-center gap-x-1">
-												<span className="font-semibold capitalize">
-													{field.label}
-												</span>
-											</span>
-										}
+										label={field.label}
 										value={displayValue}
 									/>
 								);
