@@ -10,10 +10,6 @@ import { ResourceFormsAdminClient } from "./resource-forms-admin-client";
 
 const mockUseApiClient = vi.fn();
 
-vi.mock("@xylex-group/resource-framework/hooks/use-api-client", () => ({
-  useApiClient: (...args: unknown[]) => mockUseApiClient(...args),
-}));
-
 vi.mock("next/link", () => ({
   default: ({
     children,
@@ -24,6 +20,17 @@ vi.mock("next/link", () => ({
     href: string;
   }) => <a href={href} {...props}>{children}</a>,
 }));
+
+vi.mock("@xylex-group/resource-framework", async () => {
+  const actual = await vi.importActual<typeof import("@xylex-group/resource-framework")>(
+    "@xylex-group/resource-framework",
+  );
+
+  return {
+    ...actual,
+    useApiClient: (...args: unknown[]) => mockUseApiClient(...args),
+  };
+});
 
 describe("ResourceFormsAdminClient", () => {
   afterEach(() => {

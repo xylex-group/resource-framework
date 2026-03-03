@@ -9,10 +9,10 @@ import {
   getRequiredResourceFormFieldKeys,
   listResourceFormSubmissionVersions,
   migrateResolvedResourceFormSubmission,
+  useApiClient,
   useResourceFormRuntime,
   validateResourceFormSchema,
 } from "@xylex-group/resource-framework";
-import { useApiClient } from "@xylex-group/resource-framework/hooks/use-api-client";
 import {
   playgroundResourceFormRows,
   playgroundResourceFormSubmissionMigrations,

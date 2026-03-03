@@ -17,14 +17,14 @@ const configs = [
         dir: "dist",
         entryFileNames: "[name].js",
         format: "esm",
-        sourcemap: true,
+        sourcemap: false,
         preserveModules: false
       },
       {
         dir: "dist",
         entryFileNames: "[name].cjs",
         format: "cjs",
-        sourcemap: true,
+        sourcemap: false,
         exports: "named",
         preserveModules: false
       }
@@ -138,5 +138,4 @@ const configs = [
 ];
 
 export default configs;
-
 

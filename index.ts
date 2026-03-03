@@ -97,6 +97,12 @@ export {
   type UseKeyboardShortcutOptions,
 } from "./hooks/use-keyboard-shortcut";
 export {
+  useApiClient,
+  type UseApiClientProps,
+  type UseApiClientSingleProps,
+  type UseApiClientMultiProps,
+} from "./hooks/use-api-client";
+export {
   type DrizzleColumnFieldType,
   type DrizzleColumnName,
   type DrizzleColumnValue,
@@ -315,5 +321,6 @@ export type { PlaygroundFormDefinition } from "./demo/playground-forms";
 export {
   playgroundFormDefinitions,
   playgroundResourceFormRows,
+  playgroundResourceFormSubmissionMigrations,
   resolveResourceFormRows as resolvePlaygroundResourceFormRows,
 } from "./demo/playground-forms";

@@ -9,6 +9,9 @@
   },
   "homepage": "https://xylex.group",
   "author": "XYLEX Group",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -45,7 +48,9 @@
     "typecheck": "node scripts/typecheck-workspaces.mjs",
     "lint": "eslint . --ext .ts,.tsx,.mts,.cts --no-eslintrc -c .eslintrc.cjs",
     "lint:fix": "eslint . --ext .ts,.tsx,.mts,.cts --no-eslintrc -c .eslintrc.cjs --fix",
+    "prepack": "npm run lint && npm run typecheck && npm test && npm run build",
     "prepare": "npm run build",
+    "prepublishOnly": "npm run prepack",
     "test": "vitest run",
     "test:resource-forms": "vitest run tests/resource-forms.test.ts tests/resource-form-migrations.test.ts components/form-v2/__tests__/entity-form-v2.test.tsx apps/playground-next/src/app/admin/resource-forms/resource-forms-admin-client.test.tsx",
     "test:integration": "node scripts/run-athena-integration.mjs",
