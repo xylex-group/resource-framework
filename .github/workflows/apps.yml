@@ -1,0 +1,93 @@
+name: Apps
+
+on:
+  pull_request:
+    paths:
+      - "apps/**"
+      - "components/**"
+      - "hooks/**"
+      - "adapters/**"
+      - "constructors/**"
+      - "handlers/**"
+      - "registries/**"
+      - "renderers/**"
+      - "types/**"
+      - "utils/**"
+      - "resource-types.ts"
+      - "index.ts"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig*.json"
+      - "rollup.config.mjs"
+      - ".github/workflows/apps.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/**"
+      - "components/**"
+      - "hooks/**"
+      - "adapters/**"
+      - "constructors/**"
+      - "handlers/**"
+      - "registries/**"
+      - "renderers/**"
+      - "types/**"
+      - "utils/**"
+      - "resource-types.ts"
+      - "index.ts"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig*.json"
+      - "rollup.config.mjs"
+      - ".github/workflows/apps.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: apps-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Demo lint
+        run: npm --workspace apps/demo run lint
+
+      - name: Demo typecheck
+        run: npm --workspace apps/demo run typecheck
+
+      - name: Demo build
+        run: npm --workspace apps/demo run build
+
+  playground-next:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Playground typecheck
+        run: npm --workspace apps/playground-next run typecheck
