@@ -48,6 +48,18 @@ export {
 export { applyTransform } from "./adapters/transforms";
 export { buildCategoryByKey } from "./utils/categories";
 export { coerceByDatatype } from "./utils/coerce";
+export {
+  defineResourceFormSubmissionMigrationRegistry,
+  defineResourceFormSubmissionMigrationStep,
+  migrateResolvedResourceFormSubmission,
+  migrateResourceFormSubmission,
+  planResourceFormSubmissionMigration,
+  type ResourceFormSubmission,
+  type ResourceFormSubmissionMigrationContext,
+  type ResourceFormSubmissionMigrationRegistry,
+  type ResourceFormSubmissionMigrationStep,
+  type ResourceFormSubmissionTransformer,
+} from "./utils/resource-form-migrations";
 export { CreateResourceButton } from "./components/create-resource-button";
 export { CreateResourceDialog } from "./components/create-resource-dialog";
 export {

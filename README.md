@@ -264,6 +264,7 @@ Expose consistent helpers for:
 - Wrap them in `defineResourceForm()` to attach metadata, defaults, and explicit version lineage.
 - Convert definitions into persisted rows with `createResourceFormRow()` / `createResourceFormRows()`.
 - Read rows back through `resolveResourceFormRow()` / `resolveResourceFormRows()`.
+- Migrate submission payloads deterministically with `migrateResolvedResourceFormSubmission()` when downstream contracts expect a different form version.
 - Use `useResourceFormRuntime()` to manage selected-form and value state.
 - Render the validated schema with `EntityFormV2`.
 

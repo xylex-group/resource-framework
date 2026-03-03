@@ -50,6 +50,9 @@ Use these helpers instead of parsing rows ad hoc:
 - `getOrderedResourceFormSteps()`
 - `getResourceFormFieldKeys()`
 - `getRequiredResourceFormFieldKeys()`
+- `planResourceFormSubmissionMigration()`
+- `migrateResourceFormSubmission()`
+- `migrateResolvedResourceFormSubmission()`
 
 ## Validation rules
 
@@ -80,6 +83,19 @@ Recommended flow:
 6. Render the resolved form with `EntityFormV2`.
 
 Use `migration_key` as the stable form family identifier and `schema_version` as the monotonic version within that family. That keeps backend migration code explicit when builder changes alter payload shape or required fields.
+
+## Submission migrations
+
+Use the migration helpers when a persisted form version no longer matches the payload contract expected by a downstream API or storage layer.
+
+Recommended pattern:
+
+1. Register adjacent upgrade/downgrade steps with `defineResourceFormSubmissionMigrationRegistry()`.
+2. Resolve the active form row with `resolveResourceFormRows()`.
+3. Before persistence, call `migrateResolvedResourceFormSubmission({ form, toVersion, payload, registry })`.
+4. Persist the transformed payload alongside the original form metadata if auditability matters.
+
+The migration planner is deterministic: it walks one version at a time and throws if any edge in the path is missing.
 
 ## Example
 

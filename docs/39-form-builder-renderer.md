@@ -26,6 +26,7 @@ Use these APIs when reading rows back from `resource_forms`:
 - `resolveResourceFormRow(row)`
 - `resolveResourceFormRows(rows)`
 - `useResourceFormRuntime(forms)`
+- `migrateResolvedResourceFormSubmission({ form, toVersion, payload, registry })`
 - `EntityFormV2`
 
 Runtime responsibilities:
@@ -63,7 +64,8 @@ Keep the layers separate:
 2. Storage layer: persists rows in `resource_forms`.
 3. Runtime adapter layer: fetches rows from Athena or mocks.
 4. Resolution layer: validates and normalizes rows.
-5. Renderer layer: binds resolved schema to form state and UI.
+5. Migration layer: upgrades/downgrades submission payloads by `(migrationKey, schemaVersion)`.
+6. Renderer layer: binds resolved schema to form state and UI.
 
 ## Anti-patterns
 
@@ -85,6 +87,7 @@ Add tests for:
 - option-bearing field types without options
 - definition-to-row round trips
 - row-to-runtime resolution
+- upgrade/downgrade migration paths for submission payloads
 - admin save/seed flows against mocked persistence adapters
 
 See `tests/resource-forms.test.ts` for the current baseline.
