@@ -3,6 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { EntityFormV2 } from "@rf/components/form-v2/entity-form_v2";
 import {
+  listResourceFormSubmissionVersions,
+  migrateResolvedResourceFormSubmission,
+} from "@rf/utils/resource-form-migrations";
+import {
   formatResourceFormIssues,
   getOrderedResourceFormSteps,
   getRequiredResourceFormFieldKeys,
@@ -11,6 +15,7 @@ import {
 import { useResourceFormRuntime } from "@rf/hooks/use-resource-form-runtime";
 import { fetchData } from "@/lib/actions/data";
 import {
+  playgroundResourceFormSubmissionMigrations,
   resolveResourceFormRows,
   type DemoResourceFormRow,
 } from "@/lib/resource-forms";
@@ -28,7 +33,8 @@ export function ResourceFormsRuntime({
   description,
 }: ResourceFormsRuntimeProps) {
   const [submitMessage, setSubmitMessage] = useState<string>("");
-  const [submittedPayload, setSubmittedPayload] = useState<string>("");
+  const [submittedValues, setSubmittedValues] = useState<Record<string, unknown> | null>(null);
+  const [targetVersion, setTargetVersion] = useState<number>(1);
   const [rows, setRows] = useState<DemoResourceFormRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -81,7 +87,7 @@ export function ResourceFormsRuntime({
 
   useEffect(() => {
     setSubmitMessage("");
-    setSubmittedPayload("");
+    setSubmittedValues(null);
   }, [selectedForm?.id]);
 
   const selectedStepEntries = useMemo(
@@ -100,6 +106,52 @@ export function ResourceFormsRuntime({
         : { ok: true, value: null, issues: [] },
     [selectedForm],
   );
+  const availableVersions = useMemo(
+    () => selectedForm
+      ? listResourceFormSubmissionVersions({
+          registry: playgroundResourceFormSubmissionMigrations,
+          migrationKey: selectedForm.migrationKey,
+          includeVersions: [selectedForm.schemaVersion],
+        })
+      : [],
+    [selectedForm],
+  );
+  const payloadSource = submittedValues ?? values;
+  const migratedPayloadResult = useMemo(() => {
+    if (!selectedForm) {
+      return { ok: true, payload: {}, error: "" };
+    }
+
+    try {
+      return {
+        ok: true,
+        payload: migrateResolvedResourceFormSubmission({
+          registry: playgroundResourceFormSubmissionMigrations,
+          form: selectedForm,
+          toVersion: targetVersion,
+          payload: payloadSource,
+        }),
+        error: "",
+      };
+    } catch (migrationError) {
+      return {
+        ok: false,
+        payload: null,
+        error: migrationError instanceof Error ? migrationError.message : String(migrationError),
+      };
+    }
+  }, [payloadSource, selectedForm, targetVersion]);
+
+  useEffect(() => {
+    if (!selectedForm) {
+      setTargetVersion(1);
+      return;
+    }
+
+    const highestVersion =
+      availableVersions[availableVersions.length - 1] ?? selectedForm.schemaVersion;
+    setTargetVersion(highestVersion);
+  }, [availableVersions, selectedForm]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -182,14 +234,17 @@ export function ResourceFormsRuntime({
                   <p className="text-sm text-slate-400">
                     Entity: <span className="text-slate-200">{selectedForm.entity}</span>
                   </p>
+                  <p className="text-sm text-slate-400">
+                    Migration lineage: <span className="text-slate-200">{selectedForm.migrationKey} v{selectedForm.schemaVersion}</span>
+                  </p>
                 </div>
                 <EntityFormV2
                   schema={selectedForm.schema}
                   values={values}
                   onChange={updateValue}
                   onSubmit={() => {
-                    setSubmitMessage(`Captured submission for ${selectedForm.slug}.`);
-                    setSubmittedPayload(JSON.stringify(values, null, 2));
+                    setSubmitMessage(`Captured submission for ${selectedForm.slug} and transformed it to v${targetVersion}.`);
+                    setSubmittedValues({ ...values });
                   }}
                 />
                 <div className="mt-4 flex justify-end">
@@ -221,6 +276,8 @@ export function ResourceFormsRuntime({
   title: string,
   description: string,
   entity: string,
+  schema_version: number,
+  migration_key: string,
   source_schema_url?: string | null,
   source_schema_provider?: string | null,
   schema: ResourceFormSchema,
@@ -261,18 +318,62 @@ export function ResourceFormsRuntime({
                         : "No required fields."}
                     </p>
                   </div>
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.25em] text-slate-500">Migration</div>
+                    <p className="mt-1 text-slate-400">
+                      {selectedForm.migrationKey} v{selectedForm.schemaVersion}
+                      {availableVersions.length > 1
+                        ? ` -> available targets: ${availableVersions.join(", ")}`
+                        : " -> no alternate targets registered"}
+                    </p>
+                  </div>
                 </div>
               )}
             </section>
 
             <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-              <h2 className="text-lg font-semibold">Submission preview</h2>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-lg font-semibold">Submission preview</h2>
+                {selectedForm ? (
+                  <label className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-slate-500">
+                    Target
+                    <select
+                      value={String(targetVersion)}
+                      onChange={(event) => setTargetVersion(Number(event.target.value))}
+                      className="rounded-full border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-200"
+                    >
+                      {availableVersions.map((version: number) => (
+                        <option key={version} value={version}>
+                          v{version}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : null}
+              </div>
               <p className="mt-2 text-sm text-slate-400">
                 {submitMessage || "Submit a form to inspect the captured payload."}
               </p>
-              <pre className="mt-4 max-h-[420px] overflow-auto rounded-xl bg-slate-950/80 p-3 text-xs text-slate-300">
-                {submittedPayload || JSON.stringify(values, null, 2)}
-              </pre>
+              <div className="mt-4 space-y-3">
+                <div>
+                  <div className="mb-2 text-xs uppercase tracking-[0.25em] text-slate-500">Raw form values</div>
+                  <pre className="max-h-[220px] overflow-auto rounded-xl bg-slate-950/80 p-3 text-xs text-slate-300">
+                    {JSON.stringify(payloadSource, null, 2)}
+                  </pre>
+                </div>
+                <div>
+                  <div className="mb-2 text-xs uppercase tracking-[0.25em] text-slate-500">
+                    Migrated payload {selectedForm ? `(target v${targetVersion})` : ""}
+                  </div>
+                  {migratedPayloadResult.ok ? (
+                    <pre className="max-h-[220px] overflow-auto rounded-xl bg-slate-950/80 p-3 text-xs text-slate-300">
+                      {JSON.stringify(migratedPayloadResult.payload, null, 2)}
+                    </pre>
+                  ) : (
+                    <p className="text-sm text-rose-400">{migratedPayloadResult.error}</p>
+                  )}
+                </div>
+              </div>
             </section>
           </aside>
         </div>

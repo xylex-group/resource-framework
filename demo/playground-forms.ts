@@ -6,6 +6,10 @@ import {
   resolveResourceFormRows,
   type ResourceFormDefinition,
 } from "../utils/resource-forms";
+import {
+  defineResourceFormSubmissionMigrationRegistry,
+  type ResourceFormSubmissionMigrationRegistry,
+} from "../utils/resource-form-migrations";
 
 const contactSchema = defineResourceFormSchema({
   entity: "demo_contact",
@@ -278,6 +282,130 @@ export const playgroundFormDefinitions: PlaygroundFormDefinition[] = [
 export const playgroundResourceFormRows: ResourceFormRow[] =
   createResourceFormRows(playgroundFormDefinitions, {
     provider: "resource-framework-demo",
+  });
+
+export const playgroundResourceFormSubmissionMigrations: ResourceFormSubmissionMigrationRegistry =
+  defineResourceFormSubmissionMigrationRegistry({
+    contact: [
+      {
+        fromVersion: 1,
+        toVersion: 2,
+        transform: (payload) => {
+          const next = { ...payload };
+
+          if (typeof next.email_address === "string") {
+            next.primary_email = next.email_address;
+            delete next.email_address;
+          }
+
+          if (typeof next.contact_number === "string") {
+            next.primary_phone = next.contact_number;
+            delete next.contact_number;
+          }
+
+          return next;
+        },
+      },
+      {
+        fromVersion: 2,
+        toVersion: 1,
+        transform: (payload) => {
+          const next = { ...payload };
+
+          if (typeof next.primary_email === "string") {
+            next.email_address = next.primary_email;
+            delete next.primary_email;
+          }
+
+          if (typeof next.primary_phone === "string") {
+            next.contact_number = next.primary_phone;
+            delete next.primary_phone;
+          }
+
+          return next;
+        },
+      },
+    ],
+    kyc: [
+      {
+        fromVersion: 1,
+        toVersion: 2,
+        transform: (payload) => {
+          const next = { ...payload };
+
+          if (typeof next.legal_name === "string") {
+            next.subject_name = next.legal_name;
+            delete next.legal_name;
+          }
+
+          if (typeof next.date_of_birth === "string") {
+            next.birth_date = next.date_of_birth;
+            delete next.date_of_birth;
+          }
+
+          return next;
+        },
+      },
+      {
+        fromVersion: 2,
+        toVersion: 1,
+        transform: (payload) => {
+          const next = { ...payload };
+
+          if (typeof next.subject_name === "string") {
+            next.legal_name = next.subject_name;
+            delete next.subject_name;
+          }
+
+          if (typeof next.birth_date === "string") {
+            next.date_of_birth = next.birth_date;
+            delete next.birth_date;
+          }
+
+          return next;
+        },
+      },
+    ],
+    checkout: [
+      {
+        fromVersion: 1,
+        toVersion: 2,
+        transform: (payload) => {
+          const next = { ...payload };
+
+          if (typeof next.plan_choice === "string") {
+            next.plan_code = next.plan_choice;
+            delete next.plan_choice;
+          }
+
+          if (typeof next.card_choice === "string") {
+            next.payment_method = next.card_choice;
+            delete next.card_choice;
+          }
+
+          return next;
+        },
+      },
+      {
+        fromVersion: 2,
+        toVersion: 1,
+        transform: (payload) => {
+          const next = { ...payload };
+
+          if (typeof next.plan_code === "string") {
+            next.plan_choice = next.plan_code;
+            delete next.plan_code;
+          }
+
+          if (typeof next.payment_method === "string") {
+            next.card_choice = next.payment_method;
+            delete next.payment_method;
+          }
+
+          return next;
+        },
+      },
+    ],
   });
 
 export { resolveResourceFormRows };

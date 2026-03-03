@@ -82,6 +82,9 @@ function getSortedStepsForDirection(
   direction: "upgrade" | "downgrade",
 ): ResourceFormSubmissionMigrationStep[] {
   return steps
+    .filter((step) => direction === "upgrade"
+      ? step.toVersion > step.fromVersion
+      : step.toVersion < step.fromVersion)
     .slice()
     .sort((a, b) => direction === "upgrade"
       ? a.fromVersion - b.fromVersion || a.toVersion - b.toVersion
@@ -135,6 +138,24 @@ export function planResourceFormSubmissionMigration(params: {
   }
 
   return plan;
+}
+
+export function listResourceFormSubmissionVersions(params: {
+  registry: ResourceFormSubmissionMigrationRegistry;
+  migrationKey: string;
+  includeVersions?: number[];
+}): number[] {
+  const versions = new Set<number>(params.includeVersions ?? []);
+  const steps = params.registry[params.migrationKey] ?? [];
+
+  for (const step of steps) {
+    versions.add(step.fromVersion);
+    versions.add(step.toVersion);
+  }
+
+  return Array.from(versions)
+    .filter((version) => Number.isInteger(version) && version > 0)
+    .sort((a, b) => a - b);
 }
 
 export function migrateResourceFormSubmission(params: {

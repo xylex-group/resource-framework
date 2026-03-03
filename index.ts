@@ -51,6 +51,7 @@ export { coerceByDatatype } from "./utils/coerce";
 export {
   defineResourceFormSubmissionMigrationRegistry,
   defineResourceFormSubmissionMigrationStep,
+  listResourceFormSubmissionVersions,
   migrateResolvedResourceFormSubmission,
   migrateResourceFormSubmission,
   planResourceFormSubmissionMigration,
