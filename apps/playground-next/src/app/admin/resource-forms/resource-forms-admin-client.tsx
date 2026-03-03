@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import React, { useEffect, useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import {
   createResourceFormRow,
@@ -22,6 +22,8 @@ type EditorState = {
   title: string;
   description: string;
   entity: string;
+  schema_version: string;
+  migration_key: string;
   source_schema_provider: string;
   source_schema_url: string;
   is_active: boolean;
@@ -89,6 +91,8 @@ function createDraftFromRow(row?: Record<string, unknown>): EditorState {
     title: String(row?.title ?? "New form"),
     description: typeof row?.description === "string" ? row.description : "",
     entity: String(row?.entity ?? (schema as { entity?: string }).entity ?? "new_form"),
+    schema_version: String(row?.schema_version ?? 1),
+    migration_key: String(row?.migration_key ?? row?.slug ?? "new-form"),
     source_schema_provider: typeof row?.source_schema_provider === "string" ? row.source_schema_provider : "playground-admin",
     source_schema_url: typeof row?.source_schema_url === "string" ? row.source_schema_url : "",
     is_active: row?.is_active !== false,
@@ -220,6 +224,8 @@ export function ResourceFormsAdminClient() {
           ...validation.value,
           entity: draft.entity || validation.value.entity,
         },
+        schemaVersion: Number(draft.schema_version || 1),
+        migrationKey: draft.migration_key || draft.slug,
         defaultValues: parsedDefaults.value,
         isActive: draft.is_active,
         sortOrder: Number(draft.sort_order || 0),
@@ -358,6 +364,14 @@ export function ResourceFormsAdminClient() {
                 <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Entity</div>
                 <input value={draft.entity} onChange={(e) => setDraft((current) => ({ ...current, entity: e.target.value }))} style={inputStyle} />
               </label>
+              <label>
+                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Schema version</div>
+                <input value={draft.schema_version} onChange={(e) => setDraft((current) => ({ ...current, schema_version: e.target.value }))} style={inputStyle} />
+              </label>
+              <label>
+                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Migration key</div>
+                <input value={draft.migration_key} onChange={(e) => setDraft((current) => ({ ...current, migration_key: e.target.value }))} style={inputStyle} />
+              </label>
               <label style={{ gridColumn: "1 / -1" }}>
                 <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Description</div>
                 <input value={draft.description} onChange={(e) => setDraft((current) => ({ ...current, description: e.target.value }))} style={inputStyle} />
@@ -409,6 +423,7 @@ export function ResourceFormsAdminClient() {
               <ul style={{ margin: 0, paddingLeft: 18, color: "var(--muted)", lineHeight: 1.7 }}>
                 <li>Validation uses the same shared contract as runtime rendering.</li>
                 <li>Save updates the live `resource_forms` row by `resource_form_id`.</li>
+                <li>`migration_key` + `schema_version` define the explicit migration lineage for each form family.</li>
                 <li>Seed creates canonical demo definitions through the builder helpers.</li>
               </ul>
             </section>

@@ -227,6 +227,8 @@ export type PlaygroundFormDefinition = ResourceFormDefinition;
 export const playgroundFormDefinitions: PlaygroundFormDefinition[] = [
   defineResourceForm({
     id: "contact",
+    schemaVersion: 1,
+    migrationKey: "contact",
     title: "Contact intake form",
     description:
       "Multi-step personal profile with contact preferences and a review note.",
@@ -243,6 +245,8 @@ export const playgroundFormDefinitions: PlaygroundFormDefinition[] = [
   }),
   defineResourceForm({
     id: "kyc",
+    schemaVersion: 1,
+    migrationKey: "kyc",
     title: "Simplified KYC",
     description:
       "Identity + document upload flow that ends with a compliance review step.",
@@ -256,6 +260,8 @@ export const playgroundFormDefinitions: PlaygroundFormDefinition[] = [
   }),
   defineResourceForm({
     id: "checkout",
+    schemaVersion: 1,
+    migrationKey: "checkout",
     title: "Checkout + payment",
     description:
       "Plan selection, payment capture, and review step for quick purchases.",

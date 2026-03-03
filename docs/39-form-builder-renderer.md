@@ -16,6 +16,7 @@ Builder-time responsibilities:
 - authoring valid schemas
 - setting defaults and metadata
 - assigning a stable slug/id
+- assigning explicit migration lineage (`schemaVersion`, `migrationKey`)
 - carrying source lineage (`source_schema_provider`, `source_schema_url`)
 
 ## Runtime API
@@ -31,6 +32,7 @@ Runtime responsibilities:
 
 - validating schema shape before rendering
 - normalizing titles/slugs/default values
+- normalizing schema version lineage for migration-aware consumers
 - applying deterministic `step_order`
 - managing selected form state and live values
 - rendering field controls and step transitions
@@ -83,5 +85,6 @@ Add tests for:
 - option-bearing field types without options
 - definition-to-row round trips
 - row-to-runtime resolution
+- admin save/seed flows against mocked persistence adapters
 
 See `tests/resource-forms.test.ts` for the current baseline.

@@ -11,6 +11,8 @@ A row in `resource_forms` is treated as an authorable runtime artifact:
   title?: string;
   description?: string;
   entity: string;
+  schema_version?: number | null;
+  migration_key?: string | null;
   source_schema_url?: string | null;
   source_schema?: Record<string, unknown>;
   source_schema_provider?: string | null;
@@ -31,6 +33,8 @@ The framework normalizes rows into `ResolvedResourceForm`:
 - `description`
 - `entity`
 - `schema`
+- `schemaVersion`
+- `migrationKey`
 - `defaultValues`
 - `isActive`
 - `sortOrder`
@@ -75,6 +79,8 @@ Recommended flow:
 5. Read rows back and resolve them with `resolveResourceFormRows()`.
 6. Render the resolved form with `EntityFormV2`.
 
+Use `migration_key` as the stable form family identifier and `schema_version` as the monotonic version within that family. That keeps backend migration code explicit when builder changes alter payload shape or required fields.
+
 ## Example
 
 ```ts
@@ -102,6 +108,8 @@ const definition = defineResourceForm({
   id: "contact-intake",
   title: "Contact intake",
   schema: contactSchema,
+  schemaVersion: 2,
+  migrationKey: "contact-intake",
   defaultValues: {
     first_name: "Alex",
   },

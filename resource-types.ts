@@ -794,6 +794,8 @@ export type ResourceFormRow = {
   title?: string;
   description?: string;
   entity: string;
+  schema_version?: number | null;
+  migration_key?: string | null;
   source_schema_url?: string | null;
   source_schema?: Record<string, unknown>;
   source_schema_provider?: string | null;

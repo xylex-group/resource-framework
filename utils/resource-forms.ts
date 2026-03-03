@@ -22,6 +22,8 @@ export type ResourceFormDefinition = {
   title: string;
   description?: string;
   schema: ResourceFormSchema;
+  schemaVersion?: number;
+  migrationKey?: string | null;
   defaultValues?: Record<string, unknown>;
   isActive?: boolean;
   sortOrder?: number;
@@ -40,6 +42,8 @@ export type ResolvedResourceForm = {
   description: string;
   entity: string;
   schema: ResourceFormSchema;
+  schemaVersion: number;
+  migrationKey: string;
   defaultValues: Record<string, unknown>;
   isActive: boolean;
   sortOrder: number;
@@ -75,6 +79,21 @@ function normalizeSlug(value: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "") || "resource-form";
+}
+
+function normalizeSchemaVersion(value: unknown): number | null {
+  if (typeof value === "number" && Number.isInteger(value) && value > 0) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim().length > 0) {
+    const parsed = Number(value);
+    if (Number.isInteger(parsed) && parsed > 0) {
+      return parsed;
+    }
+  }
+
+  return null;
 }
 
 function pushIssue(
@@ -332,9 +351,30 @@ export function defineResourceForm(
     );
   }
 
+  if (
+    definition.schemaVersion !== undefined &&
+    normalizeSchemaVersion(definition.schemaVersion) === null
+  ) {
+    throw new Error(
+      `Resource form \"${definition.id}\" schemaVersion must be a positive integer if provided.`,
+    );
+  }
+
+  if (
+    definition.migrationKey !== undefined &&
+    definition.migrationKey !== null &&
+    !isNonEmptyString(definition.migrationKey)
+  ) {
+    throw new Error(
+      `Resource form \"${definition.id}\" migrationKey must be a non-empty string if provided.`,
+    );
+  }
+
   return {
     ...definition,
     slug: normalizeSlug(definition.slug ?? definition.id),
+    schemaVersion: normalizeSchemaVersion(definition.schemaVersion) ?? 1,
+    migrationKey: definition.migrationKey ?? normalizeSlug(definition.slug ?? definition.id),
   };
 }
 
@@ -353,6 +393,8 @@ export function createResourceFormRow(
     title: normalized.title,
     description: normalized.description ?? "",
     entity: normalized.schema.entity,
+    schema_version: normalized.schemaVersion ?? 1,
+    migration_key: normalized.migrationKey ?? normalized.slug,
     source_schema_url: normalized.sourceSchemaUrl ?? null,
     source_schema: normalized.schema as unknown as Record<string, unknown>,
     source_schema_provider:
@@ -411,6 +453,11 @@ export function resolveResourceFormRow(
     description: typeof row.description === "string" ? row.description : "",
     entity: schema.entity,
     schema,
+    schemaVersion: normalizeSchemaVersion(row.schema_version) ?? 1,
+    migrationKey:
+      typeof row.migration_key === "string" && row.migration_key.trim().length > 0
+        ? row.migration_key
+        : slug,
     defaultValues: isRecord(row.default_values) ? row.default_values : {},
     isActive: row.is_active !== false,
     sortOrder:

@@ -47,7 +47,7 @@
     "lint:fix": "eslint . --ext .ts,.tsx,.mts,.cts --no-eslintrc -c .eslintrc.cjs --fix",
     "prepare": "npm run build",
     "test": "vitest run",
-    "test:resource-forms": "vitest run tests/resource-forms.test.ts components/form-v2/__tests__/entity-form-v2.test.tsx",
+    "test:resource-forms": "vitest run tests/resource-forms.test.ts components/form-v2/__tests__/entity-form-v2.test.tsx apps/playground-next/src/app/admin/resource-forms/resource-forms-admin-client.test.tsx",
     "test:integration": "node scripts/run-athena-integration.mjs",
     "test:watch": "vitest"
   },

@@ -7,6 +7,14 @@ export default defineConfig({
   resolve: {
     alias: [
       {
+        find: /^@xylex-group\/resource-framework\/(.*)$/,
+        replacement: `${rootDir}$1`,
+      },
+      {
+        find: "@xylex-group/resource-framework",
+        replacement: fileURLToPath(new URL("./index.ts", import.meta.url)),
+      },
+      {
         find: "@/packages/resource-framework",
         replacement: rootDir,
       },

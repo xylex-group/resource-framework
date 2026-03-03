@@ -261,11 +261,13 @@ Expose consistent helpers for:
 `resource_forms` is now a first-class subsystem, not just a demo pattern.
 
 - Author form schemas with `defineResourceFormSchema()`.
-- Wrap them in `defineResourceForm()` to attach metadata and defaults.
+- Wrap them in `defineResourceForm()` to attach metadata, defaults, and explicit version lineage.
 - Convert definitions into persisted rows with `createResourceFormRow()` / `createResourceFormRows()`.
 - Read rows back through `resolveResourceFormRow()` / `resolveResourceFormRows()`.
 - Use `useResourceFormRuntime()` to manage selected-form and value state.
 - Render the validated schema with `EntityFormV2`.
+
+Persist `migration_key` + `schema_version` on each `resource_forms` row so builder changes can be migrated as an explicit form family/version pair.
 
 Use this layer whenever a form should be driven by persisted metadata instead of hardcoded JSX.
 

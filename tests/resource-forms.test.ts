@@ -54,6 +54,8 @@ describe("resource form tooling", () => {
       title: "Customer intake",
       description: "Demo intake flow",
       schema: validSchema,
+      schemaVersion: 3,
+      migrationKey: "customer-intake",
       defaultValues: {
         first_name: "Taylor",
       },
@@ -67,7 +69,23 @@ describe("resource form tooling", () => {
     expect(resolved[0]?.slug).toBe("customer-intake");
     expect(resolved[0]?.defaultValues).toEqual({ first_name: "Taylor" });
     expect(resolved[0]?.sortOrder).toBe(3);
+    expect(resolved[0]?.schemaVersion).toBe(3);
+    expect(resolved[0]?.migrationKey).toBe("customer-intake");
     expect(resolved[0]?.sourceSchemaProvider).toBe("vitest");
+  });
+
+  it("defaults version lineage when version fields are omitted", () => {
+    const row = createResourceFormRow({
+      id: "versionless-form",
+      title: "Versionless form",
+      schema: validSchema,
+    });
+    const resolved = resolveResourceFormRows([row]);
+
+    expect(row.schema_version).toBe(1);
+    expect(row.migration_key).toBe("versionless-form");
+    expect(resolved[0]?.schemaVersion).toBe(1);
+    expect(resolved[0]?.migrationKey).toBe("versionless-form");
   });
 
   it("reports meaningful validation issues for malformed schemas", () => {
