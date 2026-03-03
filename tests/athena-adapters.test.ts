@@ -28,13 +28,14 @@ describe("Athena adapters", () => {
   });
 
   it("maps fetchDataViaAthena to the Athena SDK query builder", async () => {
-    const limit = vi.fn().mockResolvedValue({
+    const select = vi.fn().mockResolvedValue({
       data: [{ customer_id: "cust-1" }],
       error: null,
     });
-    const offset = vi.fn(() => ({ limit }));
-    const eq = vi.fn(() => ({ offset, limit }));
-    fromMock.mockReturnValue({ eq, offset, limit });
+    const limit = vi.fn(() => ({ select }));
+    const offset = vi.fn(() => ({ limit, select }));
+    const eq = vi.fn(() => ({ offset, limit, select }));
+    fromMock.mockReturnValue({ eq, offset, limit, select });
 
     const { fetchDataViaAthena } = await import(
       "@/packages/resource-framework/adapters/athena-gateway"
@@ -65,6 +66,7 @@ describe("Athena adapters", () => {
     expect(eq).toHaveBeenCalledWith("organization_id", "org-1");
     expect(offset).toHaveBeenCalledWith(20);
     expect(limit).toHaveBeenCalledWith(10);
+    expect(select).toHaveBeenCalledWith("customer_id, name");
     expect(result).toEqual({
       data: [{ customer_id: "cust-1" }],
       error: null,

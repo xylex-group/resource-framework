@@ -50,8 +50,7 @@ export function extractFileKey(url: string): string | null {
     // The path is now decoded and ready to be used with MinIO client
     // MinIO's presignedGetObject will handle encoding when generating the presigned URL
     return path || null;
-  } catch (error) {
-    console.error("[extractFileKey] Failed to parse URL:", error);
+  } catch {
     return null;
   }
 }
