@@ -146,6 +146,9 @@ export function ResourceFormsPlaygroundClient() {
               <button style={{ ...buttonStyle, background: "transparent", color: "var(--ink)" }} onClick={resetValues}>
                 Reset active defaults
               </button>
+              <Link href="/admin/resource-forms" style={{ ...buttonStyle, background: "transparent", color: "var(--ink)", textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+                Open admin builder
+              </Link>
               <Link href="/bench" style={{ ...buttonStyle, textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
                 Open Athena bench
               </Link>

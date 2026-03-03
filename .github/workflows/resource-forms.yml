@@ -1,0 +1,56 @@
+name: Resource Forms
+
+on:
+  pull_request:
+    paths:
+      - "components/form-v2/**"
+      - "utils/resource-forms.ts"
+      - "hooks/use-resource-form-runtime.ts"
+      - "demo/playground-forms.ts"
+      - "tests/resource-forms.test.ts"
+      - "components/form-v2/__tests__/**"
+      - "apps/playground-next/src/app/admin/resource-forms/**"
+      - "apps/playground-next/src/app/resource-forms-playground-client.tsx"
+      - "apps/demo/src/components/resource-forms/**"
+      - "package.json"
+      - "package-lock.json"
+      - "vitest.config.ts"
+  push:
+    branches:
+      - main
+    paths:
+      - "components/form-v2/**"
+      - "utils/resource-forms.ts"
+      - "hooks/use-resource-form-runtime.ts"
+      - "demo/playground-forms.ts"
+      - "tests/resource-forms.test.ts"
+      - "components/form-v2/__tests__/**"
+      - "apps/playground-next/src/app/admin/resource-forms/**"
+      - "apps/playground-next/src/app/resource-forms-playground-client.tsx"
+      - "apps/demo/src/components/resource-forms/**"
+      - "package.json"
+      - "package-lock.json"
+      - "vitest.config.ts"
+
+jobs:
+  resource-forms:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Typecheck workspace
+        run: npm run typecheck
+
+      - name: Run resource form tests
+        run: npm run test:resource-forms
