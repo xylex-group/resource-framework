@@ -1,5 +1,17 @@
 # Drilldown Routes
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  ResourceRow["Selected resource row"] --> DrilldownRoute["Drilldown route config"]
+  DrilldownRoute --> Sections["Sections"]
+  Sections --> Fields["Field renderers"]
+  Sections --> Widgets["Nested widgets"]
+  Widgets --> RelatedData["Related Athena fetches"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Drilldown routes define the detailed view of a single resource.
 
 ## Basic Structure
@@ -113,3 +125,11 @@ Available prefixes:
 - [Templates](./31-templating-system.md)
 - [Widgets](./04-widgets.md)
 - [Sections](./11-sections.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 3/5 - drilldown configs are flexible but layout and data-loading logic are still too tightly coupled.
+- Refactor path: Separate layout composition from widget data orchestration and validate section shapes centrally.
+- Replacement: A schema-validated drilldown layout AST with explicit widget query descriptors.
+- Weak points: Nested widgets can hide expensive fetch paths, conditional sections are hard to reason about, and route files can grow very quickly.
+<!-- codex:architecture-review:end -->

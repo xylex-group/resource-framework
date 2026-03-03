@@ -1,5 +1,17 @@
 # Widgets
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart LR
+  WidgetSpec["Widget spec"] --> Registry["Widget registry"]
+  Registry --> Resolver["Section widget resolver"]
+  Resolver --> TableWidget["Table widget"]
+  Resolver --> JsonWidget["JSON widget"]
+  Resolver --> FileWidget["File widget"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Widgets are reusable components for displaying data in drilldowns.
 
 ## Built-in Widgets
@@ -114,3 +126,11 @@ Widgets support `{{…}}` tokens in:
 - [File Explorer Widget](./21-file-explorer-widget.md)
 - [Templates](./31-templating-system.md)
 - [Widget Registry](./12-widget-registry.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 3/5 - widgets are extensible, but the contract across widget types is still uneven.
+- Refactor path: Standardize widget lifecycle, props validation, loading state, and error boundaries behind a common plugin contract.
+- Replacement: A formally typed widget plugin interface with schema-based prop validation.
+- Weak points: Inconsistent prop shapes, mixed rendering and data access responsibilities, and limited runtime validation for custom widgets.
+<!-- codex:architecture-review:end -->

@@ -1,5 +1,17 @@
 # Components
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  ResourceTable --> Cells["Cells and column renderers"]
+  ResourceDrilldown --> Sections["Sections and widgets"]
+  ResourceProvider --> Context["Context consumers"]
+  Context --> ResourceTable
+  Context --> ResourceDrilldown
+```
+<!-- codex:architecture-diagram:end -->
+
 Reusable React components for resource-driven UIs.
 
 ## ResourceTable
@@ -140,3 +152,11 @@ function Page() {
 
 - [Drilldown Routes](./03-drilldown-routes.md)
 - [Widgets](./04-widgets.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 3/5 - the components are reusable, but several still assume framework-wide context and styling conventions.
+- Refactor path: Push more behavior into headless primitives and let host apps own more presentation-specific wrappers.
+- Replacement: A headless component package with optional themed wrappers.
+- Weak points: Component composition is strong, but portability is limited when host aliases or shared design primitives are assumed.
+<!-- codex:architecture-review:end -->

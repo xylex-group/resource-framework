@@ -1,5 +1,16 @@
 # Drilldown Layout
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart LR
+  LayoutConfig["Drilldown layout config"] --> Header["Header and actions"]
+  LayoutConfig --> SectionGrid["Section grid"]
+  SectionGrid --> Summary["Summary items"]
+  SectionGrid --> Widgets["Embedded widgets"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Layout system for resource drilldowns.
 
 ## Basic Layout
@@ -138,3 +149,11 @@ Automatically adjusts for mobile:
 
 - [Sections](./10-sections.md)
 - [Widgets](./04-widgets.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 3/5 - the layout abstraction is solid, but presentation policy is still coupled to resource route assumptions.
+- Refactor path: Move toward slot-based composition with clearer layout primitives and reusable section containers.
+- Replacement: A headless drilldown layout engine with render slots and host theming.
+- Weak points: Header composition can get crowded, section layout rules are implicit, and customization paths can overlap.
+<!-- codex:architecture-review:end -->

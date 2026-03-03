@@ -1,5 +1,16 @@
 # Formatting
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart LR
+  RawValue["Raw value"] --> Formatter["Formatting helpers"]
+  Formatter --> DisplayString["Display string"]
+  DisplayString --> Table["Table cells"]
+  DisplayString --> Drilldown["Drilldown fields"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Data formatting and display helpers.
 
 ## Format Module
@@ -119,3 +130,11 @@ formatter(new Date()); // Formatted for locale
 
 - [Utilities](./26-utilities.md)
 - [Columns](./09-columns.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 2/5 - formatting is a healthy shared concern, but it needs a clearer central contract to avoid duplicate presentation logic.
+- Refactor path: Centralize display formatting policy and align it with column metadata.
+- Replacement: A presentation-formatting module keyed by datatype and locale policy.
+- Weak points: Different consumers may still format the same value differently, and locale or timezone assumptions are not always explicit.
+<!-- codex:architecture-review:end -->

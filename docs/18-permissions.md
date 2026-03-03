@@ -1,5 +1,16 @@
 # Permissions and Scopes
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart LR
+  UserScopes["User scopes"] --> Provider["Resource context"]
+  Provider --> Routes["Route create/edit policies"]
+  Provider --> UI["Conditional buttons and sections"]
+  UI --> Mutations["Allowed actions"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Access control and permission management.
 
 ## User Scopes
@@ -133,3 +144,11 @@ function ResourceActions({ resource }) {
 
 - [Hooks](./05-hooks.md)
 - [Resource Routes](./02-resource-routes.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 4/5 - permissions are practical, but the model is mostly UI-driven and scope-string based.
+- Refactor path: Introduce a formal capability model with explicit policy evaluation and backend parity.
+- Replacement: A policy engine or permission service that returns capabilities per resource and action.
+- Weak points: String-based scopes are easy to drift, frontend gating is not sufficient for security, and policy logic can end up duplicated.
+<!-- codex:architecture-review:end -->

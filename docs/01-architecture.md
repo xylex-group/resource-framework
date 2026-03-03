@@ -1,5 +1,17 @@
 # Architecture
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  UI["UI Components"] --> Hooks["Hooks and Context"]
+  Hooks --> Config["Route and Type Config"]
+  Config --> Adapters["Athena Adapters and Utilities"]
+  Adapters --> Storage["Athena Gateway and Storage Services"]
+  Storage --> UI
+```
+<!-- codex:architecture-diagram:end -->
+
 ## Layered Design
 
 The Resource Framework is built on a layered architecture that separates concerns:
@@ -69,3 +81,11 @@ UI Display
 - **Type Safety**: TypeScript throughout
 - **Performance**: Memoization, efficient lookups
 - **Security**: Input validation, XSS prevention
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 2/5 - the layering is sound, but the boundaries are still blurred by app-specific imports and mixed transport concerns.
+- Refactor path: Split the architecture into clearer package seams: headless UI, data client, registries, and app bindings.
+- Replacement: A multi-package workspace with a stable core package and optional integration packages.
+- Weak points: Some components still reach into host aliases, data concerns leak into hooks, and the published surface is tighter than the internal dependency graph.
+<!-- codex:architecture-review:end -->

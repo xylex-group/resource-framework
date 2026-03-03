@@ -1,5 +1,16 @@
 # Utilities
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  Utilities["Utility modules"] --> Formatting["Formatting"]
+  Utilities --> Parsing["Parsing and coercion"]
+  Utilities --> Export["CSV and download helpers"]
+  Utilities --> Layout["Drilldown and table helpers"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Utility functions and helpers.
 
 ## String Utilities
@@ -138,3 +149,11 @@ formatZipCode('12345');           // '12345'
 ## See Also
 
 - [Format](./26-format.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 4/5 - utilities are useful but represent classic gravitational technical debt when unrelated helpers accumulate.
+- Refactor path: Group utilities into narrower domain modules and enforce stricter ownership boundaries.
+- Replacement: Small focused packages or namespaces by domain concern instead of a broad utils bucket.
+- Weak points: Discovery becomes harder over time, low-signal helpers mix with critical helpers, and shared util files invite accidental coupling.
+<!-- codex:architecture-review:end -->

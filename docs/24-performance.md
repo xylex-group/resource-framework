@@ -1,5 +1,16 @@
 # Performance
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  InputState["User input and route changes"] --> Memo["Memoization and cached state"]
+  Memo --> Fetch["Batched or cached fetches"]
+  Fetch --> Render["Table or drilldown render"]
+  Render --> Interaction["Perceived responsiveness"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Performance optimization strategies.
 
 ## Memoization
@@ -146,3 +157,11 @@ import { resolveTemplate } from '@/packages/resource-framework/templating/resolv
 
 - [Architecture](./01-architecture.md)
 - [Hooks](./05-hooks.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 3/5 - the current performance story is more guidance than measured architecture.
+- Refactor path: Document real performance budgets and instrument the hot paths: table rendering, widgets, and file previews.
+- Replacement: A measured performance playbook with virtualization, caching, and query invalidation strategy.
+- Weak points: Without metrics, optimizations can be speculative, and high-cardinality tables or nested widgets can still degrade quickly.
+<!-- codex:architecture-review:end -->

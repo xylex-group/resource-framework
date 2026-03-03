@@ -1,5 +1,16 @@
 # CSV Export
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  TableData["Current table rows"] --> Formatter["CSV formatter"]
+  Formatter --> Mapper["Column mapping"]
+  Mapper --> Blob["Download blob"]
+  Blob --> File["CSV file"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Export resource data to CSV format.
 
 ## Basic Export
@@ -145,3 +156,11 @@ function ExportButton() {
 
 - [Data API](./07-data-api.md)
 - [Utilities](./27-utilities.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 2/5 - CSV export is straightforward, but currently oriented around in-memory datasets.
+- Refactor path: Separate small client-side exports from large server-side streaming exports.
+- Replacement: A streaming export service for large resources plus a lightweight client export helper.
+- Weak points: Large datasets can stress the browser, formatting logic can diverge from table display logic, and column selection is still mostly manual.
+<!-- codex:architecture-review:end -->

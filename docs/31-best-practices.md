@@ -1,5 +1,16 @@
 # Best Practices
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart LR
+  Patterns["Recommended patterns"] --> Routes["Config authoring"]
+  Patterns --> Components["Component usage"]
+  Patterns --> Data["Data and template usage"]
+  Patterns --> Ops["Maintainability and performance"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Guidelines for using the Resource Framework effectively.
 
 ## Configuration Best Practices
@@ -218,3 +229,11 @@ const offset = pageIndex * pageSize;
 - [Architecture](./01-architecture.md)
 - [Performance](./24-performance.md)
 - [Security](./18-permissions.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 2/5 - this page is useful, but best-practice docs age quickly unless tied back to lint rules, generators, or CI.
+- Refactor path: Convert repeated guidance into constructors, tests, and lintable conventions where possible.
+- Replacement: Actionable guardrails in code plus ADRs for higher-level guidance.
+- Weak points: Narrative guidance alone is easy to ignore, and some recommendations depend on tribal knowledge or surrounding docs.
+<!-- codex:architecture-review:end -->

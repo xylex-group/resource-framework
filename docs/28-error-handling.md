@@ -1,5 +1,16 @@
 # Error Handling
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  Failure["Runtime or adapter failure"] --> Boundary["Error boundary or hook error state"]
+  Boundary --> UIMessage["User-facing fallback"]
+  Failure --> Logging["Console or telemetry"]
+  UIMessage --> Retry["Retry or recovery path"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Error management and recovery.
 
 ## Error Boundaries
@@ -167,3 +178,11 @@ try {
 
 - [Hooks](./05-hooks.md)
 - [Components](./06-components.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 4/5 - error handling exists in multiple layers, but there is no single typed error model across the framework.
+- Refactor path: Introduce an error taxonomy and standardize retryable vs terminal failures across adapters and UI.
+- Replacement: Typed framework errors with shared normalization, logging, and presentation helpers.
+- Weak points: Raw backend errors still surface in places, retry policy is inconsistent, and UI fallback behavior varies by component.
+<!-- codex:architecture-review:end -->

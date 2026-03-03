@@ -1,5 +1,16 @@
 # Columns
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  ColumnSpec["Column specs"] --> Builder["Column builder"]
+  Builder --> Registry["Column registry"]
+  Registry --> Table["Rendered table columns"]
+  ColumnSpec --> Editors["Editable controls"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Column definitions control how data is displayed and edited.
 
 ## Simple Columns
@@ -118,3 +129,11 @@ const columns = registry.getColumns();
 
 - [Resource Routes](./02-resource-routes.md)
 - [Drilldown Routes](./03-drilldown-routes.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 3/5 - column metadata is capable, but formatting, editing, and layout metadata are all packed into one structure.
+- Refactor path: Separate display metadata, editor metadata, and data semantics into distinct layers.
+- Replacement: A typed column DSL with schema-driven editor factories.
+- Weak points: Large column specs are easy to overconfigure, editor options can become repetitive, and column metadata has many optional branches.
+<!-- codex:architecture-review:end -->

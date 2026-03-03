@@ -1,5 +1,17 @@
 # Form Builder And Renderer
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart LR
+  Builder["Builder APIs"] --> Rows["Persisted rows"]
+  Rows --> Resolver["Resolution layer"]
+  Resolver --> Migration["Submission migration layer"]
+  Migration --> Renderer["EntityFormV2 runtime"]
+  Renderer --> Submission["Downstream contract"]
+```
+<!-- codex:architecture-diagram:end -->
+
 This package now has a clearer split between builder-time and runtime concerns.
 
 ## Builder-time API
@@ -91,3 +103,11 @@ Add tests for:
 - admin save/seed flows against mocked persistence adapters
 
 See `tests/resource-forms.test.ts` for the current baseline.
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 4/5 - the builder/renderer split is clearer now, but it still shares one package and many implicit runtime assumptions.
+- Refactor path: Define formal contracts between authoring, resolution, migration, and rendering layers.
+- Replacement: A versioned forms platform with separate builder, runtime, and submission packages.
+- Weak points: The boundaries are documented better than they are enforced, migrations require manual registry maintenance, and renderer behavior is still coupled to schema conventions.
+<!-- codex:architecture-review:end -->

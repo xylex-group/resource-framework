@@ -1,5 +1,18 @@
 # Templating System
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  Template["Template string"] --> Resolver["Template resolver"]
+  Resolver --> Env["env strategy"]
+  Resolver --> User["user strategy"]
+  Resolver --> Resource["resource strategy"]
+  Resolver --> Column["column strategy"]
+  Resolver --> Value["Resolved value"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Dynamic value resolution using templates.
 
 ## Overview
@@ -152,3 +165,11 @@ resolveTemplate('{{config.theme}}', {});
 
 - [Templating README](../templating/README.md)
 - [File Explorer Widget](./20-file-explorer-widget.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 4/5 - the templating system is powerful, but strategy growth can turn it into an implicit mini-language.
+- Refactor path: Constrain the strategy surface and formalize which contexts are allowed where.
+- Replacement: A compiled expression layer or stricter declarative resolver with explicit context contracts.
+- Weak points: Debugging template failures can be difficult, overuse can hide data dependencies, and security boundaries depend on strict strategy control.
+<!-- codex:architecture-review:end -->

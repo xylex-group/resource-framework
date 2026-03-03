@@ -1,5 +1,17 @@
 # File Explorer Widget
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  FileWidget["File explorer widget"] --> AthenaFiles["Athena file adapters"]
+  AthenaFiles --> Upload["Upload endpoint"]
+  AthenaFiles --> Refresh["Signed URL refresh"]
+  Upload --> Storage["Object storage"]
+  Refresh --> Preview["Lightbox or download"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Manage files in resource drilldowns.
 
 ## Basic Usage
@@ -196,3 +208,11 @@ Automatic formatting:
 - [Widgets](./04-widgets.md)
 - [Templating](./31-templating-system.md)
 - [S3 Client Config](./29-s3-client-config.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 4/5 - file handling is materially useful but still spans widget UI, gateway routing, metadata rows, and storage behavior.
+- Refactor path: Promote file operations into a dedicated file domain service with explicit lifecycle states.
+- Replacement: A standalone file module with upload sessions, metadata persistence, and preview contracts.
+- Weak points: Uploads and metadata writes can diverge, preview access depends on signed URL refresh, and storage-path conventions are implicit.
+<!-- codex:architecture-review:end -->

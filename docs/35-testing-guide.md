@@ -1,5 +1,16 @@
 # Testing Guide
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  TestGuide["Testing guide"] --> Templating["Templating suites"]
+  TestGuide --> Components["UI/component tests"]
+  TestGuide --> Integration["Athena integration"]
+  TestGuide --> CI["Workflow enforcement"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Comprehensive testing for the Resource Framework and Templating System.
 
 ## Test Coverage
@@ -321,3 +332,11 @@ Tests run automatically on:
 - [Testing](./25-testing.md) - General testing strategies
 - [Type Safety](./23-type-safety.md) - TypeScript testing
 - [Performance](./24-performance.md) - Performance testing
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 3/5 - the guide is valuable, but fixed test counts and manually curated coverage descriptions are brittle.
+- Refactor path: Align the guide with generated metrics and stable test categories rather than exact counts.
+- Replacement: A generated test matrix in docs plus workflow badges and coverage summaries.
+- Weak points: Exact numbers drift, categories can lag behind new suites, and the guide can overstate confidence if CI requirements change.
+<!-- codex:architecture-review:end -->

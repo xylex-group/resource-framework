@@ -1,5 +1,17 @@
 # Documentation Index
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  Index["Documentation index"] --> Core["Core concepts"]
+  Index --> Components["Components and hooks"]
+  Index --> Data["Data and adapters"]
+  Index --> Forms["Resource forms"]
+  Index --> Ops["Testing and practices"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Complete documentation for the Resource Framework.
 
 ## Getting Started
@@ -168,3 +180,11 @@ When adding new documentation:
 
 - Latest: Resource Framework with full templating system
 - See [templating/README.md](../templating/README.md) for templating changelog
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 1/5 - the index is low-risk, but it should ideally be generated to avoid stale links and categorization drift.
+- Refactor path: Generate the index from frontmatter or a docs manifest.
+- Replacement: A docs-site navigation config or generated Markdown index.
+- Weak points: Manual indexes become stale, and cross-page relationships can be underspecified as docs grow.
+<!-- codex:architecture-review:end -->

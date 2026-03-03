@@ -1,5 +1,16 @@
 # Registries
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart LR
+  ResourceRegistry["Resource registry"] --> Consumers["Hooks and components"]
+  DrilldownRegistry["Drilldown registry"] --> Consumers
+  FilterRegistry["Filter registry"] --> Consumers
+  WidgetRegistry["Widget registry"] --> Consumers
+```
+<!-- codex:architecture-diagram:end -->
+
 Registries are centralized configuration stores.
 
 ## Resource Routes Registry
@@ -109,3 +120,11 @@ const drilldown: ResourceDrilldownRoute = RESOURCE_DRILLDOWN_ROUTES.customers;
 - [Resource Routes](./02-resource-routes.md)
 - [Drilldown Routes](./03-drilldown-routes.md)
 - [Filters](./24-filters.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 4/5 - centralized registries simplify discovery but increase global coupling.
+- Refactor path: Adopt module-scoped registration or lazy registry composition by feature area.
+- Replacement: Plugin modules that export route bundles and register themselves explicitly.
+- Weak points: Global registries are hard to split by domain, difficult to tree-shake, and prone to merge conflicts in larger teams.
+<!-- codex:architecture-review:end -->

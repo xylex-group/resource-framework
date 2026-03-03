@@ -1,5 +1,18 @@
 # Testing
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart LR
+  Unit["Unit tests"] --> Contracts["Contract helpers"]
+  Component["Component tests"] --> UIFlows["Renderer and admin flows"]
+  Integration["Athena integration"] --> Gateway["Real backend"]
+  Contracts --> Confidence["Release confidence"]
+  UIFlows --> Confidence
+  Gateway --> Confidence
+```
+<!-- codex:architecture-diagram:end -->
+
 Testing resource framework code.
 
 ## Unit Testing
@@ -172,3 +185,11 @@ npm run typecheck
 
 - [Templating](./31-templating-system.md)
 - [Type Safety](./23-type-safety.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 2/5 - the testing architecture is improving, though the coverage map still lives partly in docs instead of CI enforcement.
+- Refactor path: Tie documented test categories to dedicated scripts and protected workflow checks.
+- Replacement: A CI-driven test matrix with explicit package, component, and integration tiers.
+- Weak points: Some suites still rely on environment-specific behavior, and broad vitest runs can mask slower UI-heavy tests.
+<!-- codex:architecture-review:end -->

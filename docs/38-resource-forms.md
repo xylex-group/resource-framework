@@ -1,5 +1,17 @@
 # Resource Forms
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  Definition["Resource form definition"] --> Row["resource_forms row"]
+  Row --> Resolver["resolveResourceFormRows"]
+  Resolver --> Runtime["useResourceFormRuntime"]
+  Runtime --> Renderer["EntityFormV2"]
+  Renderer --> Submission["Raw and migrated payloads"]
+```
+<!-- codex:architecture-diagram:end -->
+
 `resource_forms` is the package-level contract for persisted, metadata-driven form experiences.
 
 A row in `resource_forms` is treated as an authorable runtime artifact:
@@ -150,3 +162,11 @@ Both demo surfaces now use the same package-level flow:
 - resolve persisted rows via `resolveResourceFormRows()`
 - manage selected form + values with `useResourceFormRuntime()`
 - render with `EntityFormV2`
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 4/5 - resource forms are now a real subsystem, but they still live inside the general framework package.
+- Refactor path: Split authoring, runtime, and migration concerns into clearer modules with stronger persistence contracts.
+- Replacement: A dedicated resource-forms package or submodule with its own storage, validation, and migration APIs.
+- Weak points: Schema evolution is still manual, runtime and admin concerns are adjacent, and submission persistence is not yet a first-class platform capability.
+<!-- codex:architecture-review:end -->

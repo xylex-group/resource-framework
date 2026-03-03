@@ -1,5 +1,16 @@
 # Fields
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  FieldDef["Field definition"] --> Renderer["Field renderer"]
+  Renderer --> Display["Read-only display"]
+  Renderer --> Editor["Editable control"]
+  FieldDef --> DataSource["Optional data source"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Fields display individual pieces of data.
 
 ## Basic Fields
@@ -139,3 +150,11 @@ Validate using data_type:
 - [Columns](./09-columns.md)
 - [Sections](./10-sections.md)
 - [Templates](./31-templating-system.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 3/5 - field definitions are flexible, but the distinction between display fields and interactive fields is not always sharp.
+- Refactor path: Split field display descriptors from input/editor descriptors and centralize control selection.
+- Replacement: A field registry keyed by semantic type with strict prop contracts.
+- Weak points: Optional properties make field behavior hard to infer quickly, and data source behavior is only loosely documented.
+<!-- codex:architecture-review:end -->

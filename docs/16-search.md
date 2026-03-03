@@ -1,5 +1,16 @@
 # Search
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  SearchInput["Search input"] --> Parser["Simple or dork parser"]
+  Parser --> QueryState["URL and filter state"]
+  QueryState --> DataFetch["Athena fetch"]
+  DataFetch --> ResultView["Table or drilldown widgets"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Search and query functionality for resources.
 
 ## Basic Search
@@ -149,3 +160,11 @@ function GlobalSearch() {
 
 - [Filters](./15-filters.md)
 - [Data API](./07-data-api.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 3/5 - search is usable, but plain text search and structured dork-style search are still loosely coupled.
+- Refactor path: Unify search parsing into one query model with explicit tokenization and backend capabilities.
+- Replacement: A search service abstraction that supports both free text and structured query compilation.
+- Weak points: Search quality depends heavily on route config, dork syntax can be opaque to users, and backend support may differ across resources.
+<!-- codex:architecture-review:end -->

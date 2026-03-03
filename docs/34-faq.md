@@ -1,5 +1,15 @@
 # FAQ
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart LR
+  FAQ["FAQ entry"] --> Topic["Architecture topic"]
+  Topic --> Doc["Deeper documentation page"]
+  FAQ --> Troubleshooting["Operator guidance"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Frequently asked questions about the Resource Framework.
 
 ## Getting Started
@@ -125,3 +135,11 @@ A: Check headers are correct and permissions allow the action.
 - [Best Practices](./31-best-practices.md)
 - [Error Handling](./28-error-handling.md)
 - [Integration Examples](./33-integration-examples.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 2/5 - FAQs are useful for discovery, but they should not become the primary home for architecture truths.
+- Refactor path: Keep FAQ answers short and link to authoritative design docs or troubleshooting guides.
+- Replacement: Search-backed troubleshooting docs plus concise FAQ summaries.
+- Weak points: FAQ answers can go stale fast, duplicate information from primary docs, and hide important caveats in short prose.
+<!-- codex:architecture-review:end -->

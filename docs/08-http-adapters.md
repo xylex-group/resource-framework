@@ -1,5 +1,16 @@
 # HTTP Adapters
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart LR
+  Hooks["Hooks and handlers"] --> Adapter["Athena HTTP adapters"]
+  Adapter --> Headers["Request metadata and auth"]
+  Headers --> Gateway["Athena Gateway"]
+  Adapter --> Files["File endpoints"]
+```
+<!-- codex:architecture-diagram:end -->
+
 HTTP transport is centralized behind Athena-backed adapters.
 
 ## Primary Adapters
@@ -79,3 +90,11 @@ const uploaded = await uploadFileViaAthena(formData);
 
 - [Athena Data API](./07-data-api.md)
 - [Testing](./25-testing.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 4/5 - this is a compatibility layer with real value, but it is still an integration boundary rather than the final architecture.
+- Refactor path: Reduce duplicate request assembly and move toward one transport client with typed endpoint wrappers.
+- Replacement: A single Athena client service with generated request/response types and interceptor hooks.
+- Weak points: Header composition is duplicated conceptually across call sites, file and CRUD flows are related but still modeled separately, and failures are only partially classified.
+<!-- codex:architecture-review:end -->

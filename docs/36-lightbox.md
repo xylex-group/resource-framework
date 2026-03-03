@@ -1,5 +1,17 @@
 # Lightbox Module
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  FileList["File list or widget"] --> Lightbox["Lightbox state"]
+  Lightbox --> Detector["File type detector"]
+  Detector --> Renderer["Renderer registry"]
+  Renderer --> Preview["Preview component"]
+  Lightbox --> Refresh["Authorized URL refresh"]
+```
+<!-- codex:architecture-diagram:end -->
+
 ## Overview
 
 The Lightbox module provides a comprehensive, reusable file preview system for the resource framework. It supports multiple file types with dedicated renderers, keyboard navigation, and a modern UI that integrates seamlessly with the design system.
@@ -608,3 +620,11 @@ Potential future additions:
 - [File Explorer Widget](./20-file-explorer-widget.md)
 - [Drilldown Layout](./21-drilldown-layout.md)
 - [Components](./06-components.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 3/5 - the lightbox is feature-rich, but it is approaching the size of a standalone subsystem.
+- Refactor path: Split lightbox state, renderer registration, and auth-url management into smaller modules or a separate package.
+- Replacement: A dedicated lightbox package with explicit renderer/plugin interfaces.
+- Weak points: Preview logic spans many file types, auth-url refresh introduces asynchronous complexity, and renderer registration can become crowded.
+<!-- codex:architecture-review:end -->

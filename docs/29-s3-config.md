@@ -1,5 +1,16 @@
 # S3 Client Configuration
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart LR
+  WidgetConfig["File widget config"] --> StorageConfig["S3 client config"]
+  StorageConfig --> Provider["AWS, MinIO, DO, Hetzner"]
+  Provider --> Bucket["Bucket and object path"]
+  Bucket --> FileOps["Upload, preview, delete"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Configure S3/object storage access in file explorers.
 
 ## Default Configuration
@@ -163,3 +174,11 @@ Use environment variables in config:
 
 - [File Explorer Widget](./20-file-explorer-widget.md)
 - [Templating](./31-templating-system.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 3/5 - storage config is practical, but still provider-centric and embedded in widget docs rather than a stronger storage abstraction.
+- Refactor path: Separate storage provider configuration from file widget behavior and path conventions.
+- Replacement: A provider-agnostic storage config object plus a storage adapter registry.
+- Weak points: Credential handling is sensitive, object path rules are convention-based, and provider differences can leak into UI config.
+<!-- codex:architecture-review:end -->

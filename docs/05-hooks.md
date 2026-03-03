@@ -1,5 +1,17 @@
 # Hooks
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  Components["Components"] --> RouteHook["Route hooks"]
+  Components --> DataHook["useApiClient"]
+  Components --> StateHook["Table and form hooks"]
+  DataHook --> Athena["Athena adapters"]
+  StateHook --> Context["Resource context and URL state"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Reusable React hooks for resource-related operations.
 
 ## useResourceRoute
@@ -149,3 +161,11 @@ function TableView() {
 
 - [Data API](./08-data-api.md)
 - [ResourceProvider](./13-resource-provider.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 4/5 - the hook layer is broad and overlaps state, transport, and view composition.
+- Refactor path: Split hooks into domain data hooks, UI state hooks, and integration hooks with a narrower surface.
+- Replacement: A query-library-backed data layer plus thin headless UI hooks.
+- Weak points: The hook set is difficult to document completely, internal assumptions can leak through signatures, and testing hooks in isolation is uneven.
+<!-- codex:architecture-review:end -->

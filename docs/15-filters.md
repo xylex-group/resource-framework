@@ -1,5 +1,16 @@
 # Filters
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart LR
+  FilterUI["Filter UI"] --> FilterState["Filter state"]
+  FilterState --> Query["Condition array or URL query"]
+  Query --> DataHook["useApiClient"]
+  DataHook --> Table["Filtered results"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Filtering data in tables and drilldowns.
 
 ## Basic Filtering
@@ -124,3 +135,11 @@ const filtered = applyClientFilters(data, filters);
 
 - [Data API](./07-data-api.md)
 - [Hooks](./05-hooks.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 3/5 - filtering works, but condition formats and UI-level filter state still have multiple representations.
+- Refactor path: Adopt a single filter AST used by UI, URL serialization, and backend requests.
+- Replacement: A canonical filter schema with parser/serializer utilities generated from operator metadata.
+- Weak points: Cross-page filter persistence is hard, nested conditions are not first-class, and debugging filter payloads can be noisy.
+<!-- codex:architecture-review:end -->

@@ -1,5 +1,23 @@
 # Athena Data API
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+sequenceDiagram
+  participant UI as UI or Hook
+  participant Adapter as Athena Adapter
+  participant SDK as Athena SDK
+  participant Gateway as Athena Gateway
+  participant DB as Database
+  UI->>Adapter: fetch/insert/update/delete request
+  Adapter->>SDK: normalized call
+  SDK->>Gateway: HTTP request
+  Gateway->>DB: execute query
+  DB-->>Gateway: rows or error
+  Gateway-->>UI: normalized response
+```
+<!-- codex:architecture-diagram:end -->
+
 The framework now uses Athena as its primary data plane. Package code should call the Athena-backed adapters or `useApiClient`.
 
 ## Core Adapters
@@ -153,3 +171,11 @@ try {
 
 - [Hooks](./05-hooks.md)
 - [HTTP Adapters](./08-http-adapters.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 4/5 - the data plane is improved, but the framework still normalizes multiple historical call shapes.
+- Refactor path: Collapse the CRUD surface around explicit repository operations instead of generic table-centric commands.
+- Replacement: Typed domain repositories or generated clients per resource family.
+- Weak points: Generic table operations can hide missing constraints, response normalization adds compatibility overhead, and backend errors are still fairly raw.
+<!-- codex:architecture-review:end -->

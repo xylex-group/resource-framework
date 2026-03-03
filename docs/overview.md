@@ -1,5 +1,18 @@
 ## Resource Framework Overview
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  Overview["Resource framework package"] --> Components["Components"]
+  Overview --> Hooks["Hooks"]
+  Overview --> Registries["Registries and constructors"]
+  Overview --> Templating["Templating"]
+  Overview --> Utilities["Utilities"]
+  Components --> Apps["Demo and host apps"]
+```
+<!-- codex:architecture-diagram:end -->
+
 The `packages/resource-framework` package provides the UI primitives, data helpers, and configuration tools that drive the dashboard drilldowns, widgets, and table views across the Suitsbooks project. It is organized into the following layers:
 
 1. **Components** – shared React components (tables, drilldowns, widgets, edit state helpers) that can be composed inside resource pages and drilldowns.
@@ -33,3 +46,11 @@ packages/resource-framework/
 ```
 
 Add more markdown files in `docs/` as the framework evolves (API contracts, widget guides, template strategy extensions, etc.).
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 2/5 - the overview is structurally fine, but it should stay aligned with the actual published package boundary.
+- Refactor path: Keep the overview generated from package exports and module manifests where possible.
+- Replacement: A generated architecture summary page sourced from the codebase.
+- Weak points: High-level summaries can hide deep aliasing or packaging issues if they are not updated alongside code movement.
+<!-- codex:architecture-review:end -->

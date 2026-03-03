@@ -1,5 +1,17 @@
 # Integration Examples
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  Example["Integration example"] --> Routes["Routes and columns"]
+  Example --> Provider["Context wiring"]
+  Example --> Table["Table UI"]
+  Example --> Drilldown["Drilldown UI"]
+  Example --> Athena["Athena transport"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Real-world examples of using the Resource Framework.
 
 ## Complete Resource Setup
@@ -214,3 +226,11 @@ widgets: [
 - [Drilldown Routes](./03-drilldown-routes.md)
 - [Components](./06-components.md)
 - [Widgets](./04-widgets.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 3/5 - examples are useful, but they are static and can drift from the codebase if not exercised.
+- Refactor path: Back examples with runnable fixtures or sample apps.
+- Replacement: Executable playground examples or tested snippets generated from the sample apps.
+- Weak points: Copy-paste examples can decay, hidden setup assumptions are common, and readers may not know which parts are illustrative vs required.
+<!-- codex:architecture-review:end -->

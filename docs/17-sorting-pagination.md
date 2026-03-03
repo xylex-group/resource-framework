@@ -1,5 +1,20 @@
 # Sorting and Pagination
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+sequenceDiagram
+  participant User as User
+  participant Table as Table UI
+  participant State as Table config state
+  participant Data as useApiClient
+  User->>Table: sort or change page
+  Table->>State: update sorting/pagination
+  State->>Data: request next slice
+  Data-->>Table: paged rows
+```
+<!-- codex:architecture-diagram:end -->
+
 Sorting and paginating large datasets.
 
 ## Sorting
@@ -142,3 +157,11 @@ const changePageSize = (size) => {
 
 - [Data API](./07-data-api.md)
 - [Hooks](./05-hooks.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 2/5 - sorting and pagination are conventional, but still tied to route and table state assumptions.
+- Refactor path: Make server-driven pagination and multi-sort contracts more explicit across the table layer.
+- Replacement: A headless data-grid controller with clear server paging semantics.
+- Weak points: Column id mismatches can break sorting silently, and pagination state can drift from URL state if not coordinated carefully.
+<!-- codex:architecture-review:end -->

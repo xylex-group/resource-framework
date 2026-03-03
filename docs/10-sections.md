@@ -1,5 +1,16 @@
 # Sections
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart LR
+  SectionConfig["Section config"] --> Layout["Grid layout"]
+  SectionConfig --> Fields["Fields"]
+  SectionConfig --> Widgets["Widgets"]
+  Layout --> Drilldown["Drilldown page"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Sections are logical groupings within drilldown views.
 
 ## Basic Structure
@@ -134,3 +145,11 @@ Use templates for conditional widgets:
 - [Drilldown Routes](./03-drilldown-routes.md)
 - [Fields](./10-fields.md)
 - [Widgets](./04-widgets.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 3/5 - sections are a good abstraction, but they still blend data grouping, layout, and editing exposure.
+- Refactor path: Model sections as a smaller layout primitive plus explicit content descriptors.
+- Replacement: A declarative layout schema with separate section semantics and render policies.
+- Weak points: Section shape is broad, widget-heavy sections can be opaque, and edit-state exposure is a cross-cutting concern hidden inside layout config.
+<!-- codex:architecture-review:end -->

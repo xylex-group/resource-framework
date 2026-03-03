@@ -1,5 +1,15 @@
 # Sonner Notifications
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart LR
+  Action["User action or mutation"] --> NotificationHelper["Notification helper"]
+  NotificationHelper --> Sonner["Sonner toast"]
+  Sonner --> User["Feedback to user"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Toast notification system using Sonner for user feedback.
 
 ## Overview
@@ -321,3 +331,11 @@ function DataForm() {
 - [Error Handling](./28-error-handling.md)
 - [Hooks](./05-hooks.md)
 - [File Explorer Widget](./20-file-explorer-widget.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 2/5 - notifications are simple, but a direct dependency on one toast library can leak into broad app behavior.
+- Refactor path: Keep a thin notification abstraction and centralize toast semantics.
+- Replacement: A notification provider interface with Sonner as one implementation.
+- Weak points: Notification semantics can become inconsistent across features, and replacement cost grows if the Sonner API becomes the de facto framework contract.
+<!-- codex:architecture-review:end -->

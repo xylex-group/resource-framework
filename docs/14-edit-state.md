@@ -1,5 +1,19 @@
 # Edit State
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+stateDiagram-v2
+  [*] --> Viewing
+  Viewing --> Editing: enter edit mode
+  Editing --> Dirty: mutate field
+  Dirty --> Saving: submit
+  Saving --> Viewing: success
+  Saving --> Dirty: failure
+  Dirty --> Viewing: revert
+```
+<!-- codex:architecture-diagram:end -->
+
 Edit state management for resource modifications.
 
 ## Basic Edit Mode
@@ -146,3 +160,11 @@ setNestedField(['phones', 0, 'number'], '555-1234');
 
 - [Resource Provider](./13-resource-provider.md)
 - [Components](./06-components.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 4/5 - edit state is one of the more stateful parts of the framework and carries business-specific assumptions.
+- Refactor path: Use a formal state machine or form-state abstraction with explicit transitions and side effects.
+- Replacement: A state-machine-driven edit orchestrator or a dedicated form library integration.
+- Weak points: Dirty-state detection can be subtle, save-all behavior crosses many components, and error recovery is easy to fragment.
+<!-- codex:architecture-review:end -->

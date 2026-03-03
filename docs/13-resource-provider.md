@@ -1,5 +1,17 @@
 # ResourceProvider
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  Provider["ResourceProvider"] --> Context["Resource context"]
+  Context --> Table["Tables"]
+  Context --> Drilldown["Drilldowns"]
+  Context --> Permissions["Scope-aware UI"]
+  Provider --> Fetch["Initial resource fetch"]
+```
+<!-- codex:architecture-diagram:end -->
+
 ResourceProvider is a React context wrapper for resource state.
 
 ## Basic Usage
@@ -148,3 +160,11 @@ function CustomerDetail() {
 
 - [Hooks](./05-hooks.md)
 - [Components](./06-components.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 4/5 - the provider centralizes useful state, but it risks becoming a broad ambient dependency.
+- Refactor path: Split provider responsibilities into resource data, permissions, and user preferences contexts.
+- Replacement: Smaller providers combined by page-level composition or a query cache plus selectors.
+- Weak points: Context churn can affect render performance, consumer expectations can sprawl, and test setup becomes heavier as more state is included.
+<!-- codex:architecture-review:end -->

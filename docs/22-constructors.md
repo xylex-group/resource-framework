@@ -1,5 +1,16 @@
 # Constructors
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart TD
+  RawConfig["Raw config objects"] --> Constructor["Constructor helpers"]
+  Constructor --> Validated["Normalized config"]
+  Validated --> Registry["Registry entry"]
+  Validated --> Consumers["Hooks and components"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Helper functions for defining resources and columns.
 
 ## defineResourceRoute
@@ -117,3 +128,11 @@ const route = defineResourceRoute({
 
 - [Resource Routes](./02-resource-routes.md)
 - [Columns](./09-columns.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 2/5 - constructors already reduce repetition, but they still rely on convention-heavy input.
+- Refactor path: Add stronger runtime validation and clearer error output for malformed constructor input.
+- Replacement: Schema-backed builders with compile-time inference and runtime parsing.
+- Weak points: Constructors improve ergonomics but cannot fully prevent invalid semantics when many optional branches are allowed.
+<!-- codex:architecture-review:end -->

@@ -1,5 +1,16 @@
 # Resource Routes
 
+<!-- codex:architecture-diagram:start -->
+## Architecture Diagram
+```mermaid
+flowchart LR
+  RouteDef["ResourceRoute definition"] --> Registry["RESOURCE_ROUTES"]
+  Registry --> Table["ResourceTable"]
+  Registry --> Drilldown["ResourceDrilldown"]
+  Registry --> Actions["Edit, create, row actions"]
+```
+<!-- codex:architecture-diagram:end -->
+
 Resource routes define how resources appear and behave in the dashboard.
 
 ## Basic Definition
@@ -101,3 +112,11 @@ rowActions: [
 - [Drilldown Routes](./03-drilldown-routes.md)
 - [Columns](./10-columns.md)
 - [Templates](./31-templating-system.md)
+
+<!-- codex:architecture-review:start -->
+## Architecture Assessment
+- Technical debt rating: 3/5 - route objects are powerful but can become monolithic configuration blobs.
+- Refactor path: Normalize route authoring into smaller composable route fragments and validator-backed constructors.
+- Replacement: A typed route DSL or generated route manifests from schema metadata.
+- Weak points: Large route objects are hard to diff, easy to misconfigure, and can mix UI concerns with permissions and data behavior.
+<!-- codex:architecture-review:end -->
