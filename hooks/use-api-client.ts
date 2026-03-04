@@ -16,13 +16,13 @@ import {
 } from "../adapters/athena-gateway";
 import { useUserStore } from "@/lib/stores";
 
-interface Condition {
+export interface ApiClientCondition {
   eq_column: string;
   eq_value: string | number | boolean | null;
 }
 
 interface UseApiClientBaseProps {
-  conditions?: Condition[];
+  conditions?: ApiClientCondition[];
   columns?: string[];
   limit?: number;
   offset?: number;
@@ -43,11 +43,86 @@ export interface UseApiClientMultiProps extends UseApiClientBaseProps {
 
 export type UseApiClientProps = UseApiClientSingleProps | UseApiClientMultiProps;
 
+function snakeToCamel(value: string): string {
+  return value.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
+}
+
+function valuesMatch(expected: unknown, actual: unknown): boolean {
+  if (expected === actual) {
+    return true;
+  }
+
+  if (expected == null && actual == null) {
+    return true;
+  }
+  if (expected == null || actual == null) {
+    return false;
+  }
+
+  if (typeof expected === "number" && typeof actual === "string") {
+    return expected === Number(actual) && !Number.isNaN(Number(actual));
+  }
+  if (typeof expected === "string" && typeof actual === "number") {
+    return Number(expected) === actual && !Number.isNaN(Number(expected));
+  }
+
+  if (expected instanceof Date && typeof actual === "string") {
+    return expected.toISOString() === actual ||
+      expected.getTime() === new Date(actual).getTime();
+  }
+  if (typeof expected === "string" && actual instanceof Date) {
+    return expected === actual.toISOString() ||
+      new Date(expected).getTime() === actual.getTime();
+  }
+
+  if (typeof expected === "string" && typeof actual === "string") {
+    const expectedDate = new Date(expected);
+    const actualDate = new Date(actual);
+
+    if (
+      !Number.isNaN(expectedDate.getTime()) &&
+      !Number.isNaN(actualDate.getTime())
+    ) {
+      return expectedDate.getTime() === actualDate.getTime();
+    }
+  }
+
+  return JSON.stringify(actual) === JSON.stringify(expected);
+}
+
+function verifyUpdatedFields(
+  fetchedData: Record<string, unknown> | null | undefined,
+  updateBody: Record<string, unknown>,
+): boolean {
+  if (!fetchedData) {
+    return false;
+  }
+
+  for (const [key, expectedValue] of Object.entries(updateBody)) {
+    if (key === "priority") {
+      continue;
+    }
+
+    const camelKey = snakeToCamel(key);
+    const actualValue = fetchedData[key] ?? fetchedData[camelKey];
+    const hasValue = key in fetchedData || camelKey in fetchedData;
+
+    if (!hasValue) {
+      continue;
+    }
+
+    if (!valuesMatch(expectedValue, actualValue)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // Helper to build client for a single table
 function buildClientFor<T>(
   tableName: string,
   schema: string,
-  forceExternalApi: boolean = false,
   athenaHeaders: Record<string, string> = {},
 ) {
   const fetchWhere = async ({
@@ -58,7 +133,7 @@ function buildClientFor<T>(
     single: one = false,
     schema: sch,
   }: {
-    conditions?: Condition[];
+    conditions?: ApiClientCondition[];
     columns?: string[];
     limit?: number;
     offset?: number;
@@ -153,19 +228,7 @@ function buildClientFor<T>(
     id: string | number,
     updateBody: Record<string, unknown>,
   ): Promise<T> => {
-    if (forceExternalApi) {
-      console.log("[apiClient.update] forceExternalApi is enabled; using Athena gateway SDK");
-    }
-
     try {
-      console.log("[apiClient.update] Calling updateData with:", {
-        table_name: tableName,
-        schema,
-        x_column: idColumn,
-        x_id: id,
-        update_body: updateBody,
-      });
-
       const response = await updateDataViaAthena<T | T[]>({
         table_name: tableName,
         schema,
@@ -176,16 +239,10 @@ function buildClientFor<T>(
         headers: athenaHeaders,
       });
 
-      console.log("[apiClient.update] updateData response:", response);
-
       if (response.error) {
-        console.error("[apiClient.update] Response has error:", response.error);
         throw new Error(response.error);
       }
 
-      console.log("[apiClient.update] Update successful, verifying...");
-      
-      // Verify the update by fetching the record
       try {
         const verifyResponse = await fetchDataViaAthena<T[]>({
           table_name: tableName,
@@ -199,105 +256,17 @@ function buildClientFor<T>(
           headers: athenaHeaders,
         });
 
-        console.log("[apiClient.update] Verification fetch response:", verifyResponse);
-
         if (!verifyResponse.error && verifyResponse.data) {
-          const fetchedData = Array.isArray(verifyResponse.data) 
-            ? verifyResponse.data[0] 
+          const fetchedData = Array.isArray(verifyResponse.data)
+            ? verifyResponse.data[0]
             : verifyResponse.data;
-          
-          console.log("[apiClient.update] Fetched record after update:", fetchedData);
-          
-          // Helper to convert snake_case to camelCase
-          const snakeToCamel = (str: string): string => {
-            return str.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
-          };
-          
-          // Check if the updated fields match (accounting for snake_case to camelCase conversion)
-          const mismatches: string[] = [];
-          const notReturned: string[] = [];
-          
-          // Helper to compare values with type coercion for numbers
-          const valuesMatch = (expected: unknown, actual: unknown): boolean => {
-            // If strictly equal, they match
-            if (expected === actual) return true;
-            
-            // Handle null/undefined
-            if (expected == null && actual == null) return true;
-            if (expected == null || actual == null) return false;
-            
-            // Handle number/string coercion (database may return numbers as strings)
-            if (typeof expected === 'number' && typeof actual === 'string') {
-              return expected === Number(actual) && !isNaN(Number(actual));
-            }
-            if (typeof expected === 'string' && typeof actual === 'number') {
-              return Number(expected) === actual && !isNaN(Number(expected));
-            }
-            
-            // Handle Date comparisons
-            if (expected instanceof Date && typeof actual === 'string') {
-              return expected.toISOString() === actual || expected.getTime() === new Date(actual).getTime();
-            }
-            if (typeof expected === 'string' && actual instanceof Date) {
-              return expected === actual.toISOString() || new Date(expected).getTime() === actual.getTime();
-            }
-            
-            // Handle date string comparisons (ISO format vs PostgreSQL timestamp format)
-            // e.g., "2026-01-26T23:00:00.000Z" vs "2026-01-26 23:00:00+00"
-            if (typeof expected === 'string' && typeof actual === 'string') {
-              // Check if both look like dates
-              const expectedDate = new Date(expected);
-              const actualDate = new Date(actual);
-              
-              // If both are valid dates, compare their timestamps
-              if (!isNaN(expectedDate.getTime()) && !isNaN(actualDate.getTime())) {
-                // Compare timestamps (ignore format differences)
-                return expectedDate.getTime() === actualDate.getTime();
-              }
-            }
-            
-            // Fall back to JSON comparison for objects/arrays
-            return JSON.stringify(actual) === JSON.stringify(expected);
-          };
-          
-          for (const [key, expectedValue] of Object.entries(updateBody)) {
-            // Skip verification for priority field - it may have caching/race condition issues
-            // The optimistic update already handles the UI, so verification is less critical
-            if (key === "priority") {
-              continue;
-            }
-            
-            // Try both the original key and its camelCase version
-            const camelKey = snakeToCamel(key);
-            const hasKey = key in (fetchedData as Record<string, unknown>);
-            const hasCamelKey = camelKey in (fetchedData as Record<string, unknown>);
-            
-            if (!hasKey && !hasCamelKey) {
-              // Field wasn't returned in the fetch (might not be in columns list)
-              notReturned.push(key);
-              continue;
-            }
-            
-            const actualValue = (fetchedData as Record<string, unknown>)?.[key] ?? 
-                               (fetchedData as Record<string, unknown>)?.[camelKey];
-            
-            if (!valuesMatch(expectedValue, actualValue)) {
-              mismatches.push(`${key}: expected ${JSON.stringify(expectedValue)}, got ${JSON.stringify(actualValue)} (checked: ${key}, ${camelKey})`);
-            }
-          }
-          
-          if (notReturned.length > 0) {
-            console.warn("[apiClient.update] Some fields were not returned in verification (may not be in columns list):", notReturned);
-          }
-          
-          if (mismatches.length > 0) {
-            console.error("[apiClient.update] Verification failed! Mismatches:", mismatches);
-          } else {
-            console.log("[apiClient.update] Verification successful - all returned fields match");
-          }
+          void verifyUpdatedFields(
+            fetchedData as Record<string, unknown> | undefined,
+            updateBody,
+          );
         }
-      } catch (verifyError) {
-        console.warn("[apiClient.update] Verification fetch failed:", verifyError);
+      } catch {
+        // Verification is best-effort only; callers should not fail if the readback path is unavailable.
       }
 
       return response.data as T;
@@ -341,7 +310,7 @@ function buildClientFor<T>(
 
 export interface ApiClientInstance<T> {
   fetchWhere: (params?: {
-    conditions?: Condition[];
+    conditions?: ApiClientCondition[];
     columns?: string[];
     limit?: number;
     offset?: number;
@@ -393,7 +362,7 @@ export function useApiClient<T>({
   noCache = false,
   single = false,
   schema = "public",
-  forceExternalApi = false,
+  forceExternalApi: _forceExternalApi = false,
 }: UseApiClientProps) {
   const { user } = useUserStore();
   const [data, setData] = useState<T | T[] | null>(null);
@@ -432,9 +401,9 @@ export function useApiClient<T>({
     return Object.fromEntries(
       (table as string[]).map((
         tName,
-      ) => [tName, buildClientFor<T>(tName, schema, forceExternalApi, athenaHeaders)]),
+      ) => [tName, buildClientFor<T>(tName, schema, athenaHeaders)]),
     );
-  }, [isMultiTable, table, schema, forceExternalApi, athenaHeaders]);
+  }, [isMultiTable, table, schema, athenaHeaders]);
 
   // Fetch data function
   const fetchDataFromApi = useCallback(async () => {
@@ -523,7 +492,7 @@ export function useApiClient<T>({
       single: one = false,
       schema: sch,
     }: {
-      conditions?: Condition[];
+      conditions?: ApiClientCondition[];
       columns?: string[];
       limit?: number;
       offset?: number;
@@ -630,8 +599,8 @@ export function useApiClient<T>({
 
   // Create a client instance for single-table update operations
   const singleTableClient = useMemo(
-    () => buildClientFor<T>(tableName, schema, forceExternalApi, athenaHeaders),
-    [tableName, schema, forceExternalApi, athenaHeaders]
+    () => buildClientFor<T>(tableName, schema, athenaHeaders),
+    [tableName, schema, athenaHeaders]
   );
 
   const update = useCallback(

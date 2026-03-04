@@ -1,7 +1,5 @@
 "use client";
 
-// TODO: TO BE DEPRECATED - Use useApiClient instead
-
 import { useState } from "react";
 import { useApiClient } from "./use-api-client";
 
@@ -31,6 +29,15 @@ interface UseUpdateState {
 	isSuccess: boolean;
 	isError: boolean;
 	error: string;
+}
+
+function createErrorState(error: string): UseUpdateState {
+  return {
+    isLoading: false,
+    isSuccess: false,
+    isError: true,
+    error,
+  };
 }
 
 /**
@@ -73,43 +80,18 @@ export function useUpdateData({
 	};
 
 	const update = async (newUpdateBody?: Record<string, unknown>) => {
-		console.log("[useUpdateData] Starting update with:", {
-			table,
-			column,
-			id,
-			updateBody: newUpdateBody || initialUpdateBody,
-		});
-
 		if (!table) {
-			console.error("[useUpdateData] Missing table parameter");
-			setState({
-				isLoading: false,
-				isSuccess: false,
-				isError: true,
-				error: "Missing table parameter",
-			});
+			setState(createErrorState("Missing table parameter"));
 			return false;
 		}
 
 		if (!column) {
-			console.error("[useUpdateData] Missing column parameter");
-			setState({
-				isLoading: false,
-				isSuccess: false,
-				isError: true,
-				error: "Missing column parameter",
-			});
+			setState(createErrorState("Missing column parameter"));
 			return false;
 		}
 
 		if (!id) {
-			console.error("[useUpdateData] Missing id parameter");
-			setState({
-				isLoading: false,
-				isSuccess: false,
-				isError: true,
-				error: "Missing id parameter",
-			});
+			setState(createErrorState("Missing id parameter"));
 			return false;
 		}
 
@@ -122,11 +104,6 @@ export function useUpdateData({
 
 		try {
 			const updateBody = newUpdateBody || initialUpdateBody;
-			console.log("[useUpdateData] Calling apiClient.update with:", {
-				column,
-				id,
-				updateBody,
-			});
 
 			if (!hasUpdateMethod(apiClient)) {
 				throw new Error("API client does not have update method");
@@ -134,7 +111,6 @@ export function useUpdateData({
 
 			await apiClient.update(column, id, updateBody);
 
-			console.log("[useUpdateData] Update successful");
 			setState({
 				isLoading: false,
 				isSuccess: true,
@@ -147,13 +123,7 @@ export function useUpdateData({
 			const errorMessage = err instanceof Error
 				? err.message
 				: "Failed to update data";
-			console.error("[useUpdateData] Update failed:", errorMessage);
-			setState({
-				isLoading: false,
-				isSuccess: false,
-				isError: true,
-				error: errorMessage,
-			});
+			setState(createErrorState(errorMessage));
 			mergedConfig.onError();
 			return false;
 		}

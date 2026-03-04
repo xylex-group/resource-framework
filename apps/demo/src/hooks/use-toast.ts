@@ -7,11 +7,7 @@ export type ToastOptions = {
 };
 
 export function useToast() {
-  const notify = (options: ToastOptions) => {
-    console.log(
-      `[toast] ${options.title || "[no title]"} - ${options.description || ""} (${options.variant || "info"})`,
-    );
-  };
+  const notify = (_options: ToastOptions) => undefined;
 
   return { toast: notify };
 }
