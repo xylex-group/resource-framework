@@ -30,7 +30,7 @@ export function UnsupportedRenderer({ file }: LightboxRendererProps) {
   const handleDownload = useCallback(async () => {
     try {
       const url = await getFreshUrl();
-      const { downloadS3File } = await import("@/packages/resource-framework/utils/s3-file-handler");
+      const { downloadS3File } = await import("../../utils/s3-file-handler");
       await downloadS3File(url, file.name);
     } catch (error) {
       console.error("[UnsupportedRenderer] Download failed:", error);

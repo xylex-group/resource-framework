@@ -8,7 +8,7 @@ import {
   formatUnixSecondsToMonthDayTime,
 } from "@/lib/date-utils";
 import { prettyString } from "@/lib/format/string";
-import { AssigneesCell } from "@/packages/resource-framework/components/cells/AssigneesCell";
+import { AssigneesCell } from "../components/cells/AssigneesCell";
 import type {
   ColumnRegistry,
   LeanColumnSpec,

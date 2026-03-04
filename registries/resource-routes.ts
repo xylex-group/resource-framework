@@ -16,7 +16,7 @@ import { countryCodes, timezoneKeys } from "@/lib/constants";
 import {
   getDrizzleColumnInfo,
   getDrizzleColumnMeta,
-} from "@/packages/resource-framework/utils/drizzle-editor";
+} from "../utils/drizzle-editor";
 
 const customerJurisdictionDataSource = {
   table: "customer_jurisdictions",

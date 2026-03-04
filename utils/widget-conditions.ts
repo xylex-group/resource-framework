@@ -1,8 +1,8 @@
 "use client";
 
-import type { TableWidgetCondition } from "@/packages/resource-framework/resource-types";
-import { resolveTemplateValue } from "@/packages/resource-framework/templating";
-import type { TemplateContext } from "@/packages/resource-framework/templating/types";
+import type { TableWidgetCondition } from "../resource-types";
+import { resolveTemplateValue } from "../templating";
+import type { TemplateContext } from "../templating/types";
 
 /**
  * @deprecated Use resolveTemplateValue from the templating module instead.

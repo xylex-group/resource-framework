@@ -1,7 +1,7 @@
 "use client";
 import { type ReactNode, useCallback } from "react";
 import { toast } from "sonner";
-import { defaultNotificationConfig, getCloseAction } from "@/packages/resource-framework/notifications";
+import { defaultNotificationConfig, getCloseAction } from "../notifications";
 
 interface UseNotificationOptions {
 	message: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import type { DrilldownSectionWidgetSpec } from "@/packages/resource-framework/resource-types";
+import type { DrilldownSectionWidgetSpec } from "../../resource-types";
 import { getSectionWidgetRenderer } from "./widgets";
 
 function getWidgetKey(spec: DrilldownSectionWidgetSpec, index: number) {

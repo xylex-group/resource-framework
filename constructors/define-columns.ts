@@ -6,7 +6,7 @@ import type {
   ResourceFieldSpec,
 } from "../resource-types";
 import { defaultEditorByColumn } from "./column-registry";
-import { getDrizzleColumnInfo } from "@/packages/resource-framework/utils/drizzle-editor";
+import { getDrizzleColumnInfo } from "../utils/drizzle-editor";
 
 /**
  * Builds column specifications compatible with ResourceRoute.columns from high-level field specs.

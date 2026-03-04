@@ -1,6 +1,6 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { PriorityIcon } from "@/components/icons";
-import { ScopeCell } from "@/packages/resource-framework/components/cells/ScopeCell";
+import { ScopeCell } from "../components/cells/ScopeCell";
 import {
   buildColumnsFromRegistry,
   type LeanColumnSpec,

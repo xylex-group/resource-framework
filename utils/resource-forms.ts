@@ -2,7 +2,7 @@ import type {
   ResourceFormField,
   ResourceFormRow,
   ResourceFormSchema,
-} from "../resource-types";
+} from "../types/resource-forms";
 
 export type ResourceFormValidationIssue = {
   path: string;

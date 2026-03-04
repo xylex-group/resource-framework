@@ -34,7 +34,7 @@ import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
 import * as React from "react";
 import * as ReactNamespace from "react";
 import { useState } from "react";
-import type { FormField as FormFieldType } from "@/packages/resource-framework/resource-types";
+import type { FormField as FormFieldType } from "../../resource-types";
 
 interface FormFieldProps {
     field: FormFieldType;

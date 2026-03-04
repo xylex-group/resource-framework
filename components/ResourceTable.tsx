@@ -2,7 +2,7 @@
 
 import ErrorBlock from "@/components/ui/error";
 import { LeanTable } from "@/components/ui-responsive/lean-table";
-import { useApiClient } from "@/packages/resource-framework/hooks/use-api-client";
+import { useApiClient } from "../hooks/use-api-client";
 import {
   useBackButtonStore,
   useContentStore,

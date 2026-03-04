@@ -1,4 +1,4 @@
-import { DateInputMode } from "@/packages/resource-framework/resource-types";
+import { DateInputMode } from "../resource-types";
 import { FormStateData } from "@/lib/types";
 import { Dispatch, SetStateAction } from "react";
 

@@ -1,14 +1,14 @@
 import type { ColumnConfigObject, ResourceData } from "@/lib/types";
-import type { ResourceRoute } from "@/packages/resource-framework/resource-types";
+import type { ResourceRoute } from "../../resource-types";
 import {
   buildColumnsFromRegistry,
   type LeanColumnSpec,
-} from "@/packages/resource-framework/constructors/column-registry";
-import { coerceByDatatype } from "@/packages/resource-framework/utils/coerce";
+} from "../../constructors/column-registry";
+import { coerceByDatatype } from "../../utils/coerce";
 import {
   insertDataViaAthena,
   updateDataViaAthena,
-} from "@/packages/resource-framework/adapters/athena-gateway";
+} from "../../adapters/athena-gateway";
 import { Dispatch, SetStateAction } from "react";
 
 interface HandleSaveAllParams {
@@ -114,17 +114,6 @@ export async function handleSaveAll({
       const prev = coerceByDatatype(prevRaw, dt);
       const changed = JSON.stringify(next) !== JSON.stringify(prev);
 
-      if (k === "currency" || changed) {
-        console.log(`[save-all] Field "${k}":`, {
-          nextRaw,
-          prevRaw,
-          next,
-          prev,
-          changed,
-          datatype: dt,
-        });
-      }
-
       if (changed) updates[k] = next;
     });
 
@@ -143,7 +132,6 @@ export async function handleSaveAll({
     try {
       ok = await update(updates);
     } catch (updateError) {
-      console.error("[save-all] Error calling update:", updateError);
       throw updateError;
     }
 
@@ -171,24 +159,14 @@ export async function handleSaveAll({
         // Refresh data using mutate if available, otherwise reload page
         if (mutate) {
           await mutate();
-        } else {
-          console.warn(
-            "[save-all] No mutate function available; skipping refresh",
-          );
         }
-      } catch (refreshError) {
-        console.error("[save-all] Failed to refresh data:", refreshError);
+      } catch {
+        // Keep the successful save state even if background refresh fails.
       }
     } else {
-      console.error("[save-all] Save failed - update returned false");
       notification({ message: "Save failed", success: false });
     }
-  } catch (e) {
-    console.error("[save-all] Exception during save:", e);
-    console.error("[save-all] Error details:", {
-      message: e instanceof Error ? e.message : String(e),
-      stack: e instanceof Error ? e.stack : undefined,
-    });
+  } catch {
     notification({ message: "Save failed", success: false });
   }
 }
@@ -212,7 +190,6 @@ async function syncProductPrice({
   currency: string;
 }) {
   if (!productId) {
-    console.warn("[save-all] Cannot sync price: missing productId");
     return;
   }
 
@@ -232,7 +209,6 @@ async function syncProductPrice({
       });
     } else {
       // Create new price record and link to product
-
       const insertResponse = await insertDataViaAthena({
         table_name: "prices",
         schema: "public",
@@ -246,10 +222,6 @@ async function syncProductPrice({
       });
 
       if (insertResponse.error) {
-        console.error(
-          "[save-all] Failed to create price record:",
-          insertResponse.error,
-        );
         return;
       }
 
@@ -272,8 +244,7 @@ async function syncProductPrice({
         });
       }
     }
-  } catch (priceError) {
-    console.error("[save-all] Error syncing price:", priceError);
+  } catch {
     // Don't throw - the main product update succeeded, price sync is secondary
   }
 }

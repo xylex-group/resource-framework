@@ -10,8 +10,8 @@ import { FormFieldV2 } from "./form-field_v2";
 import type {
   ResourceFormField,
   ResourceFormSchema,
-} from "@/packages/resource-framework/resource-types";
-import { getOrderedResourceFormSteps } from "@/packages/resource-framework/utils/resource-forms";
+} from "../../types/resource-forms";
+import { getOrderedResourceFormSteps } from "../../utils/resource-forms";
 
 interface EntityFormV2Props {
   schema: ResourceFormSchema;

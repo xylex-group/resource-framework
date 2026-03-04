@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import Loading from "@/components/ui/loading";
-import { useFetchData } from "@/packages/resource-framework/hooks/use-fetch-data";
+import { useFetchData } from "../../hooks/use-fetch-data";
 import { useUserStore } from "@/lib/stores";
 
 interface ScopeWrapperProps {

@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { ResourceFormSchema } from "@/packages/resource-framework/resource-types";
+import type { ResourceFormSchema } from "../../types/resource-forms";
 
 interface KycReviewCardProps {
     schema: ResourceFormSchema;

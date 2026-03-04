@@ -1,4 +1,4 @@
-import type { ResourceFormRow } from "../resource-types";
+import type { ResourceFormRow } from "../types/resource-forms";
 import {
   createResourceFormRows,
   defineResourceForm,

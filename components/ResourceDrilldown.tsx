@@ -2,9 +2,9 @@
 
 import React, { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useApiClient } from "@/packages/resource-framework/hooks/use-api-client";
-import { useUpdateData } from "@/packages/resource-framework/hooks/use-update-data";
-import { fetchDataViaAthena } from "@/packages/resource-framework/adapters/athena-gateway";
+import { useApiClient } from "../hooks/use-api-client";
+import { useUpdateData } from "../hooks/use-update-data";
+import { fetchDataViaAthena } from "../adapters/athena-gateway";
 
 import { useNotification } from "@/hooks/use-notifications";
 import { Code2, Pencil, TextSelect, X } from "lucide-react";
@@ -13,8 +13,8 @@ import { RESOURCE_DRILLDOWN_ROUTES } from "../registries/resource-drilldown-rout
 import { RESOURCE_ROUTES } from "../registries/resource-routes";
 import { type ResourceRoute } from "../resource-types";
 import { useContentStore, useUserStore, useViewStore } from "@/lib/stores";
-import { getDrizzleEditorType } from "@/packages/resource-framework/utils/drizzle-editor";
-import { AddField } from "@/packages/resource-framework/components/edit-state/add-field";
+import { getDrizzleEditorType } from "../utils/drizzle-editor";
+import { AddField } from "./edit-state/add-field";
 import { ResourceDrilldownNoEditFields } from "./sections/no-edit-fields";
 import { handleSaveAll } from "./edit-state/save-all";
 import SelectDataSource from "./fields/select-data-source";
@@ -41,8 +41,8 @@ import {
   buildColumnsFromRegistry,
   defaultEditorByColumn,
   type LeanColumnSpec,
-} from "@/packages/resource-framework/constructors/column-registry";
-import { coerceByDatatype } from "@/packages/resource-framework/utils/coerce";
+} from "../constructors/column-registry";
+import { coerceByDatatype } from "../utils/coerce";
 import { CalendarInputForm } from "@/components/inputs/calendar-input-form";
 import { useUserScopes } from "../hooks/useUserScopes";
 import { UnsavedChanges } from "./edit-state/unsaved-changes";
@@ -70,7 +70,7 @@ import {
   detectDateInputMode,
   toDatePickerValue,
   toDateTimeLocalValue,
-} from "@/packages/resource-framework/utils/date-utils";
+} from "../utils/date-utils";
 
 export const ResourceDrilldown = ({
   resourceName,

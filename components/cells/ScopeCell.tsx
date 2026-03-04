@@ -2,7 +2,7 @@
 
 import { Flag } from "@/components/ui/flag";
 import { FC, useMemo } from "react";
-import type { FormationInfo } from "@/packages/resource-framework/resource-types";
+import type { FormationInfo } from "../../resource-types";
 
 const DEFAULT_MAP: Record<string, FormationInfo> = {
   formation_nl_bv: { label: "Netherlands • BV", country: "NL" },

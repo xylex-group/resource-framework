@@ -1,7 +1,7 @@
 import { createElement } from "react";
 import { User } from "lucide-react";
 import type { ResourceDrilldownRoute } from "../resource-types";
-import { interpolateDrilldownTemplate } from "@/packages/resource-framework/utils/drilldown-template";
+import { interpolateDrilldownTemplate } from "../utils/drilldown-template";
 
 /**
  * Generates a drilldown URL path by replacing template placeholders with actual values.

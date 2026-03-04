@@ -1,7 +1,7 @@
 "use client";
 
 import type { ComponentType } from "react";
-import type { DrilldownSectionWidgetSpec } from "@/packages/resource-framework/resource-types";
+import type { DrilldownSectionWidgetSpec } from "../../../resource-types";
 
 export type SectionWidgetRendererProps = {
   spec: DrilldownSectionWidgetSpec;

@@ -17,7 +17,7 @@ import { CardSelect } from "@/components/layouts/formations/card-select";
 import { ShareHolderCard } from "@/components/layouts/formations/share-holder-card";
 import FileUploadZoneForm from "@/components/file-upload/file-upload-zone-form";
 import { cn } from "@/lib/utils";
-import { ResourceFormField } from "@/packages/resource-framework/resource-types";
+import type { ResourceFormField } from "../../types/resource-forms";
 
 interface FormFieldV2Props {
   field: ResourceFormField;

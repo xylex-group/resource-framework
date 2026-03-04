@@ -1,7 +1,7 @@
 "use client";
 
 import { useUserStore } from "@/lib/stores";
-import { fetchDataViaAthena } from "@/packages/resource-framework/adapters/athena-gateway";
+import { fetchDataViaAthena } from "../adapters/athena-gateway";
 import React, {
   createContext,
   useCallback,
@@ -17,7 +17,7 @@ import type {
   ResourceProviderProps,
   UserPermissionScope,
   UserPreference,
-} from "@/packages/resource-framework/resource-types";
+} from "../resource-types";
 
 export const suppressHydrationWarning = true;
 

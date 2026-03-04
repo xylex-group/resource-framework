@@ -8,7 +8,7 @@ import { useAuthorizedFileUrl } from "../hooks/useAuthorizedFileUrl";
 import {
   fetchS3FileAsArrayBuffer,
   fetchS3FileAsText,
-} from "@/packages/resource-framework/utils/s3-file-handler";
+} from "../../utils/s3-file-handler";
 import { cn } from "@/lib/utils";
 import JSZip from "jszip";
 import Papa from "papaparse";

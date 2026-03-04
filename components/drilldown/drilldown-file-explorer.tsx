@@ -29,9 +29,9 @@ import {
   type LightboxFile,
   refreshFileUrl,
   useLightbox,
-} from "@/packages/resource-framework/lightbox";
+} from "../../lightbox";
 import { CLOSE_USER_POPOVER_EVENT } from "@/lib/events/popover-events";
-import { isDownloadAllowed } from "@/packages/resource-framework/lightbox/utils/file-download";
+import { isDownloadAllowed } from "../../lightbox/utils/file-download";
 
 export interface FileItem {
   id: string;

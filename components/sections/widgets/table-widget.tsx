@@ -6,9 +6,9 @@ import { LeanTable } from "@/components/ui-responsive/lean-table";
 import type { LeanTableTitleSize } from "@/components/ui-responsive/lean-table";
 import { useUserStore } from "@/lib/stores";
 import { cn } from "@/lib/utils";
-import { buildTableColumns } from "@/packages/resource-framework/utils/column-builder";
-import { useResourceRoute } from "@/packages/resource-framework/hooks/useResourceRoute";
-import { useApiClient } from "@/packages/resource-framework/hooks/use-api-client";
+import { buildTableColumns } from "../../../utils/column-builder";
+import { useResourceRoute } from "../../../hooks/useResourceRoute";
+import { useApiClient } from "../../../hooks/use-api-client";
 import {
   registerSectionWidget,
   type SectionWidgetRendererProps,
@@ -16,14 +16,14 @@ import {
 import type {
   Primitive,
   TableWidgetProps,
-} from "@/packages/resource-framework/resource-types";
+} from "../../../resource-types";
 import ErrorBlock from "@/components/ui/error";
 import {
   buildWidgetConditions,
   interpolateWidgetValue,
-} from "@/packages/resource-framework/utils/widget-conditions";
-import { getValueByKeyCase, getValueByPathCase } from "@/packages/resource-framework/utils/key-case";
-import { CreateResourceDialog } from "@/packages/resource-framework/components/create-resource-dialog";
+} from "../../../utils/widget-conditions";
+import { getValueByKeyCase, getValueByPathCase } from "../../../utils/key-case";
+import { CreateResourceDialog } from "../../create-resource-dialog";
 import { prettyString } from "@/lib/format/string";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";

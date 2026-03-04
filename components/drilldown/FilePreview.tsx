@@ -10,7 +10,7 @@ import {
   FileVideo,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuthorizedFileUrl } from "@/packages/resource-framework/lightbox/hooks/useAuthorizedFileUrl";
+import { useAuthorizedFileUrl } from "../../lightbox/hooks/useAuthorizedFileUrl";
 
 /** Minimal file shape needed for preview; compatible with FileItem from drilldown-file-explorer */
 export interface FilePreviewItem {

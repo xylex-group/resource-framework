@@ -2,15 +2,15 @@
 
 import { useMemo, useState } from "react";
 import { useUserStore } from "@/lib/stores";
-import { useResourceRoute } from "@/packages/resource-framework/hooks/useResourceRoute";
-import { useApiClient } from "@/packages/resource-framework/hooks/use-api-client";
+import { useResourceRoute } from "../../../hooks/useResourceRoute";
+import { useApiClient } from "../../../hooks/use-api-client";
 import {
   registerSectionWidget,
   type SectionWidgetRendererProps,
 } from "./registry";
-import type { ChartWidgetProps } from "@/packages/resource-framework/resource-types";
+import type { ChartWidgetProps } from "../../../resource-types";
 import ErrorBlock from "@/components/ui/error";
-import { buildWidgetConditions } from "@/packages/resource-framework/utils/widget-conditions";
+import { buildWidgetConditions } from "../../../utils/widget-conditions";
 import { Container } from "@/components/ui/container";
 import { ChartContainer } from "@/components/ui/chart";
 import { LineBarChartWidget } from "@/components/charts";

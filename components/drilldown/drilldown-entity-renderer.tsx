@@ -7,8 +7,8 @@ import { DrilldownSummary, DrilldownSummaryItem } from "../drilldown-summary";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { SectionWidgetGroup } from "@/packages/resource-framework/components/sections/section-widget";
-import type { DrilldownSectionWidgetSpec } from "@/packages/resource-framework/resource-types";
+import { SectionWidgetGroup } from "../sections/section-widget";
+import type { DrilldownSectionWidgetSpec } from "../../resource-types";
 
 export interface EntityField<T extends Record<string, unknown>> {
 	key: string;

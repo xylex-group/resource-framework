@@ -1,10 +1,10 @@
 import * as React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { defineColumns } from "@/packages/resource-framework/constructors/define-columns";
+import { defineColumns } from "../constructors/define-columns";
 import type {
   ResourceFieldSpec,
   ResourceRouteEntry,
-} from "@/packages/resource-framework/resource-types";
+} from "../resource-types";
 
 /**
  * Hook to convert resource route column specifications into TanStack Table column definitions.

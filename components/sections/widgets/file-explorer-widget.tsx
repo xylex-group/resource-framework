@@ -4,17 +4,17 @@ import { useCallback, useMemo, useState } from "react";
 import {
   DrilldownFileExplorer,
   type FileItem as DrilldownFileItem,
-} from "@/packages/resource-framework/components/drilldown/drilldown-file-explorer";
+} from "../../drilldown/drilldown-file-explorer";
 import {
   useApiClient,
   UseApiClientMultiReturn,
   UseApiClientSingleReturn,
-} from "@/packages/resource-framework/hooks/use-api-client";
+} from "../../../hooks/use-api-client";
 import {
   resolveTemplate,
   resolveTemplateValue as resolveTemplateValueNew,
-} from "@/packages/resource-framework/templating";
-import type { TemplateContext } from "@/packages/resource-framework/templating/types";
+} from "../../../templating";
+import type { TemplateContext } from "../../../templating/types";
 import {
   registerSectionWidget,
   type SectionWidgetRendererProps,
@@ -22,12 +22,12 @@ import {
 import type {
   FileExplorerWidgetSpec,
   TableWidgetCondition,
-} from "@/packages/resource-framework/resource-types";
+} from "../../../resource-types";
 import { Container } from "@/components/ui/container";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/lib/stores";
-import { uploadFileViaAthena } from "@/packages/resource-framework/adapters/athena-files";
-import { useFileUploadStatus } from "@/packages/resource-framework/notifications";
+import { uploadFileViaAthena } from "../../../adapters/athena-files";
+import { useFileUploadStatus } from "../../../notifications";
 
 type FileRow = Record<string, unknown> & {
   file_id?: string;
@@ -184,6 +184,10 @@ function sanitizePathSegment(value?: string | null): string {
   return sanitized;
 }
 
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Unknown error";
+}
+
 function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
   type ApiClientResult =
     | UseApiClientSingleReturn<FileRow>
@@ -289,7 +293,6 @@ function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
 
   const files = useMemo(() => {
     if (!Array.isArray(data)) {
-      console.warn("[FileExplorerWidget] data is not an array:", data);
       return [];
     }
     const mapped = mapFileRows(data, fileIdColumn);
@@ -337,10 +340,6 @@ function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
             const uploadResult = await uploadFileViaAthena(payload);
             const url = uploadResult?.url;
             if (!url) {
-              console.error(
-                "[FileExplorerWidget] handleUpload no url in response:",
-                uploadResult,
-              );
               throw new Error("Upload returned no url");
             }
 
@@ -390,16 +389,10 @@ function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
             await insert(insertBody);
             successCount++;
           } catch (error) {
-            console.error(
-              `[FileExplorerWidget] handleUpload failed to upload ${file.name}:`,
-              error,
-            );
             failCount++;
             toast({
               title: "Upload failed",
-              description: `Failed to upload ${file.name}: ${
-                error instanceof Error ? error.message : "Unknown error"
-              }`,
+              description: `Failed to upload ${file.name}: ${getErrorMessage(error)}`,
               variant: "destructive",
             });
           }
@@ -424,15 +417,9 @@ function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
           });
         }
       } catch (error) {
-        console.error(
-          "[FileExplorerWidget] handleUpload unexpected error:",
-          error,
-        );
         toast({
           title: "Upload error",
-          description: error instanceof Error
-            ? error.message
-            : "An unexpected error occurred",
+          description: getErrorMessage(error),
           variant: "destructive",
         });
       } finally {
@@ -471,12 +458,9 @@ function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
           description: "The file has been successfully deleted.",
         });
       } catch (error) {
-        console.error("[FileExplorerWidget] handleDelete error:", error);
         toast({
           title: "Delete failed",
-          description: error instanceof Error
-            ? error.message
-            : "Failed to delete file",
+          description: getErrorMessage(error),
           variant: "destructive",
         });
         throw error;

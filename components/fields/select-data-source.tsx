@@ -5,9 +5,9 @@ import { ResponsiveDropdownV2 } from "@/components/ui-responsive/responsive-drop
 import { useNotification } from "@/hooks/use-notifications";
 import { useUserStore } from "@/lib/stores";
 import type { DataSourceConfig, SelectOption } from "@/lib/types";
-import { fetchOptions } from "@/packages/resource-framework/handlers/handle-options";
-import { handleUpdate } from "@/packages/resource-framework/handlers/handle-update";
-import type { ResourceRoute } from "@/packages/resource-framework/resource-types";
+import { fetchOptions } from "../../handlers/handle-options";
+import { handleUpdate } from "../../handlers/handle-update";
+import type { ResourceRoute } from "../../resource-types";
 import { X } from "lucide-react";
 
 export interface SelectDataSourceProps {

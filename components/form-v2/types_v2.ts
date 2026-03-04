@@ -11,4 +11,4 @@ export type {
   FileUploadResourceFormField,
   ResourceFormField,
   ResourceFormSchema,
-} from "../../resource-types";
+} from "../../types/resource-forms";

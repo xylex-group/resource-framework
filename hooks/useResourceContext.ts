@@ -4,7 +4,7 @@ import { useContext } from "react";
 import {
   ResourceContext,
   type ResourceContextValue,
-} from "@/packages/resource-framework/components/ResourceProvider";
+} from "../components/ResourceProvider";
 
 /**
  * Hook to access the ResourceProvider context.

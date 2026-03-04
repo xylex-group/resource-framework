@@ -12,10 +12,10 @@ import { useUserStore } from "@/lib/stores";
 import { useNotification } from "@/hooks/use-notifications";
 import { insertRow } from "../utils/insert";
 import { insertDataViaAthena } from "../adapters/athena-gateway";
-import { defaultEditorByColumn } from "@/packages/resource-framework/constructors/column-registry";
+import { defaultEditorByColumn } from "../constructors/column-registry";
 import {
   getDrizzleColumnInfo,
-} from "@/packages/resource-framework/utils/drizzle-editor";
+} from "../utils/drizzle-editor";
 import {
   ColumnConfig,
   type FieldEditorSpec,
@@ -23,7 +23,7 @@ import {
   type FieldSpec,
   FieldValue,
   Primitive,
-} from "@/packages/resource-framework/resource-types";
+} from "../resource-types";
 import { SpecDrivenDialog } from "./dialog";
 
 const mapFieldTypeToEditorType = (

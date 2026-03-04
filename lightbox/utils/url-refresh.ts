@@ -2,7 +2,7 @@
  * Utility functions for handling expired S3/MinIO URLs
  */
 
-import { refreshFileUrlViaAthena } from "@/packages/resource-framework/adapters/athena-files";
+import { refreshFileUrlViaAthena } from "../../adapters/athena-files";
 
 /**
  * Extract the file key (object path) from an S3/MinIO URL
