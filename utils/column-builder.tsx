@@ -123,8 +123,7 @@ export const buildTableColumns = <TData extends TableRowData>(
   });
 
   try {
-    (window as unknown as { __filterableMeta?: typeof filterableMeta }).__filterableMeta =
-      filterableMeta;
+    window.__filterableMeta = filterableMeta;
   } catch {}
 
   const filteredColumns = Array.isArray(data) && data.length > 0

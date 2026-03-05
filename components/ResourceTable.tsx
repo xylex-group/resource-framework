@@ -165,14 +165,7 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
 
   const queryFilters = useMemo(() => {
     const filterableMeta =
-      typeof window !== "undefined"
-        ? (window as unknown as {
-            __filterableMeta?: Record<
-              string,
-              { filterable?: boolean; datatype?: string }
-            >;
-          }).__filterableMeta
-        : undefined;
+      typeof window !== "undefined" ? window.__filterableMeta : undefined;
     return parseQueryFilters(searchParams, filterableMeta);
   }, [searchParams]);
 
@@ -684,7 +677,7 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
           columns={createColumns}
           DialogComponent={createCfg?.dialog}
           table={resource?.table}
-          onCreatedAction={(row: Record<string, unknown> | null) => {
+          onCreatedAction={(row: TableRowData | null) => {
             try {
               const idColumn = resource?.idColumn || "id";
               const id = row?.[idColumn];

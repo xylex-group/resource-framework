@@ -23,6 +23,7 @@ import {
   type FieldSpec,
   FieldValue,
   Primitive,
+  type TableRowData,
 } from "../resource-types";
 import { SpecDrivenDialog } from "./dialog";
 
@@ -185,7 +186,7 @@ export function CreateResourceDialog(props: {
   required?: string[];
   optional?: string[];
   table?: string;
-  onCreatedAction?: (createdRow: Record<string, unknown> | null) => void;
+  onCreatedAction?: (createdRow: TableRowData | null) => void;
   /**
    * Error callback - called when create fails.
    */
@@ -690,7 +691,7 @@ export function CreateResourceDialog(props: {
       onCloseAction?.();
       const row = (j?.data && Array.isArray(j.data) ? j.data[0] : j?.data) ||
         null;
-      onCreatedAction?.(row as Record<string, unknown> | null);
+      onCreatedAction?.((row as TableRowData | null) ?? null);
     } catch {
       notification({
         message: "Could not create – try again",

@@ -639,6 +639,15 @@ export type TableColumnMeta = {
   className?: string;
 };
 
+declare global {
+  interface Window {
+    __filterableMeta?: Record<
+      string,
+      Pick<TableColumnMeta, "filterable" | "datatype">
+    >;
+  }
+}
+
 export type FieldEditorSpec = {
   type?: "text" | "number" | "boolean" | "select" | "date";
   options?: Array<{ label: string; value: string | number | boolean }>;
