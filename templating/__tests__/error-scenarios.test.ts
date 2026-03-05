@@ -15,37 +15,37 @@ describe("Error Scenarios and Edge Cases", () => {
 
   describe("Malformed Input", () => {
     it("should handle null template", () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const result = resolveTemplate(null as any, {});
       expect(result).toBe("");
     });
 
     it("should handle undefined template", () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const result = resolveTemplate(undefined as any, {});
       expect(result).toBe("");
     });
 
     it("should handle number as template", () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const result = resolveTemplate(123 as any, {});
       expect(result).toBe("123");
     });
 
     it("should handle boolean as template", () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const result = resolveTemplate(true as any, {});
       expect(result).toBe("true");
     });
 
     it("should handle object as template", () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const result = resolveTemplate({ key: "value" } as any, {});
       expect(result).toBe("[object Object]");
     });
 
     it("should handle array as template", () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const result = resolveTemplate(["a", "b"] as any, {});
       expect(result).toBe("a,b");
     });
@@ -94,7 +94,7 @@ describe("Error Scenarios and Edge Cases", () => {
 
   describe("Circular References", () => {
     it("should handle circular entity references", () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const circular: any = { name: "Test" };
       circular.self = circular;
 
@@ -300,7 +300,7 @@ describe("Error Scenarios and Edge Cases", () => {
 
     it("should handle context with null user", () => {
       const context: TemplateContext = {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         user: null as any,
       };
 
@@ -310,7 +310,7 @@ describe("Error Scenarios and Edge Cases", () => {
 
     it("should handle context with null entity", () => {
       const context: TemplateContext = {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         entity: null as any,
       };
 
@@ -674,7 +674,7 @@ describe("Error Scenarios and Edge Cases", () => {
       const context: TemplateContext = {
         entity: {
           __proto__: { polluted: "bad" },
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         } as any,
       };
 
