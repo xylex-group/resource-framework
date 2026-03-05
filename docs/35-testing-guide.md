@@ -11,13 +11,13 @@ flowchart TD
 ```
 <!-- codex:architecture-diagram:end -->
 
-Comprehensive testing for the Resource Framework and Templating System.
+Comprehensive testing guidance for the Resource Framework, including templating, adapters, forms, and app-level render paths.
 
 ## Test Coverage
 
-The framework includes **213 passing tests** covering:
+The repository currently runs a broad test suite (unit, component, contract, and env-gated integration) with around **300 tests** in regular CI/local runs.
 
-### Templating Tests (213 tests across 6 files)
+### Templating Tests (Core suites across 6 files)
 
 1. **templating.test.ts** (27 tests)
    - EnvStrategy (3 tests)
@@ -111,27 +111,27 @@ The framework includes **213 passing tests** covering:
 
 ### All Templating Tests
 ```bash
-npm test packages/resource-framework/templating/__tests__/
+npx vitest run templating/__tests__/
 ```
 
 ### Specific Test File
 ```bash
-npm test packages/resource-framework/templating/__tests__/templating.test.ts
-npm test packages/resource-framework/templating/__tests__/advanced.test.ts
-npm test packages/resource-framework/templating/__tests__/integration.test.ts
-npm test packages/resource-framework/templating/__tests__/strategies.test.ts
-npm test packages/resource-framework/templating/__tests__/registry.test.ts
-npm test packages/resource-framework/templating/__tests__/error-scenarios.test.ts
+npx vitest run templating/__tests__/templating.test.ts
+npx vitest run templating/__tests__/advanced.test.ts
+npx vitest run templating/__tests__/integration.test.ts
+npx vitest run templating/__tests__/strategies.test.ts
+npx vitest run templating/__tests__/registry.test.ts
+npx vitest run templating/__tests__/error-scenarios.test.ts
 ```
 
 ### Watch Mode
 ```bash
-npm test -- --watch packages/resource-framework/templating/__tests__/
+npx vitest templating/__tests__/
 ```
 
 ### Coverage
 ```bash
-npm test -- --coverage packages/resource-framework/templating/
+npx vitest run --coverage templating/__tests__/
 ```
 
 ## Test Categories

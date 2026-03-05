@@ -1,16 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { ResponsiveDropdownV2 } from "@/components/ui-responsive/responsive-dropdown-v2";
 import { Ellipsis } from "lucide-react";
-import type { ResourceRoute } from "../../resource-types";
+import type { ResourceRoute, TableRowData } from "../../resource-types";
 import type { ColumnDef, Row } from "@tanstack/react-table";
 import { getValueByKeyCase, getValueByPathCase } from "../../utils/key-case";
 
 type RowActionItem = {
   type?: "separator";
   label?: string;
-  onClick?: (row: Record<string, unknown>) => void;
+  onClick?: (row: TableRowData) => void;
   destructive?: boolean;
-  disabled?: boolean | ((row: Record<string, unknown>) => boolean);
+  disabled?: boolean | ((row: TableRowData) => boolean);
 };
 
 type DropdownItem = {
@@ -30,11 +30,11 @@ type DropdownItem = {
 export const createActionsColumn = (
   resource: ResourceRoute | null,
   resourceName: string | undefined,
-): ColumnDef<Record<string, unknown>> => {
+): ColumnDef<TableRowData> => {
   return {
     id: "actions",
     header: () => <span className="sr-only">Actions</span>,
-    cell: ({ row }: { row: Row<Record<string, unknown>> }) => {
+    cell: ({ row }: { row: Row<TableRowData> }) => {
       const rowData = row.original;
       const idColumn = resource?.idColumn || "id";
       const rawId = getValueByKeyCase(rowData, String(idColumn));

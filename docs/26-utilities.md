@@ -148,7 +148,7 @@ formatZipCode('12345');           // '12345'
 
 ## See Also
 
-- [Format](./26-format.md)
+- [Formatting](./27-formatting.md)
 
 <!-- codex:architecture-review:start -->
 ## Architecture Assessment

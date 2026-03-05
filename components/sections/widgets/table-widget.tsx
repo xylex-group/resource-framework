@@ -15,6 +15,7 @@ import {
 } from "./registry";
 import type {
   Primitive,
+  TableRowData,
   TableWidgetProps,
 } from "../../../resource-types";
 import ErrorBlock from "@/components/ui/error";
@@ -48,7 +49,7 @@ function TableSectionWidget({
   const { resource } = useResourceRoute(props.resourceName, userContextForRoute);
   const conditions = buildWidgetConditions(props, entity);
 
-  const apiResult = useApiClient<Record<string, unknown>>({
+  const apiResult = useApiClient<TableRowData>({
     table: resource?.table || "",
     schema: resource?.schema || "public",
     conditions,
@@ -135,7 +136,7 @@ function TableSectionWidget({
 
   const hideTopControls = props.enableSearch === false;
   const showCreateButton = canCreate && Boolean(user?.organization_id);
-  const rowHref = (rowData: Record<string, unknown>): string | undefined => {
+  const rowHref = (rowData: TableRowData): string | undefined => {
     try {
       const custom = resource?.drilldownHref;
       if (typeof custom === "function") {

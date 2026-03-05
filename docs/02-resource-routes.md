@@ -110,8 +110,8 @@ rowActions: [
 ## See Also
 
 - [Drilldown Routes](./03-drilldown-routes.md)
-- [Columns](./10-columns.md)
-- [Templates](./31-templating-system.md)
+- [Columns](./09-columns.md)
+- [Templating](./30-templating.md)
 
 <!-- codex:architecture-review:start -->
 ## Architecture Assessment

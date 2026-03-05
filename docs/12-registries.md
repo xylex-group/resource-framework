@@ -119,7 +119,7 @@ const drilldown: ResourceDrilldownRoute = RESOURCE_DRILLDOWN_ROUTES.customers;
 
 - [Resource Routes](./02-resource-routes.md)
 - [Drilldown Routes](./03-drilldown-routes.md)
-- [Filters](./24-filters.md)
+- [Filters](./15-filters.md)
 
 <!-- codex:architecture-review:start -->
 ## Architecture Assessment

@@ -149,7 +149,7 @@ Validate using data_type:
 
 - [Columns](./09-columns.md)
 - [Sections](./10-sections.md)
-- [Templates](./31-templating-system.md)
+- [Templating](./30-templating.md)
 
 <!-- codex:architecture-review:start -->
 ## Architecture Assessment

@@ -159,7 +159,7 @@ function TableView() {
 
 ## See Also
 
-- [Data API](./08-data-api.md)
+- [Data API](./07-data-api.md)
 - [ResourceProvider](./13-resource-provider.md)
 
 <!-- codex:architecture-review:start -->

@@ -173,7 +173,7 @@ Use environment variables in config:
 ## See Also
 
 - [File Explorer Widget](./20-file-explorer-widget.md)
-- [Templating](./31-templating-system.md)
+- [Templating](./30-templating.md)
 
 <!-- codex:architecture-review:start -->
 ## Architecture Assessment

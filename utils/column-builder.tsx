@@ -6,7 +6,12 @@ import {
   type LeanColumnSpec,
 } from "../constructors/column-registry";
 import { getPriorityLabel, stringPriorityToNumber } from "./priority";
-import type { ResourceRoute } from "../resource-types";
+import type { ResourceRoute, TableColumnMeta, TableRowData } from "../resource-types";
+
+type RouteColumnConfig = Exclude<
+  NonNullable<ResourceRoute["columns"]>[number],
+  string
+>;
 
 /**
  * Builds table columns from resource configuration and data
@@ -14,7 +19,7 @@ import type { ResourceRoute } from "../resource-types";
  * @param resource - Resource route configuration
  * @returns Array of TanStack Table ColumnDef objects
  */
-export const buildTableColumns = <TData extends Record<string, unknown>>(
+export const buildTableColumns = <TData extends TableRowData>(
   data: TData[] | undefined,
   resource: ResourceRoute | null,
 ): ColumnDef<TData>[] => {
@@ -24,25 +29,23 @@ export const buildTableColumns = <TData extends Record<string, unknown>>(
 
   const specs: Array<LeanColumnSpec<TData>> = (
     hasConfigured
-      ? (configured as Array<string | Record<string, unknown>>)
+      ? (configured as Array<string | RouteColumnConfig>)
         .filter((c) => !(typeof c === "object" && c?.hidden))
         .map((c) =>
           typeof c === "string" ? { key: c, header: c.replace(/_/g, " ") } : {
-            key: c.column_name as string,
-            header: (c.header_label as string) ||
-              (c.header as string) ||
-              (c.column_name as string).replace(/_/g, " "),
-            use: c.use as string | undefined,
-            label: c.label as string | undefined,
-            href: c.href as string | undefined,
-            cell_value_mask_label: c.cell_value_mask_label as
-              | string
-              | undefined,
-            order: c.order as number | undefined,
-            formatter: c.formatter as string | undefined,
-            minWidth: c.minWidth as number | undefined,
-            maxWidth: c.maxWidth as number | undefined,
-            widthFit: c.widthFit as boolean | undefined,
+            key: c.column_name,
+            header: c.header_label ||
+              c.header ||
+              c.column_name.replace(/_/g, " "),
+            use: c.use,
+            label: c.label,
+            href: c.href,
+            cell_value_mask_label: c.cell_value_mask_label,
+            order: c.order,
+            formatter: c.formatter,
+            minWidth: c.minWidth,
+            maxWidth: c.maxWidth,
+            widthFit: c.widthFit,
           }
         )
       : (first ? Object.keys(first) : []).map((k) => ({
@@ -102,10 +105,7 @@ export const buildTableColumns = <TData extends Record<string, unknown>>(
     return col;
   });
 
-  const filterableMeta: Record<
-    string,
-    { filterable?: boolean; datatype?: string }
-  > = {};
+  const filterableMeta: Record<string, Pick<TableColumnMeta, "filterable" | "datatype">> = {};
   const blacklist = new Set(resource?.filterableColumnBlacklist || []);
   builtWithScope.forEach((col) => {
     const colWithKey = col as ColumnDef<TData> & {
@@ -114,16 +114,16 @@ export const buildTableColumns = <TData extends Record<string, unknown>>(
     };
     const key = colWithKey.accessorKey || colWithKey.id;
     if (!key) return;
-    const meta = (col?.meta as Record<string, unknown>) || {};
+    const meta = (col?.meta as TableColumnMeta | undefined) || {};
     const isBlacklisted = blacklist.has(key);
     filterableMeta[key] = {
       filterable: isBlacklisted ? false : Boolean(meta.filterable),
-      datatype: meta.datatype as string | undefined,
+      datatype: meta.datatype,
     };
   });
 
   try {
-    (window as unknown as Record<string, unknown>).__filterableMeta =
+    (window as unknown as { __filterableMeta?: typeof filterableMeta }).__filterableMeta =
       filterableMeta;
   } catch {}
 

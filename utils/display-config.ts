@@ -1,3 +1,5 @@
+import type { ColumnDef } from "@tanstack/react-table";
+import type { TableColumnMeta, TableRowData } from "../resource-types";
 import { prettyString } from "./string";
 
 type DisplayConfigItem =
@@ -26,12 +28,18 @@ type DisplayConfigItem =
  * @returns Array of display configuration items
  */
 export const generateDisplayConfig = (
-  columns: Array<Record<string, unknown>>,
+  columns: Array<ColumnDef<TableRowData>>,
 ): DisplayConfigItem[] => {
-  const cols = (columns || []).map((c: Record<string, unknown>) => {
-    const accessor = c?.accessorKey ?? c?.id;
-    const headerText = (c?.meta as Record<string, unknown>)?.headerText;
-    const header = c?.header;
+  const cols = (columns || []).map((column) => {
+    const c = column as ColumnDef<TableRowData> & {
+      accessorKey?: string;
+      id?: string;
+      header?: unknown;
+      meta?: TableColumnMeta;
+    };
+    const accessor = c.accessorKey ?? c.id;
+    const headerText = c.meta?.headerText;
+    const header = c.header;
     const label = (typeof headerText === "string" && headerText) ||
       (typeof header === "string"
         ? header
@@ -44,11 +52,20 @@ export const generateDisplayConfig = (
   });
 
   const sortOptions = (columns || [])
-    .filter((c: Record<string, unknown>) => c?.enableSorting !== false)
-    .flatMap((c: Record<string, unknown>) => {
-      const accessor = c?.accessorKey ?? c?.id;
-      const headerText = (c?.meta as Record<string, unknown>)?.headerText;
-      const header = c?.header;
+    .filter((column) => {
+      const c = column as { enableSorting?: boolean };
+      return c.enableSorting !== false;
+    })
+    .flatMap((column) => {
+      const c = column as ColumnDef<TableRowData> & {
+        accessorKey?: string;
+        id?: string;
+        header?: unknown;
+        meta?: TableColumnMeta;
+      };
+      const accessor = c.accessorKey ?? c.id;
+      const headerText = c.meta?.headerText;
+      const header = c.header;
       const label = (typeof headerText === "string" && headerText) ||
         (typeof header === "string"
           ? header

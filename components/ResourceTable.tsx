@@ -19,6 +19,7 @@ import {
 } from "next/navigation";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
+import type { TableColumnMeta, TableRowData } from "../resource-types";
 import { useUserScopes } from "../hooks/useUserScopes";
 import { useResourceRoute } from "../hooks/useResourceRoute";
 import { useAdvancedFilters } from "../hooks/useAdvancedFilters";
@@ -45,13 +46,13 @@ const parseSearchByColumns = (value?: string): string[] => {
     .filter((segment) => segment.length > 0);
 };
 
-type ColumnKeyDef = ColumnDef<Record<string, unknown>> & {
+type ColumnKeyDef = ColumnDef<TableRowData> & {
   accessorKey?: string;
   id?: string;
-  meta?: Record<string, unknown>;
+  meta?: TableColumnMeta;
 };
 
-const getColumnIdentifier = (column: ColumnDef<Record<string, unknown>>): string | undefined => {
+const getColumnIdentifier = (column: ColumnDef<TableRowData>): string | undefined => {
   const colDef = column as ColumnKeyDef;
   if (typeof colDef.accessorKey === "string" && colDef.accessorKey.trim()) {
     return colDef.accessorKey;
@@ -67,7 +68,7 @@ const getColumnIdentifier = (column: ColumnDef<Record<string, unknown>>): string
 };
 
 const resolveSearchColumnIdentifier = (
-  columns: ColumnDef<Record<string, unknown>>[],
+  columns: ColumnDef<TableRowData>[],
   target: string,
 ): string | undefined => {
   const needle = target.toLowerCase();
@@ -165,14 +166,14 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
   const queryFilters = useMemo(() => {
     const filterableMeta =
       typeof window !== "undefined"
-        ? (window as unknown as Record<string, unknown>).__filterableMeta
+        ? (window as unknown as {
+            __filterableMeta?: Record<
+              string,
+              { filterable?: boolean; datatype?: string }
+            >;
+          }).__filterableMeta
         : undefined;
-    return parseQueryFilters(
-      searchParams,
-      filterableMeta as
-        | Record<string, { filterable?: boolean; datatype?: string }>
-        | undefined
-    );
+    return parseQueryFilters(searchParams, filterableMeta);
   }, [searchParams]);
 
   const effectiveLimit = useMemo(() => {
@@ -182,7 +183,7 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
     return limit;
   }, [limit]);
 
-  const apiResult = useApiClient<Record<string, unknown>[]>({
+  const apiResult = useApiClient<TableRowData>({
     table: resource?.table || "",
     schema: resource?.schema || "public",
     conditions,
@@ -205,11 +206,7 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
   const flatData = useMemo(() => {
     if (!data) return undefined;
     if (!Array.isArray(data)) return undefined;
-    // Check if it's a nested array
-    if (data.length > 0 && Array.isArray(data[0])) {
-      return (data as Record<string, unknown>[][]).flat();
-    }
-    return data as Record<string, unknown>[];
+    return data as TableRowData[];
   }, [data]);
 
   const columns = useMemo(() => {
@@ -223,10 +220,15 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
       const asArray = Array.isArray(columns) ? columns : [];
       return asArray
         .map((c) => {
-          const col = c as unknown as Record<string, unknown>;
-          const key = (col?.accessorKey as string) ?? (col?.id as string);
+          const col = c as ColumnDef<TableRowData> & {
+            accessorKey?: string;
+            id?: string;
+            header?: unknown;
+            meta?: TableColumnMeta;
+          };
+          const key = col.accessorKey ?? col.id;
           if (!key) return null;
-          const meta = (col?.meta as Record<string, unknown>) || {};
+          const meta = col.meta || {};
           const headerText = meta?.headerText;
           const header = col?.header;
           const label =
@@ -297,7 +299,7 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
     if (user?.organization_id && flatData && Array.isArray(flatData)) {
       // Check if any data belongs to different org
       const hasWrongOrgData = flatData.some(
-        (item: Record<string, unknown>) =>
+        (item: TableRowData) =>
           item.organization_id && item.organization_id !== user.organization_id
       );
 
@@ -309,8 +311,7 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
   }, [user?.organization_id, flatData, router]);
 
   const displayConfig = useMemo(
-    () =>
-      generateDisplayConfig(columns as unknown as Record<string, unknown>[]),
+    () => generateDisplayConfig(columns as ColumnDef<TableRowData>[]),
     [columns]
   );
 
@@ -494,7 +495,7 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
         );
       })()}
       <LeanTable
-        columns={columns as unknown as ColumnDef<Record<string, unknown>>[]}
+        columns={columns as ColumnDef<TableRowData>[]}
         data={filteredData}
         title={(() => {
           const deferToHeader = resource?.deferToHeader ?? false;
@@ -565,7 +566,7 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
           };
 
           try {
-            const rowData = row as Record<string, unknown>;
+            const rowData = row as TableRowData;
             const idColumn = resource?.idColumn || "id";
             const rawId = getValueByKeyCase(rowData, String(idColumn));
             const hasId =
@@ -645,8 +646,7 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
             : columns?.length
               ? [
                   {
-                    id: (columns[0] as unknown as Record<string, unknown>)
-                      .accessorKey as string,
+                    id: getColumnIdentifier(columns[0]) ?? "id",
                     desc: true,
                   },
                 ]

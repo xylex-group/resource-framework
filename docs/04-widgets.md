@@ -123,9 +123,9 @@ Widgets support `{{…}}` tokens in:
 
 ## See Also
 
-- [File Explorer Widget](./21-file-explorer-widget.md)
-- [Templates](./31-templating-system.md)
-- [Widget Registry](./12-widget-registry.md)
+- [File Explorer Widget](./20-file-explorer-widget.md)
+- [Templating](./30-templating.md)
+- [Registries](./12-registries.md)
 
 <!-- codex:architecture-review:start -->
 ## Architecture Assessment

@@ -623,6 +623,22 @@ export interface ResourceProviderProps {
 
 export type Primitive = string | number | boolean | null | undefined;
 
+export type TableCellValue =
+  | Primitive
+  | Record<string, unknown>
+  | Array<unknown>
+  | unknown;
+
+export type TableRowData = Record<string, unknown>;
+
+export type TableColumnMeta = {
+  column_name?: string;
+  headerText?: string;
+  filterable?: boolean;
+  datatype?: string;
+  className?: string;
+};
+
 export type FieldEditorSpec = {
   type?: "text" | "number" | "boolean" | "select" | "date";
   options?: Array<{ label: string; value: string | number | boolean }>;

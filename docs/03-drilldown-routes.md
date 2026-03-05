@@ -122,9 +122,9 @@ Available prefixes:
 
 ## See Also
 
-- [Templates](./31-templating-system.md)
+- [Templating](./30-templating.md)
 - [Widgets](./04-widgets.md)
-- [Sections](./11-sections.md)
+- [Sections](./10-sections.md)
 
 <!-- codex:architecture-review:start -->
 ## Architecture Assessment

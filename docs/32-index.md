@@ -63,7 +63,7 @@ Complete documentation for the Resource Framework.
 - [Utilities](./26-utilities.md) - Utility functions
 - [Formatting](./27-formatting.md) - Data formatting
 - [Testing](./25-testing.md) - Testing strategies
-- [Testing Guide](./35-testing-guide.md) - Comprehensive test suite (213 tests)
+- [Testing Guide](./35-testing-guide.md) - Comprehensive framework and templating testing playbook
 
 ## Advanced Topics
 
@@ -74,6 +74,13 @@ Complete documentation for the Resource Framework.
 - [CSV Export](./19-csv-export.md) - Data export
 - [Drilldown Layout](./21-drilldown-layout.md) - Layout system
 - [Registries](./12-registries.md) - Centralized configuration
+
+## Deep Reference & Operations
+
+- [Complete Technical Reference](./40-complete-reference.md) - End-to-end architecture, contracts, extension points, and release expectations
+- [Athena Migration Runbook](./41-athena-migration-runbook.md) - Controlled rollout/rollback and verification strategy for Athena cutover
+- [Resource Forms Operations Guide](./42-resource-forms-operations.md) - Lifecycle governance for schema, versioning, and submission migration
+- [Troubleshooting Playbook](./43-troubleshooting-playbook.md) - Practical diagnosis and deterministic fix patterns
 
 ## Quick Links
 
@@ -118,7 +125,7 @@ Complete documentation for the Resource Framework.
 ```
 packages/resource-framework/
 ├── docs/
-│   ├── 00-overview.md          (this folder)
+│   ├── overview.md
 │   ├── 01-architecture.md
 │   ├── 02-resource-routes.md
 │   ├── 03-drilldown-routes.md
@@ -150,6 +157,10 @@ packages/resource-framework/
 │   ├── 29-s3-config.md
 │   ├── 30-templating.md
 │   ├── 31-best-practices.md
+│   ├── 40-complete-reference.md
+│   ├── 41-athena-migration-runbook.md
+│   ├── 42-resource-forms-operations.md
+│   ├── 43-troubleshooting-playbook.md
 │   ├── 38-resource-forms.md
 │   ├── 39-form-builder-renderer.md
 │   └── 32-index.md (you are here)
@@ -166,7 +177,7 @@ packages/resource-framework/
 - Use Ctrl+F to search within each doc
 - File names indicate the topic (e.g., 20-file-explorer-widget.md)
 - See Also sections link related topics
-- Cross-references use format `[Text](./filename.md)`
+- Cross-references use standard Markdown links (example: `Text -> ./target-doc.md`).
 
 ## Contributing
 

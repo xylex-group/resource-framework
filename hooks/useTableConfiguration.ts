@@ -52,7 +52,7 @@ export const useTableConfiguration = (
   }, [contextSettings?.rows_per_page]);
 
   const noCache = useMemo(() => {
-    const flag = (resource as Record<string, unknown>)?.force_no_cache;
+    const flag = resource?.force_no_cache;
     if (flag === true) return true;
     if (flag === false) return false;
     return !cacheExperimental;
@@ -60,7 +60,7 @@ export const useTableConfiguration = (
 
   const columns = useMemo(() => {
     try {
-      const configured = (resource as Record<string, unknown>)?.columns;
+      const configured = resource?.columns;
       if (!Array.isArray(configured) || configured.length === 0) {
         return [] as string[];
       }
@@ -90,8 +90,8 @@ export const useTableConfiguration = (
         [
           ...base,
           ...Array.from(referencedColumns),
-          (resource as Record<string, unknown>)?.idColumn || "id",
-          (resource as Record<string, unknown>)?.avatar_column || undefined,
+          resource?.idColumn || "id",
+          resource?.avatar_column || undefined,
         ].filter(Boolean) as string[]
       );
       return Array.from(withId);

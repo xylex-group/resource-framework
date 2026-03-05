@@ -155,7 +155,7 @@ function ExportButton() {
 ## See Also
 
 - [Data API](./07-data-api.md)
-- [Utilities](./27-utilities.md)
+- [Utilities](./26-utilities.md)
 
 <!-- codex:architecture-review:start -->
 ## Architecture Assessment

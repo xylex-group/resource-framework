@@ -206,8 +206,8 @@ Automatic formatting:
 ## See Also
 
 - [Widgets](./04-widgets.md)
-- [Templating](./31-templating-system.md)
-- [S3 Client Config](./29-s3-client-config.md)
+- [Templating](./30-templating.md)
+- [S3 Configuration](./29-s3-config.md)
 
 <!-- codex:architecture-review:start -->
 ## Architecture Assessment

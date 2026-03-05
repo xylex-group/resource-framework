@@ -183,7 +183,7 @@ npm run typecheck
 
 ## See Also
 
-- [Templating](./31-templating-system.md)
+- [Templating](./30-templating.md)
 - [Type Safety](./23-type-safety.md)
 
 <!-- codex:architecture-review:start -->
