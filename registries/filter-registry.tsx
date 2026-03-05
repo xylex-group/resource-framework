@@ -3,7 +3,7 @@
 import {
   type FilterOption,
   type FilterRegistry,
-} from "@/packages/resource-framework";
+} from "../resource-types";
 
 export const filterRegistry: FilterRegistry = {
   string: {

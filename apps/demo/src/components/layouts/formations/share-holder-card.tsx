@@ -1,7 +1,7 @@
 "use client";
 
 import { NumberField } from "@/components/ui/number-field";
-import type { ResourceFormField } from "@rf/resource-types";
+import type { ResourceFormField } from "../../../../../../types/resource-forms";
 import { cn } from "@/lib/utils";
 
 export interface ShareHolderCardProps {
