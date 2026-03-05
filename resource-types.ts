@@ -547,6 +547,11 @@ export type {
   ResourceFormFieldType,
   ResourceFormRow,
   ResourceFormSchema,
+  ResourceFormSubmissionConfig,
+  ResourceFormSubmissionDestination,
+  ResourceFormSubmissionNoopDestination,
+  ResourceFormSubmissionTableDestination,
+  ResourceFormSubmissionWebhookDestination,
   TextAreaResourceFormField,
   TextLikeResourceFormField,
 } from "./types/resource-forms";

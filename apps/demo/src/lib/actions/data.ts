@@ -161,6 +161,10 @@ const initialTables: Record<string, TableData> = {
   resource_forms: playgroundResourceFormRows.map((row) => ({
     ...row,
   })),
+  resource_form_submissions: [],
+  demo_contact_submissions: [],
+  demo_kyc_submissions: [],
+  demo_checkout_submissions: [],
 };
 
 const tableStore: Record<string, TableData> = {};

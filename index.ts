@@ -61,6 +61,15 @@ export {
   type ResourceFormSubmissionMigrationStep,
   type ResourceFormSubmissionTransformer,
 } from "./utils/resource-form-migrations";
+export {
+  createResourceFormSubmissionEnvelope,
+  normalizeResourceFormSubmissionConfig,
+  submitResourceForm,
+  type ResourceFormSubmissionDispatchResult,
+  type ResourceFormSubmissionEnvelope,
+  type ResourceFormSubmissionHandlers,
+  type ResourceFormSubmissionWriteResult,
+} from "./utils/resource-form-submissions";
 export { CreateResourceButton } from "./components/create-resource-button";
 export { CreateResourceDialog } from "./components/create-resource-dialog";
 export {
@@ -187,6 +196,11 @@ export {
   type ResourceFormFieldType,
   type ResourceFormRow,
   type ResourceFormSchema,
+  type ResourceFormSubmissionConfig,
+  type ResourceFormSubmissionDestination,
+  type ResourceFormSubmissionNoopDestination,
+  type ResourceFormSubmissionTableDestination,
+  type ResourceFormSubmissionWebhookDestination,
   type ResourceProviderProps,
   type ResourceRoute,
   type ResourceRouteEntry,

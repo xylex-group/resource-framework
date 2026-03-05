@@ -246,6 +246,14 @@ export const playgroundFormDefinitions: PlaygroundFormDefinition[] = [
       preferred_channel: "phone_email",
       notes: "Share product updates, but please avoid SMS on weekends.",
     },
+    submissionConfig: {
+      enabled: true,
+      storeEnvelopeTable: "resource_form_submissions",
+      destination: {
+        type: "table",
+        table: "demo_contact_submissions",
+      },
+    },
   }),
   defineResourceForm({
     id: "kyc",
@@ -261,6 +269,14 @@ export const playgroundFormDefinitions: PlaygroundFormDefinition[] = [
       nationality: "CA",
       compliance_note: "Approved for standard risk tier.",
     },
+    submissionConfig: {
+      enabled: true,
+      storeEnvelopeTable: "resource_form_submissions",
+      destination: {
+        type: "table",
+        table: "demo_kyc_submissions",
+      },
+    },
   }),
   defineResourceForm({
     id: "checkout",
@@ -275,6 +291,14 @@ export const playgroundFormDefinitions: PlaygroundFormDefinition[] = [
       card_choice: "visa_4242",
       card_nickname: "Corporate card",
       billing_comment: "Apply the annual subscription discount next cycle.",
+    },
+    submissionConfig: {
+      enabled: true,
+      storeEnvelopeTable: "resource_form_submissions",
+      destination: {
+        type: "table",
+        table: "demo_checkout_submissions",
+      },
     },
   }),
 ];

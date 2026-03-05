@@ -105,6 +105,39 @@ export interface ResourceFormSchema {
   show_submit_button?: boolean;
 }
 
+export type ResourceFormSubmissionTableDestination = {
+  type: "table";
+  table: string;
+  schema?: string;
+  payloadColumn?: string;
+  metadataColumn?: string;
+};
+
+export type ResourceFormSubmissionWebhookDestination = {
+  type: "webhook";
+  url: string;
+  method?: "POST" | "PUT";
+  headers?: Record<string, string>;
+  includeRawPayload?: boolean;
+  includeMigratedPayload?: boolean;
+};
+
+export type ResourceFormSubmissionNoopDestination = {
+  type: "none";
+};
+
+export type ResourceFormSubmissionDestination =
+  | ResourceFormSubmissionTableDestination
+  | ResourceFormSubmissionWebhookDestination
+  | ResourceFormSubmissionNoopDestination;
+
+export type ResourceFormSubmissionConfig = {
+  enabled?: boolean;
+  storeEnvelopeTable?: string;
+  storeEnvelopeSchema?: string;
+  destination?: ResourceFormSubmissionDestination;
+};
+
 export type ResourceFormRow = {
   resource_form_id: string;
   slug: string;
@@ -118,6 +151,7 @@ export type ResourceFormRow = {
   source_schema_provider?: string | null;
   schema?: Record<string, unknown>;
   default_values?: Record<string, unknown> | null;
+  submission_config?: ResourceFormSubmissionConfig | Record<string, unknown> | null;
   is_active?: boolean;
   sort_order?: number | null;
 };

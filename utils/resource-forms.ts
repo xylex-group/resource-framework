@@ -1,8 +1,10 @@
 import type {
   ResourceFormField,
+  ResourceFormSubmissionConfig,
   ResourceFormRow,
   ResourceFormSchema,
 } from "../types/resource-forms";
+import { normalizeResourceFormSubmissionConfig } from "./resource-form-submissions";
 
 export type ResourceFormValidationIssue = {
   path: string;
@@ -29,6 +31,7 @@ export type ResourceFormDefinition = {
   sortOrder?: number;
   sourceSchemaProvider?: string | null;
   sourceSchemaUrl?: string | null;
+  submissionConfig?: ResourceFormSubmissionConfig;
 };
 
 export type DefinedResourceForm = ResourceFormDefinition & {
@@ -49,6 +52,7 @@ export type ResolvedResourceForm = {
   sortOrder: number;
   sourceSchemaProvider?: string | null;
   sourceSchemaUrl?: string | null;
+  submissionConfig: ResourceFormSubmissionConfig;
 };
 
 const VALID_RESOURCE_FORM_TYPES = new Set<ResourceFormField["type"]>([
@@ -401,6 +405,11 @@ export function createResourceFormRow(
       normalized.sourceSchemaProvider ?? options?.provider ?? null,
     schema: normalized.schema as unknown as Record<string, unknown>,
     default_values: normalized.defaultValues ?? {},
+    submission_config:
+      normalizeResourceFormSubmissionConfig(normalized.submissionConfig ?? {}).destination.type === "none" &&
+      normalized.submissionConfig === undefined
+        ? null
+        : normalizeResourceFormSubmissionConfig(normalized.submissionConfig ?? {}),
     is_active: normalized.isActive ?? true,
     sort_order: normalized.sortOrder ?? options?.sortOrder ?? 0,
   };
@@ -472,6 +481,7 @@ export function resolveResourceFormRow(
       typeof row.source_schema_url === "string"
         ? row.source_schema_url
         : null,
+    submissionConfig: normalizeResourceFormSubmissionConfig(row.submission_config),
   };
 }
 
