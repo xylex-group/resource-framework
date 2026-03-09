@@ -6,6 +6,8 @@
   "aliases": {
     "utils": "@repo/ui/src/lib/utils",
     "components": "@repo/ui/src/components"
+  },
+  "registries": {
+    "@reui": "https://reui.io/r/{style}/{name}.json"
   }
 }
-
