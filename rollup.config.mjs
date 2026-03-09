@@ -65,8 +65,22 @@ const configs = [
       const isUseClientDirective =
         typeof warning.message === "string" &&
         /["']use (client|server)["']/.test(warning.message);
+      const isThirdPartyCircularDependency =
+        warning.code === "CIRCULAR_DEPENDENCY" &&
+        (
+          (Array.isArray(warning.ids) &&
+            warning.ids.length > 0 &&
+            warning.ids.every(
+              (id) => typeof id === "string" && id.includes("node_modules/")
+            )) ||
+          (typeof warning.message === "string" &&
+            warning.message.includes("node_modules/"))
+        );
 
       if (isModuleDirective && isUseClientDirective) {
+        return;
+      }
+      if (isThirdPartyCircularDependency) {
         return;
       }
 
