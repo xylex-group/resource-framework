@@ -45,7 +45,7 @@
     "dev": "turbo run dev --parallel",
     "build": "rimraf dist && rollup -c && tsc -p tsconfig.build.json",
     "build:all": "turbo run build",
-    "lint:all": "npm run lint && cd apps/demo && npm run lint && cd ../playground-next && npm run lint",
+    "lint:all": "bun run lint && bun run --cwd apps/demo lint && bun run --cwd apps/playground-next lint",
     "typecheck": "node scripts/typecheck-workspaces.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
