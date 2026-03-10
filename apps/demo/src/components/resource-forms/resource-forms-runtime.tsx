@@ -167,24 +167,24 @@ export function ResourceFormsRuntime({
 
   return (
     <div className="min-h-screen">
-      <div className="mx-auto max-w-7xl space-y-6 px-4 py-10">
-        <header className="space-y-3">
-          <Badge variant="outline">{eyebrow}</Badge>
-          <h1 className="text-4xl font-semibold tracking-tight">{title}</h1>
-          <p className="max-w-3xl text-muted-foreground">{description}</p>
+      <div className="mx-auto max-w-7xl space-y-8 px-6 py-12 lg:px-8">
+        <header className="space-y-4">
+          <Badge variant="outline" className="px-3 py-1">{eyebrow}</Badge>
+          <h1 className="text-4xl font-bold tracking-tight">{title}</h1>
+          <p className="max-w-3xl text-lg leading-relaxed text-muted-foreground">{description}</p>
           <Card size="sm">
             <CardContent>
-              <p className="text-sm text-muted-foreground">
-                <code className="text-foreground">resource_forms</code> is now
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                <code className="rounded bg-muted px-1.5 py-0.5 text-foreground">resource_forms</code> is now
                 treated as a first-class contract. Rows are validated,
                 normalized, ordered, and then rendered through the shared{" "}
-                <code className="text-foreground">EntityFormV2</code> runtime.
+                <code className="rounded bg-muted px-1.5 py-0.5 text-foreground">EntityFormV2</code> runtime.
               </p>
             </CardContent>
           </Card>
         </header>
 
-        <div className="grid gap-6 lg:grid-cols-[280px,minmax(0,1fr)] xl:grid-cols-[300px,minmax(0,1fr),340px]">
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-[300px_1fr_340px]">
           {/* Sidebar: Form selector */}
           <Card className="h-fit">
             <CardHeader>
@@ -214,10 +214,10 @@ export function ResourceFormsRuntime({
                         type="button"
                         onClick={() => setSelectedFormId(form.id)}
                         className={cn(
-                          "w-full rounded-lg border p-3 text-left transition-colors",
+                          "w-full rounded-lg border p-4 text-left transition-all",
                           isSelected
-                            ? "border-primary bg-primary/5"
-                            : "border-transparent hover:bg-accent/50",
+                            ? "border-primary/60 bg-primary/10 shadow-sm"
+                            : "border-border/50 hover:border-border hover:bg-accent/50",
                         )}
                       >
                         <div className="flex items-center justify-between gap-2">

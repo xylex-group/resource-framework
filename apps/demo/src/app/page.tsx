@@ -9,7 +9,6 @@ const sections = [
     description:
       "Inspect the resource_forms table contract and render each stored schema through the shared form runtime.",
     href: "/demo/forms",
-    badge: "Forms",
     icon: FileText,
   },
   {
@@ -17,7 +16,6 @@ const sections = [
     description:
       "Run the same forms from the resource_forms table in a playground-oriented layout.",
     href: "/playground",
-    badge: "Playground",
     icon: Play,
   },
   {
@@ -25,43 +23,46 @@ const sections = [
     description:
       "Browse mock data through the ResourceTable and drilldown experience.",
     href: "/demo/contacts",
-    badge: "Table",
     icon: Table2,
   },
 ];
 
 export default function HomePage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-6 py-20">
-      <section className="mx-auto w-full max-w-3xl space-y-10">
-        <div className="space-y-3 text-center">
-          <Badge variant="outline" className="mb-2">
+    <main className="flex min-h-screen flex-col items-center justify-center px-8 py-20">
+      <section className="mx-auto w-full max-w-4xl space-y-12">
+        <div className="space-y-4 text-center">
+          <Badge variant="outline" className="mb-2 px-3 py-1">
             Resource Framework
           </Badge>
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
+          <h1 className="text-5xl font-bold tracking-tight">
             Playground &amp; Table showcase
           </h1>
-          <p className="mx-auto max-w-xl text-lg text-muted-foreground">
+          <p className="mx-auto max-w-2xl text-lg leading-relaxed text-muted-foreground">
             Explore the reusable form engine and data grid that ship with the
             resource framework.
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {sections.map((section) => {
             const Icon = section.icon;
             return (
               <Link key={section.href} href={section.href} className="group">
-                <Card className="h-full transition-all hover:bg-accent/50">
-                  <CardHeader>
+                <Card className="h-full transition-all duration-200 hover:border-primary/40 hover:bg-accent/40 hover:shadow-md">
+                  <CardHeader className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex size-9 items-center justify-center rounded-lg border border-border/50 bg-muted">
-                        <Icon className="size-4 text-primary" />
+                      <div className="flex size-10 items-center justify-center rounded-lg border border-border bg-muted/80">
+                        <Icon className="size-5 text-primary" />
                       </div>
-                      <ArrowRight className="size-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                      <ArrowRight className="size-4 text-muted-foreground opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:opacity-100" />
                     </div>
-                    <CardTitle className="mt-3">{section.title}</CardTitle>
-                    <CardDescription>{section.description}</CardDescription>
+                    <div className="space-y-2">
+                      <CardTitle className="text-base">{section.title}</CardTitle>
+                      <CardDescription className="leading-relaxed">
+                        {section.description}
+                      </CardDescription>
+                    </div>
                   </CardHeader>
                 </Card>
               </Link>

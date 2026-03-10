@@ -14,7 +14,7 @@ export default function ContactDrilldownPage({
   const id = params?.id;
   return (
     <div className="min-h-screen">
-      <div className="mx-auto max-w-6xl space-y-6 px-4 py-10">
+      <div className="mx-auto max-w-6xl space-y-8 px-6 py-12 lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1">
             <Badge variant="outline">Drilldown demo</Badge>

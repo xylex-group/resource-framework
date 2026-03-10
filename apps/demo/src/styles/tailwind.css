@@ -1,6 +1,10 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+@source "../../src/**/*.{js,ts,jsx,tsx}";
+@source "../../../../components/**/*.{ts,tsx}";
+@source "../../../../hooks/**/*.{ts,tsx}";
+
 @tailwind base;
 
 @custom-variant dark (&:is(.dark *));
@@ -43,24 +47,24 @@
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
+    --background: oklch(0.13 0.005 285);
     --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
+    --card: oklch(0.19 0.008 285);
     --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
+    --popover: oklch(0.18 0.005 285);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.432 0.232 292.759);
+    --primary: oklch(0.55 0.25 293);
     --primary-foreground: oklch(0.969 0.016 293.756);
-    --secondary: oklch(0.274 0.006 286.033);
+    --secondary: oklch(0.24 0.01 285);
     --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.371 0 0);
+    --muted: oklch(0.22 0.008 285);
+    --muted-foreground: oklch(0.65 0.01 285);
+    --accent: oklch(0.26 0.015 285);
     --accent-foreground: oklch(0.985 0 0);
     --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
+    --border: oklch(0.38 0.015 285);
+    --input: oklch(0.35 0.015 285);
+    --ring: oklch(0.55 0.25 293);
     --chart-1: oklch(0.811 0.111 293.571);
     --chart-2: oklch(0.606 0.25 292.717);
     --chart-3: oklch(0.541 0.281 293.009);
@@ -78,6 +82,11 @@
 
 @theme inline {
     --font-sans: var(--font-sans);
+    --breakpoint-sm: 40rem;
+    --breakpoint-md: 48rem;
+    --breakpoint-lg: 64rem;
+    --breakpoint-xl: 80rem;
+    --breakpoint-2xl: 96rem;
     --color-background: var(--background);
     --color-foreground: var(--foreground);
     --color-card: var(--card);
@@ -127,5 +136,9 @@
   }
   html {
     @apply font-sans;
+  }
+  [data-slot="card"] {
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
   }
 }
