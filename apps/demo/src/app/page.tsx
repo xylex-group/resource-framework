@@ -29,10 +29,10 @@ const sections = [
 
 export default function HomePage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-8 py-20">
+    <main className="flex min-h-screen flex-col items-center justify-center px-6 py-20">
       <section className="mx-auto w-full max-w-4xl space-y-12">
         <div className="space-y-4 text-center">
-          <Badge variant="outline" className="mb-2 px-3 py-1">
+          <Badge variant="outline" className="px-3 py-1">
             Resource Framework
           </Badge>
           <h1 className="text-5xl font-bold tracking-tight">
@@ -49,19 +49,20 @@ export default function HomePage() {
             const Icon = section.icon;
             return (
               <Link key={section.href} href={section.href} className="group">
-                <Card className="h-full transition-all duration-200 hover:border-primary/40 hover:bg-accent/40 hover:shadow-md">
+                <Card className="h-full transition-colors duration-200 hover:bg-accent">
                   <CardHeader className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex size-10 items-center justify-center rounded-lg border border-border bg-muted/80">
+                      <div
+                        className="flex size-10 items-center justify-center rounded-lg"
+                        style={{ backgroundColor: "#27272a" }}
+                      >
                         <Icon className="size-5 text-primary" />
                       </div>
-                      <ArrowRight className="size-4 text-muted-foreground opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:opacity-100" />
+                      <ArrowRight className="size-4 text-muted-foreground opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
                     </div>
                     <div className="space-y-2">
-                      <CardTitle className="text-base">{section.title}</CardTitle>
-                      <CardDescription className="leading-relaxed">
-                        {section.description}
-                      </CardDescription>
+                      <CardTitle>{section.title}</CardTitle>
+                      <CardDescription>{section.description}</CardDescription>
                     </div>
                   </CardHeader>
                 </Card>

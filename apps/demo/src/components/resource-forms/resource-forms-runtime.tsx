@@ -172,7 +172,7 @@ export function ResourceFormsRuntime({
           <Badge variant="outline" className="px-3 py-1">{eyebrow}</Badge>
           <h1 className="text-4xl font-bold tracking-tight">{title}</h1>
           <p className="max-w-3xl text-lg leading-relaxed text-muted-foreground">{description}</p>
-          <Card size="sm">
+          <Card>
             <CardContent>
               <p className="text-sm leading-relaxed text-muted-foreground">
                 <code className="rounded bg-muted px-1.5 py-0.5 text-foreground">resource_forms</code> is now
@@ -300,7 +300,7 @@ export function ResourceFormsRuntime({
 
           {/* Right sidebar: Analysis panels */}
           <div className="space-y-4">
-            <Card size="sm">
+            <Card>
               <CardHeader>
                 <CardTitle>Contract snapshot</CardTitle>
                 <CardDescription>
@@ -331,7 +331,7 @@ export function ResourceFormsRuntime({
               </CardContent>
             </Card>
 
-            <Card size="sm">
+            <Card>
               <CardHeader>
                 <CardTitle>Selected form analysis</CardTitle>
               </CardHeader>
@@ -418,7 +418,7 @@ export function ResourceFormsRuntime({
               </CardContent>
             </Card>
 
-            <Card size="sm">
+            <Card>
               <CardHeader>
                 <div className="flex items-center justify-between gap-3">
                   <CardTitle>Submission preview</CardTitle>
