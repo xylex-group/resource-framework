@@ -282,7 +282,7 @@ export function ResourceFormsRuntime({
                   />
                   <div className="mt-6 flex justify-end">
                     <Button variant="outline" size="sm" onClick={resetValues}>
-                      <RotateCcw data-icon="inline-start" />
+                      <RotateCcw className="size-3.5" />
                       Reset to defaults
                     </Button>
                   </div>

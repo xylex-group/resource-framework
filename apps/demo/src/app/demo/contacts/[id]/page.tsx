@@ -24,7 +24,7 @@ export default function ContactDrilldownPage({
           </div>
           <Button variant="outline" size="sm" asChild>
             <Link href="/demo/contacts">
-              <ArrowLeft data-icon="inline-start" />
+              <ArrowLeft className="size-3.5" />
               Back to table
             </Link>
           </Button>

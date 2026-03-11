@@ -19,7 +19,7 @@ export default function DemoContactsPage() {
           </div>
           <Button variant="outline" size="sm" asChild>
             <Link href="/playground">
-              <ArrowLeft data-icon="inline-start" />
+              <ArrowLeft className="size-3.5" />
               Back to playground
             </Link>
           </Button>
