@@ -7,7 +7,7 @@ export default function DemoFormsPage() {
     <ResourceFormsRuntime
       eyebrow="Demo route"
       title="Resource forms table demo"
-      description="This route reads the demo app's mock `resource_forms` rows and renders each persisted schema end-to-end through the shared form runtime."
+      description="This route reads the demo app's mock resource_forms rows and renders each persisted schema end-to-end through the shared form runtime."
     />
   );
 }

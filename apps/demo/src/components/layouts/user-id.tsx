@@ -37,7 +37,7 @@ export default function UserId(props: UserIdProps) {
     <div className="inline-flex items-center gap-2">
       <div
         className={cn(
-          "flex h-8 w-8 items-center justify-center rounded-full bg-slate-700 text-xs font-semibold text-slate-100",
+          "flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground",
           props.avatarClassName,
         )}
         title={displayName}

@@ -1,33 +1,26 @@
-"use client";
+import * as React from "react"
+import { Input as InputPrimitive } from "@base-ui/react/input"
 
-import {
-  forwardRef,
-  type DetailedHTMLProps,
-  type InputHTMLAttributes,
-} from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
-export type InputProps = Omit<
-  DetailedHTMLProps<InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>,
-  "size"
-> & {
-  size?: string | number;
+type InputProps = Omit<React.ComponentProps<"input">, "size"> & {
   label?: string;
+  size?: string | number;
 };
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { className, size, label: _label, ...props },
-  ref,
-) {
+function Input({ className, type, label: _label, size: _size, ...props }: InputProps) {
   return (
-    <input
-      ref={ref}
+    <InputPrimitive
+      type={type}
+      data-slot="input"
       className={cn(
-        "w-full rounded-sm border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500",
-        className,
+        "h-9 w-full min-w-0 rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive dark:bg-input/30",
+        className
       )}
-      size={typeof size === "number" ? size : undefined}
       {...props}
     />
-  );
-});
+  )
+}
+
+export { Input }
+export type { InputProps }

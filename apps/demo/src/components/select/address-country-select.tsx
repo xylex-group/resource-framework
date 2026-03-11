@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { countryCodes } from "@/lib/constants";
+import { Label } from "@/components/ui/label";
 
 export interface AddressCountrySelectProps {
   value: string;
@@ -17,16 +18,14 @@ export function AddressCountrySelect({
   label,
 }: AddressCountrySelectProps) {
   return (
-    <div className={cn("space-y-1", width_full ? "w-full" : "w-auto")}>
+    <div className={cn("space-y-2", width_full ? "w-full" : "w-auto")}>
       {label && (
-        <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {label}
-        </label>
+        </Label>
       )}
       <select
-        className={cn(
-          "w-full rounded-sm border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500",
-        )}
+        className="h-9 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
         value={value || ""}
         onChange={(event) => onChange(event.target.value)}
       >

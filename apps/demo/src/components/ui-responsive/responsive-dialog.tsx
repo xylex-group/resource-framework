@@ -40,7 +40,7 @@ export function ResponsiveDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
       <div
         className={cn(
-          "max-h-[90vh] w-full max-w-lg overflow-auto rounded-lg border border-slate-800 bg-slate-950 p-4 shadow-2xl",
+          "max-h-[90vh] w-full max-w-lg overflow-auto rounded-lg border border-border bg-card p-4 shadow-2xl",
           disableMaxWidth ? "max-w-full" : "",
           className,
         )}

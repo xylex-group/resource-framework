@@ -12,11 +12,11 @@ export interface FormationPaymentSectionProps {
 
 export function FormationPaymentSection({ label, formData }: FormationPaymentSectionProps) {
   return (
-    <div className={cn("space-y-2 rounded-sm border border-dashed border-slate-700 p-4")}>
-      <div className="text-sm font-semibold text-slate-100">
+    <div className={cn("space-y-3 rounded-sm border border-dashed border-border p-5")}>
+      <div className="text-sm font-semibold text-foreground">
         {label || "Payment"}
       </div>
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-muted-foreground">
         This is a placeholder for Stripe payment capture. Form data will be logged to the console.
       </p>
       <Button
