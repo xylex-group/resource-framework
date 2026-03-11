@@ -17,14 +17,14 @@ export function ShareHolderCard({
   onChange,
 }: ShareHolderCardProps) {
   return (
-    <div className={cn("space-y-1 rounded-sm border border-slate-700 bg-slate-900/40 p-3")}>
-      <div className="text-xs uppercase tracking-wide text-slate-400">
+    <div className={cn("space-y-1 rounded-sm border border-border bg-card p-3")}>
+      <div className="text-xs uppercase tracking-wide text-muted-foreground">
         {field.label}
       </div>
       <NumberField
         value={value ?? 0}
         onValueChange={(v) => onChange(v)}
-        className="bg-transparent py-0 text-base font-semibold text-white"
+        className="bg-transparent py-0 text-base font-semibold text-foreground"
       />
     </div>
   );

@@ -92,23 +92,23 @@ export function ResponsiveDropdownV2({
     <div className="relative inline-flex">
       {renderTrigger}
       {isOpen && (
-        <div className="absolute right-0 z-10 mt-2 w-56 rounded-md border border-slate-700 bg-slate-950 p-2 shadow-lg">
+        <div className="absolute right-0 z-10 mt-2 w-56 rounded-md border border-border bg-popover p-2 shadow-lg">
           {enableSearch && (
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder={inputPlaceholder}
-              className="mb-2 w-full rounded-sm border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100"
+              className="mb-2 w-full rounded-sm border border-input bg-card px-2 py-1 text-xs text-foreground"
             />
           )}
 
           <div className={cn("max-h-64 overflow-auto", scrollBarInvisible && "scrollbar-thin") }>
             {filteredItems.length === 0 ? (
-              <div className="px-2 py-1 text-xs text-slate-400">{noResultsMessage}</div>
+              <div className="px-2 py-1 text-xs text-muted-foreground">{noResultsMessage}</div>
             ) : (
               filteredItems.map((item, idx) => {
                 if (item.type === "separator") {
-                  return <hr key={`sep-${idx}`} className="my-1 border-slate-700" />;
+                  return <hr key={`sep-${idx}`} className="my-1 border-border" />;
                 }
 
                 return (
@@ -125,10 +125,10 @@ export function ResponsiveDropdownV2({
                     className={cn(
                       "w-full rounded-sm px-2 py-1 text-left text-sm",
                       item.variant === "destructive"
-                        ? "text-red-400 hover:bg-red-700/20"
-                        : "text-slate-100 hover:bg-slate-800",
-                      item.isActive && "bg-slate-800",
-                      item.disabled && "cursor-not-allowed text-slate-500",
+                        ? "text-destructive hover:bg-destructive/10"
+                        : "text-popover-foreground hover:bg-accent",
+                      item.isActive && "bg-accent",
+                      item.disabled && "cursor-not-allowed text-muted-foreground",
                     )}
                   >
                     {item.buttonText}

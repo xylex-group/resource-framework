@@ -167,7 +167,7 @@ export function ResourceFormsRuntime({
 
   return (
     <div className="min-h-screen">
-      <div className="mx-auto max-w-7xl space-y-8 px-6 py-12 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-10 px-6 py-14 lg:px-10">
         <header className="space-y-4">
           <Badge variant="outline" className="px-3 py-1">{eyebrow}</Badge>
           <h1 className="text-4xl font-bold tracking-tight">{title}</h1>
@@ -184,7 +184,7 @@ export function ResourceFormsRuntime({
           </Card>
         </header>
 
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-[300px_1fr_340px]">
+        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-[300px_1fr_360px]">
           {/* Sidebar: Form selector */}
           <Card className="h-fit">
             <CardHeader>
@@ -203,7 +203,7 @@ export function ResourceFormsRuntime({
                   No active rows were returned from <code>resource_forms</code>.
                 </p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {forms.map((form) => {
                     const stepCount = getOrderedResourceFormSteps(form.schema).length;
                     const requiredCount = getRequiredResourceFormFieldKeys(form.schema).length;
@@ -250,12 +250,12 @@ export function ResourceFormsRuntime({
             <CardContent>
               {selectedForm ? (
                 <>
-                  <div className="mb-5 space-y-2">
+                  <div className="mb-6 space-y-3">
                     <Badge variant="outline">Live form runtime</Badge>
                     <h2 className="text-2xl font-semibold tracking-tight">
                       {selectedForm.title}
                     </h2>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                    <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground">
                       <span>
                         Entity:{" "}
                         <span className="text-foreground">{selectedForm.entity}</span>
@@ -268,7 +268,7 @@ export function ResourceFormsRuntime({
                       </span>
                     </div>
                   </div>
-                  <Separator className="mb-5" />
+                  <Separator className="mb-6" />
                   <EntityFormV2
                     schema={selectedForm.schema}
                     values={values}
@@ -280,7 +280,7 @@ export function ResourceFormsRuntime({
                       setSubmittedValues({ ...values });
                     }}
                   />
-                  <div className="mt-4 flex justify-end">
+                  <div className="mt-6 flex justify-end">
                     <Button variant="outline" size="sm" onClick={resetValues}>
                       <RotateCcw data-icon="inline-start" />
                       Reset to defaults
@@ -299,7 +299,7 @@ export function ResourceFormsRuntime({
           </Card>
 
           {/* Right sidebar: Analysis panels */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Contract snapshot</CardTitle>

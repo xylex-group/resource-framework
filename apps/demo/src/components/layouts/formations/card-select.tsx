@@ -26,12 +26,12 @@ export function CardSelect({ options, value, onChangeAction }: CardSelectProps) 
             key={option.value}
             type="button"
             variant={isActive ? "default" : "ghost"}
-            className={cn("w-full flex-col items-start text-left")}
+            className={cn("h-auto w-full flex-col items-start gap-1 p-4 text-left")}
             onClick={() => onChangeAction(option.value)}
           >
             <span className="text-base font-semibold">{option.title}</span>
             {option.description && (
-              <span className="text-xs text-slate-300">{option.description}</span>
+              <span className="text-xs text-muted-foreground">{option.description}</span>
             )}
           </Button>
         );

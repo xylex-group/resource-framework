@@ -29,9 +29,9 @@ const sections = [
 
 export default function HomePage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-6 py-20">
-      <section className="mx-auto w-full max-w-4xl space-y-12">
-        <div className="space-y-4 text-center">
+    <main className="flex min-h-screen flex-col items-center justify-center px-8 py-24">
+      <section className="mx-auto w-full max-w-4xl space-y-14">
+        <div className="space-y-5 text-center">
           <Badge variant="outline" className="px-3 py-1">
             Resource Framework
           </Badge>
@@ -44,7 +44,7 @@ export default function HomePage() {
           </p>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {sections.map((section) => {
             const Icon = section.icon;
             return (
@@ -52,10 +52,7 @@ export default function HomePage() {
                 <Card className="h-full transition-colors duration-200 hover:bg-accent">
                   <CardHeader className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <div
-                        className="flex size-10 items-center justify-center rounded-lg"
-                        style={{ backgroundColor: "#27272a" }}
-                      >
+                      <div className="flex size-10 items-center justify-center rounded-lg border border-border bg-muted/50">
                         <Icon className="size-5 text-primary" />
                       </div>
                       <ArrowRight className="size-4 text-muted-foreground opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />

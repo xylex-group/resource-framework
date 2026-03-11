@@ -10,10 +10,9 @@ function Card({
     <div
       data-slot="card"
       className={cn(
-        "flex flex-col gap-5 rounded-xl bg-card p-6 text-card-foreground",
+        "flex flex-col gap-6 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm",
         className
       )}
-      style={{ border: "1px solid #3f3f46" }}
       {...props}
     />
   )
@@ -80,10 +79,9 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-footer"
       className={cn(
-        "flex items-center border-t p-4",
+        "flex items-center border-t border-border p-4",
         className
       )}
-      style={{ borderColor: "#3f3f46" }}
       {...props}
     />
   )

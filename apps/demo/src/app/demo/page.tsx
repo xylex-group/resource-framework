@@ -23,18 +23,18 @@ const sections = [
 export default function DemoIndexPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center px-8">
-      <div className="mx-auto w-full max-w-3xl space-y-10 py-12">
-        <div className="space-y-4 text-center">
+      <div className="mx-auto w-full max-w-3xl space-y-12 py-14">
+        <div className="space-y-5 text-center">
           <Badge variant="outline" className="px-3 py-1">Demo</Badge>
           <h1 className="text-4xl font-bold tracking-tight">
             Demo dashboard
           </h1>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-lg leading-relaxed text-muted-foreground">
             Navigate between the playground forms and the contacts table.
           </p>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2">
           {sections.map((section) => {
             const Icon = section.icon;
             return (
@@ -42,7 +42,7 @@ export default function DemoIndexPage() {
                 <Card className="h-full transition-all duration-200 hover:border-primary/40 hover:bg-accent/40 hover:shadow-md">
                   <CardHeader className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex size-10 items-center justify-center rounded-lg border border-border bg-muted/80">
+                      <div className="flex size-10 items-center justify-center rounded-lg border border-border bg-muted/50">
                         <Icon className="size-5 text-primary" />
                       </div>
                       <ArrowRight className="size-4 text-muted-foreground opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:opacity-100" />

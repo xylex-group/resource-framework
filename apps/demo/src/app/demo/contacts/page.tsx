@@ -11,7 +11,7 @@ import { ArrowLeft } from "lucide-react";
 export default function DemoContactsPage() {
   return (
     <div className="min-h-screen">
-      <div className="mx-auto max-w-6xl space-y-8 px-6 py-12 lg:px-8">
+      <div className="mx-auto max-w-6xl space-y-10 px-6 py-14 lg:px-10">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="space-y-1">
             <Badge variant="outline">Resource table demo</Badge>
