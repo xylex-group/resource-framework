@@ -3,6 +3,7 @@ import type { ColumnMeta } from "@tanstack/react-table";
 declare module "@tanstack/react-table" {
   interface ColumnMeta<TData, TValue> {
     widthFit?: boolean;
+    headerText?: string;
   }
 }
 import type { RowData } from "@tanstack/react-table";

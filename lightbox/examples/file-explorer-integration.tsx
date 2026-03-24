@@ -5,7 +5,7 @@
  * Shows how to add file preview functionality to the file explorer
  */
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Lightbox, useLightbox, type LightboxFile } from "../index";
 import type { FileItem } from "../../components/drilldown/drilldown-file-explorer";
 
@@ -25,6 +25,7 @@ export function FileExplorerWithLightbox({
   onDelete,
 }: FileExplorerWithLightboxProps) {
   const { state, openLightbox, closeLightbox } = useLightbox();
+  const [, setSelectedFileId] = useState<string | null>(null);
   // Convert FileItem[] to LightboxFile[]
   const lightboxFiles: LightboxFile[] = useMemo(() => {
     return files.map(file => ({
@@ -134,7 +135,7 @@ function FileCard({
           />
         ) : (
           <div className="text-center p-4">
-            <div className="text-4xl mb-2">📄</div>
+            <div className="text-4xl mb-2">[FILE]</div>
             <div className="text-xs text-secondary truncate">
               {file.type?.split("/")[1] || "file"}
             </div>
@@ -165,7 +166,7 @@ function FileCard({
           }}
           className="absolute top-2 right-2 w-6 h-6 bg-background/80 hover:bg-hover backdrop-blur-sm rounded-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
         >
-          <span className="text-xs">×</span>
+          <span className="text-xs">x</span>
         </button>
       )}
     </div>
@@ -235,3 +236,4 @@ export function FileExplorerWidgetWithLightbox() {
     </div>
   );
 }
+

@@ -8,6 +8,21 @@ declare module "next/navigation" {
   export function useParams<T = Record<string, string>>(): T;
 }
 
+declare module "next/link" {
+  import type { ComponentProps, ReactElement, ReactNode } from "react";
+
+  export type LinkProps = ComponentProps<"a"> & {
+    href: string;
+    prefetch?: boolean;
+    replace?: boolean;
+    scroll?: boolean;
+    children?: ReactNode;
+  };
+
+  const Link: (props: LinkProps) => ReactElement;
+  export default Link;
+}
+
 declare module "@bprogress/core" {
   export const BProgress: {
     start: () => void;

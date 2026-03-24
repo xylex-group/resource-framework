@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import type { ColumnDef } from "@tanstack/react-table";
 
 import { generateDisplayConfig } from "@/packages/resource-framework/utils/display-config";
+import type { TableRowData } from "@/packages/resource-framework/resource-types";
 
 describe("generateDisplayConfig", () => {
   it("produces toggles for every column and uses header fallbacks", () => {
@@ -14,9 +16,7 @@ describe("generateDisplayConfig", () => {
       },
     ];
 
-    const config = generateDisplayConfig(
-      columns as Array<Record<string, unknown>>,
-    );
+    const config = generateDisplayConfig(columns as Array<ColumnDef<TableRowData>>);
     expect(config.some((entry) => entry.value === "show_name")).toBe(true);
     expect(config.some((entry) => entry.value === "show_balance")).toBe(true);
     expect(config.some((entry) => entry.value === "show_custom_column")).toBe(
@@ -30,9 +30,7 @@ describe("generateDisplayConfig", () => {
       { accessorKey: "hidden", header: "Hidden", enableSorting: false },
     ];
 
-    const config = generateDisplayConfig(
-      columns as Array<Record<string, unknown>>,
-    );
+    const config = generateDisplayConfig(columns as Array<ColumnDef<TableRowData>>);
     const sortEntry = config.find(
       (entry) => entry.type === "sort" && entry.value === "sort_by",
     );

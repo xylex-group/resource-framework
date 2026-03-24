@@ -11,7 +11,11 @@ describe("buildColumnsFromRegistry", () => {
       { key: "foo_bar", label: "Custom label" },
     ]);
 
-    expect(columns[0].meta?.headerText).toBe("Custom label");
+    const firstColumn = columns[0];
+    if (!firstColumn) {
+      throw new Error("expected at least one column");
+    }
+    expect(firstColumn.meta?.headerText).toBe("Custom label");
   });
 
   it("renders masked links with tokens resolved", () => {
