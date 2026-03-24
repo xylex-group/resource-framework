@@ -67,7 +67,7 @@ export function LeanTable<TData>({
     <div className="space-y-3">
       {title && (
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-slate-100">{title}</h2>
+          <h2 className="text-xl font-semibold text-foreground">{title}</h2>
           {onAddItemAction && addItemLabel && (
             <Button onClick={onAddItemAction}>{addItemLabel}</Button>
           )}
@@ -80,13 +80,13 @@ export function LeanTable<TData>({
           placeholder={filterPlaceholder || "Search..."}
           value={globalFilter}
           onChange={(event) => setGlobalFilter(event.target.value)}
-          className="rounded-sm border border-slate-700 bg-slate-900 px-3 py-1 text-sm text-slate-100 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
+          className="rounded-sm border border-input bg-card px-3 py-1 text-sm text-foreground focus:border-ring focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         />
       </div>
 
-      <div className="overflow-auto rounded-md border border-slate-800 bg-slate-950/60">
+      <div className="overflow-auto rounded-md border border-border bg-card">
         <table className="min-w-full text-sm">
-          <thead className="bg-slate-900/80 text-xs uppercase tracking-wide text-slate-400">
+          <thead className="bg-muted text-xs uppercase tracking-wide text-muted-foreground">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -103,11 +103,11 @@ export function LeanTable<TData>({
               </tr>
             ))}
           </thead>
-          <tbody className="divide-y divide-slate-800">
+          <tbody className="divide-y divide-border">
             {table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
-                className="cursor-pointer hover:bg-slate-900"
+                className="cursor-pointer hover:bg-accent"
                 onClick={() => {
                   if (hrefAction) {
                     const href = hrefAction(row.original as TData);
@@ -120,7 +120,7 @@ export function LeanTable<TData>({
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
-                    className="px-3 py-2 text-slate-100"
+                    className="px-3 py-2 text-foreground"
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
