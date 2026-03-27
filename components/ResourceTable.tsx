@@ -46,6 +46,13 @@ const parseSearchByColumns = (value?: string): string[] => {
     .filter((segment) => segment.length > 0);
 };
 
+type FilterFieldType = "text" | "number" | "date" | "boolean";
+type FilterFieldDefinition = {
+  key: string;
+  label: string;
+  type: FilterFieldType;
+};
+
 type ColumnKeyDef = ColumnDef<TableRowData> & {
   accessorKey?: string;
   id?: string;
@@ -84,6 +91,45 @@ const resolveSearchColumnIdentifier = (
     }
   }
   return undefined;
+};
+
+const inferFilterTypeFromDatatype = (datatype?: string): FilterFieldType => {
+  const normalized = String(datatype || "").toLowerCase();
+  if (normalized.includes("bool")) return "boolean";
+  if (
+    normalized.includes("num") ||
+    normalized.includes("int") ||
+    normalized.includes("decimal") ||
+    normalized.includes("currency")
+  ) {
+    return "number";
+  }
+  if (normalized.includes("date") || normalized.includes("time")) return "date";
+  return "text";
+};
+
+const toFilterFieldDefinition = (
+  column: ColumnDef<TableRowData>,
+): FilterFieldDefinition | null => {
+  const col = column as ColumnDef<TableRowData> & {
+    accessorKey?: string;
+    id?: string;
+    header?: unknown;
+    meta?: TableColumnMeta;
+  };
+  const key = col.accessorKey ?? col.id;
+  if (!key) return null;
+
+  const meta = col.meta || {};
+  const label =
+    (typeof meta.headerText === "string" && meta.headerText) ||
+    (typeof col.header === "string" ? col.header : prettyString(String(key)));
+
+  return {
+    key,
+    label,
+    type: inferFilterTypeFromDatatype(meta.datatype),
+  };
 };
 
 /**
@@ -212,45 +258,8 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
     try {
       const asArray = Array.isArray(columns) ? columns : [];
       return asArray
-        .map((c) => {
-          const col = c as ColumnDef<TableRowData> & {
-            accessorKey?: string;
-            id?: string;
-            header?: unknown;
-            meta?: TableColumnMeta;
-          };
-          const key = col.accessorKey ?? col.id;
-          if (!key) return null;
-          const meta = col.meta || {};
-          const headerText = meta?.headerText;
-          const header = col?.header;
-          const label =
-            (typeof headerText === "string" && headerText) ||
-            (typeof header === "string" ? header : prettyString(String(key)));
-          const dt = String(meta?.datatype || "").toLowerCase();
-          const type: "text" | "number" | "date" | "boolean" = dt.includes(
-            "bool"
-          )
-            ? "boolean"
-            : dt.includes("num") ||
-                dt.includes("int") ||
-                dt.includes("decimal") ||
-                dt.includes("currency")
-              ? "number"
-              : dt.includes("date") || dt.includes("time")
-                ? "date"
-                : "text";
-          return { key, label, type };
-        })
-        .filter(
-          (
-            item
-          ): item is {
-            key: string;
-            label: string;
-            type: "text" | "number" | "date" | "boolean";
-          } => item !== null
-        );
+        .map(toFilterFieldDefinition)
+        .filter((item): item is FilterFieldDefinition => item !== null);
     } catch {
       return [];
     }
