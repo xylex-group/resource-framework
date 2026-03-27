@@ -69,14 +69,14 @@ export interface DrilldownFileExplorerProps {
 }
 
 const formatFileSize = (bytes?: number) => {
-  if (!bytes) return "—";
+  if (!bytes) return "-";
   if (bytes < 1024) return bytes + " B";
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
   return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 };
 
 const formatDate = (dateString?: string) => {
-  if (!dateString) return "—";
+  if (!dateString) return "-";
   return new Date(dateString).toLocaleDateString();
 };
 
@@ -135,7 +135,7 @@ function FileListRow({
             {file.name}
           </p>
           <p className="text-xs text-secondary">
-            {formatFileSize(file.size)} • {formatDate(file.created_at)}
+            {formatFileSize(file.size)} * {formatDate(file.created_at)}
           </p>
         </div>
       </div>
@@ -146,7 +146,7 @@ function FileListRow({
             size="icon_v2"
             className="h-8 w-8 shrink-0"
             disabled={deletingId === file.id}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
           >
             {deletingId === file.id
               ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -236,7 +236,7 @@ function FileGridTile({
           variant="secondary"
           size="icon_v2"
           className="h-6 w-6"
-          onClick={(e) => {
+          onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
             e.stopPropagation();
             e.preventDefault();
             onDownload(file);
@@ -250,7 +250,7 @@ function FileGridTile({
             variant="secondary"
             size="icon_v2"
             className="h-6 w-6"
-            onClick={(e) => {
+            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
               e.stopPropagation();
               e.preventDefault();
               onDelete(file.id);
@@ -741,3 +741,4 @@ export function DrilldownFileExplorer({
     </>
   );
 }
+

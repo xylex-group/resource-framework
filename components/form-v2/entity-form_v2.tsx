@@ -13,6 +13,91 @@ import type {
 } from "../../types/resource-forms";
 import { getOrderedResourceFormSteps } from "../../utils/resource-forms";
 
+const PERCENT_TOTAL_TOLERANCE = 0.1;
+const PERCENT_TOTAL_VALIDATIONS = [
+  {
+    fieldPrefix: "ownership_pct",
+    errorKey: "__ownership_total__",
+    message: "Ownership percentages must total 100%.",
+  },
+  {
+    fieldPrefix: "voting_rights_pct",
+    errorKey: "__voting_total__",
+    message: "Voting rights percentages must total 100%.",
+  },
+] as const;
+
+function toNumber(value: unknown): number {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  if (value == null || value === "") {
+    return 0;
+  }
+
+  const parsed = Number.parseFloat(String(value));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function sumFieldValues(
+  fields: ResourceFormField[],
+  values: Record<string, unknown>,
+): number {
+  return fields.reduce((sum, field) => sum + toNumber(values[field.key]), 0);
+}
+
+function getRequiredFieldErrors(
+  fields: ResourceFormField[],
+  values: Record<string, unknown>,
+): Record<string, string> {
+  const stepErrors: Record<string, string> = {};
+
+  for (const field of fields) {
+    if (!field.required) {
+      continue;
+    }
+
+    const value = values[field.key];
+    const missing = value === null || value === undefined ||
+      (typeof value === "string" && value.trim().length === 0) ||
+      (typeof value === "number" && Number.isNaN(value));
+
+    if (missing) {
+      stepErrors[field.key] = `${field.label} is required.`;
+    }
+  }
+
+  return stepErrors;
+}
+
+function getPercentageTotalErrors(
+  fields: ResourceFormField[],
+  values: Record<string, unknown>,
+): Record<string, string> {
+  const stepErrors: Record<string, string> = {};
+
+  for (const validation of PERCENT_TOTAL_VALIDATIONS) {
+    const matchingFields = fields.filter((field) =>
+      field.key.startsWith(validation.fieldPrefix)
+    );
+
+    if (matchingFields.length === 0) {
+      continue;
+    }
+
+    const total = sumFieldValues(matchingFields, values);
+
+    if (Math.abs(total - 100) > PERCENT_TOTAL_TOLERANCE) {
+      const rounded = Math.round(total);
+      stepErrors[validation.errorKey] =
+        `${validation.message} Currently ${rounded}%.`;
+    }
+  }
+
+  return stepErrors;
+}
+
 interface EntityFormV2Props {
   schema: ResourceFormSchema;
   values: Record<string, unknown>;
@@ -60,84 +145,13 @@ export function EntityFormV2({
     currentStepIndex
   ] ?? ["", [] as ResourceFormField[]];
 
-  const isFieldMissing = (
-    field: ResourceFormField,
-    data: Record<string, unknown>,
-  ) => {
-    const required = field.required;
-    if (!required) return false;
-
-    const value = data[field.key];
-
-    if (value === null || value === undefined) {
-      return true;
-    }
-
-    if (typeof value === "string") {
-      return value.trim().length === 0;
-    }
-
-    if (typeof value === "number") {
-      return Number.isNaN(value);
-    }
-
-    return false;
-  };
-
   const getStepErrors = (): Record<string, string> => {
-    const stepErrors: Record<string, string> = {};
+    const fields = currentStepFields as ResourceFormField[];
 
-    (currentStepFields as ResourceFormField[]).forEach((field) => {
-      if (isFieldMissing(field, values)) {
-        stepErrors[field.key] = `${field.label} is required.`;
-      }
-    });
-
-    // FIXME: floris; this is business logic
-    const pctFields = currentStepFields as ResourceFormField[];
-    // FIXME: floris; this is business logic
-    const ownershipFields = pctFields.filter((field) =>
-      field.key.startsWith("ownership_pct")
-    );
-    // FIXME: floris; this is business logic
-    const votingFields = pctFields.filter((field) =>
-      field.key.startsWith("voting_rights_pct")
-    );
-    const sumPct = (fields: ResourceFormField[]) => {
-      return fields.reduce((acc, field) => {
-        const raw = values[field.key];
-        const num = typeof raw === "number"
-          ? raw
-          : raw == null || raw === ""
-          ? 0
-          : Number.parseFloat(String(raw));
-        if (!Number.isFinite(num)) return acc;
-        return acc + num;
-      }, 0);
+    return {
+      ...getRequiredFieldErrors(fields, values),
+      ...getPercentageTotalErrors(fields, values),
     };
-
-    const TOLERANCE = 0.1;
-
-    // FIXME: floris; this is business logic
-    if (ownershipFields.length > 0) {
-      const total = sumPct(ownershipFields);
-      if (Math.abs(total - 100) > TOLERANCE) {
-        const rounded = Math.round(total);
-        stepErrors["__ownership_total__"] =
-          `Ownership percentages must total 100%. Currently ${rounded}%.`;
-      }
-    }
-    // FIXME: floris; this is business logic
-    if (votingFields.length > 0) {
-      const total = sumPct(votingFields);
-      if (Math.abs(total - 100) > TOLERANCE) {
-        const rounded = Math.round(total);
-        stepErrors["__voting_total__"] =
-          `Voting rights percentages must total 100%. Currently ${rounded}%.`;
-      }
-    }
-
-    return stepErrors;
   };
 
   const updateField = (key: string, value: unknown) => {

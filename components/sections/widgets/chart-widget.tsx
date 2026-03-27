@@ -315,7 +315,7 @@ function ChartSectionWidget({ spec, entity }: SectionWidgetRendererProps) {
             {props.showPeriodSelector !== false && (
               <Select
                 value={selectedPeriod}
-                onValueChange={(value) =>
+                onValueChange={(value: string) =>
                   setSelectedPeriod(value as PeriodOption)
                 }
               >
@@ -362,7 +362,7 @@ function ChartSectionWidget({ spec, entity }: SectionWidgetRendererProps) {
           {props.showPeriodSelector !== false && (
             <Select
               value={selectedPeriod}
-              onValueChange={(value) =>
+              onValueChange={(value: string) =>
                 setSelectedPeriod(value as PeriodOption)
               }
             >

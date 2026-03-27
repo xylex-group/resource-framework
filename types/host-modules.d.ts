@@ -23,6 +23,59 @@ declare module "next/link" {
   export default Link;
 }
 
+declare module "next-themes" {
+  import type { ComponentType, ReactNode } from "react";
+
+  export const ThemeProvider: ComponentType<{
+    children?: ReactNode;
+    attribute?: string;
+    defaultTheme?: string;
+    enableSystem?: boolean;
+    disableTransitionOnChange?: boolean;
+  }>;
+
+  export function useTheme(): {
+    theme?: string;
+    setTheme: (theme: string) => void;
+  };
+}
+
+declare module "@base-ui/react/button" {
+  export const Button: any;
+}
+
+declare module "@base-ui/react/input" {
+  export const Input: any;
+}
+
+declare module "@base-ui/react/select" {
+  export const Select: any;
+}
+
+declare module "@base-ui/react/separator" {
+  export const Separator: any;
+}
+
+declare module "@base-ui/react/scroll-area" {
+  export const ScrollArea: any;
+}
+
+declare module "@base-ui/react/tabs" {
+  export const Tabs: any;
+}
+
+declare module "@base-ui/react/tooltip" {
+  export const Tooltip: any;
+}
+
+declare module "@base-ui/react/merge-props" {
+  export function mergeProps<T = unknown>(...args: unknown[]): T;
+}
+
+declare module "@base-ui/react/use-render" {
+  export const useRender: any;
+}
+
 declare module "@bprogress/core" {
   export const BProgress: {
     start: () => void;
