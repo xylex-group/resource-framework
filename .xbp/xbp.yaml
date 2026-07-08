@@ -1,0 +1,102 @@
+project_name: '@xylex-group/resource-framework'
+version: 0.1.0
+port: 3000
+build_dir: ./
+app_type: nodejs
+build_command: pnpm run build
+start_command: node dist/index.cjs
+install_command: pnpm install
+environment: null
+services:
+- name: '@xylex-group/resource-framework'
+  target: nodejs
+  branch: main
+  port: 3000
+  root_directory: ./
+  environment: null
+  url: null
+  healthcheck_path: null
+  restart_policy: on_failure
+  restart_policy_max_failure_count: 10
+  start_wrapper: pm2
+  commands:
+    pre: null
+    install: pnpm install
+    build: pnpm run build
+    start: node dist/index.cjs
+    dev: null
+  force_run_from_root: false
+  version_targets:
+  - package.json
+  systemd_service_name: null
+  systemd: null
+- name: '@xylex-group/demo-app'
+  target: nextjs
+  branch: main
+  port: 3001
+  root_directory: apps/demo
+  environment: null
+  url: null
+  healthcheck_path: null
+  restart_policy: on_failure
+  restart_policy_max_failure_count: 10
+  start_wrapper: pm2
+  commands:
+    pre: null
+    install: pnpm install
+    build: pnpm run build
+    start: pnpm run start
+    dev: null
+  force_run_from_root: false
+  version_targets:
+  - apps/demo/package.json
+  systemd_service_name: null
+  systemd: null
+- name: '@xylex-group/playground-next'
+  target: nextjs
+  branch: main
+  port: 3002
+  root_directory: apps/playground-next
+  environment: null
+  url: null
+  healthcheck_path: null
+  restart_policy: on_failure
+  restart_policy_max_failure_count: 10
+  start_wrapper: pm2
+  commands:
+    pre: null
+    install: pnpm install
+    build: pnpm run build
+    start: pnpm run start
+    dev: null
+  force_run_from_root: false
+  version_targets:
+  - apps/playground-next/package.json
+  systemd_service_name: null
+  systemd: null
+workers: null
+systemd_service_name: null
+systemd: null
+kafka_brokers: null
+kafka_topic: null
+kafka_public_url: null
+log_files: null
+monitor_url: null
+monitor_method: null
+monitor_expected_code: null
+monitor_interval: null
+database: null
+target: nodejs
+branch: main
+crate_name: null
+npm_script: null
+port_storybook: null
+url: null
+url_storybook: null
+linear: null
+github: null
+publish: null
+version_targets:
+- apps/demo/package.json
+- apps/playground-next/package.json
+- package.json
