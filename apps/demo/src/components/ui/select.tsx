@@ -8,7 +8,10 @@ import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
 
 const Select = SelectPrimitive.Root
 
-function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
+function SelectGroup({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Group>) {
   return (
     <SelectPrimitive.Group
       data-slot="select-group"
@@ -18,7 +21,10 @@ function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   )
 }
 
-function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
+function SelectValue({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Value>) {
   return (
     <SelectPrimitive.Value
       data-slot="select-value"
@@ -33,7 +39,7 @@ function SelectTrigger({
   size = "default",
   children,
   ...props
-}: SelectPrimitive.Trigger.Props & {
+}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> & {
   size?: "sm" | "default"
 }) {
   return (
@@ -65,11 +71,8 @@ function SelectContent({
   alignOffset = 0,
   alignItemWithTrigger = true,
   ...props
-}: SelectPrimitive.Popup.Props &
-  Pick<
-    SelectPrimitive.Positioner.Props,
-    "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger"
-  >) {
+}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Popup> &
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Positioner>) {
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Positioner
@@ -98,7 +101,7 @@ function SelectContent({
 function SelectLabel({
   className,
   ...props
-}: SelectPrimitive.GroupLabel.Props) {
+}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.GroupLabel>) {
   return (
     <SelectPrimitive.GroupLabel
       data-slot="select-label"
@@ -112,7 +115,7 @@ function SelectItem({
   className,
   children,
   ...props
-}: SelectPrimitive.Item.Props) {
+}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>) {
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
@@ -139,7 +142,7 @@ function SelectItem({
 function SelectSeparator({
   className,
   ...props
-}: SelectPrimitive.Separator.Props) {
+}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>) {
   return (
     <SelectPrimitive.Separator
       data-slot="select-separator"
