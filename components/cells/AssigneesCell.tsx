@@ -1,12 +1,8 @@
 "use client";
 
 import React, { FC } from "react";
+import { Popover } from "@heroui/react";
 import UserId from "@/components/layouts/user-id";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
 import type { Assignee } from "../../resource-types";
 
 export const AssigneesCell: FC<{ assignees?: Assignee[] }> = ({
@@ -41,38 +37,40 @@ export const AssigneesCell: FC<{ assignees?: Assignee[] }> = ({
         </div>
       ))}
       {overflow.length > 0 && (
-        <HoverCard>
-          <HoverCardTrigger asChild>
+        <Popover>
+          <Popover.Trigger>
             <div className="flex h-7 min-w-7 items-center justify-center rounded-sm bg-muted px-1.5 text-xs text-primary">
               +{overflow.length}
             </div>
-          </HoverCardTrigger>
-          <HoverCardContent
+          </Popover.Trigger>
+          <Popover.Content
             className="w-65 rounded-sm bg-card"
-            align="start"
+            placement="bottom start"
           >
-            <div className="flex flex-col gap-3">
-              {overflow.map((a, idx) => (
-                <div
-                  key={(a.user_id || a.email || a.username || String(idx)) +
-                    "_overflow"}
-                  className="flex items-center gap-2"
-                >
-                  <UserId
-                    user_id={a.user_id}
-                    email={a.email}
-                    username={a.username}
-                    display_name={a.display_name}
-                    avatar={a.avatar}
-                    first_name={a.first_name}
-                    last_name={a.last_name}
-                    variant="default"
-                  />
-                </div>
-              ))}
-            </div>
-          </HoverCardContent>
-        </HoverCard>
+            <Popover.Dialog>
+              <div className="flex flex-col gap-3">
+                {overflow.map((a, idx) => (
+                  <div
+                    key={(a.user_id || a.email || a.username || String(idx)) +
+                      "_overflow"}
+                    className="flex items-center gap-2"
+                  >
+                    <UserId
+                      user_id={a.user_id}
+                      email={a.email}
+                      username={a.username}
+                      display_name={a.display_name}
+                      avatar={a.avatar}
+                      first_name={a.first_name}
+                      last_name={a.last_name}
+                      variant="default"
+                    />
+                  </div>
+                ))}
+              </div>
+            </Popover.Dialog>
+          </Popover.Content>
+        </Popover>
       )}
     </div>
   );

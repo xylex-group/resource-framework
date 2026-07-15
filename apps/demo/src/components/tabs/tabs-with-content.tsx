@@ -1,9 +1,9 @@
 "use client";
 
+import { Tabs } from "@heroui/react";
 import type { ReactNode } from "react";
-import { cn } from "@/lib/utils";
 
-export interface TabDefinition {
+interface TabDefinition {
   label: string;
   content: ReactNode;
   key?: string | number;
@@ -21,25 +21,29 @@ export default function TabsWithContent({
   onTabChange,
 }: TabsWithContentProps) {
   return (
-    <div className="space-y-3">
-      <div className="flex gap-2 border-b border-slate-800 pb-2">
+    <Tabs
+      selectedKey={String(activeIndex)}
+      onSelectionChange={(key) => onTabChange(Number(key))}
+      variant="secondary"
+    >
+      <Tabs.ListContainer>
+        <Tabs.List aria-label="Sections">
         {tabs.map((tab, idx) => (
-          <button
+          <Tabs.Tab
+            id={String(idx)}
             key={tab.key ?? idx}
-            type="button"
-            className={cn(
-              "rounded-sm px-3 py-1 text-sm font-semibold transition",
-              idx === activeIndex
-                ? "bg-slate-800 text-white"
-                : "text-slate-400 hover:text-white",
-            )}
-            onClick={() => onTabChange(idx)}
           >
             {tab.label}
-          </button>
+            <Tabs.Indicator />
+          </Tabs.Tab>
         ))}
-      </div>
-      <div>{tabs[activeIndex]?.content}</div>
-    </div>
+        </Tabs.List>
+      </Tabs.ListContainer>
+      {tabs.map((tab, idx) => (
+        <Tabs.Panel id={String(idx)} key={tab.key ?? idx}>
+          {tab.content}
+        </Tabs.Panel>
+      ))}
+    </Tabs>
   );
 }

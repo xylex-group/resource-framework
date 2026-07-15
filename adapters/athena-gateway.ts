@@ -1,9 +1,18 @@
-import { Backend, createClient } from "@xylex-group/athena";
-import { APP_CONFIG } from "@/lib/config";
+import type {
+  AthenaJsonPrimitive,
+  AthenaJsonValue,
+} from "@xylex-group/athena/browser";
+import {
+  createAthenaAdapterClient,
+  type AthenaAdapterConfig,
+} from "./athena-client-config";
+
+type AthenaRow = Record<string, AthenaJsonValue>;
+type AthenaWriteRow = Partial<AthenaRow>;
 
 export interface DataCondition {
   eq_column: string;
-  eq_value: string | number | boolean | null;
+  eq_value: AthenaJsonPrimitive;
 }
 
 export interface DataResponse<T = unknown> {
@@ -45,74 +54,35 @@ export interface DeleteDataParams {
   update_body?: Record<string, unknown>;
 }
 
-export interface AthenaGatewayConfig {
-  baseUrl?: string;
-  apiKey?: string;
-  client?: string;
-  headers?: Record<string, string>;
-  requestId?: string;
-  idempotencyKey?: string;
-}
+export type AthenaGatewayConfig = AthenaAdapterConfig;
 
-const DEFAULT_ATHENA_BASE_URL = "https://athena-db.com";
-const DEFAULT_ATHENA_CLIENT = "railway_direct";
-
-function getAthenaBaseUrl(): string {
-  return APP_CONFIG.athena?.db_api_url ?? DEFAULT_ATHENA_BASE_URL;
-}
-
-function getAthenaClient(): string {
-  return APP_CONFIG.athena?.standard_client ?? DEFAULT_ATHENA_CLIENT;
-}
-
-function getAthenaApiKey(): string {
-  return (
-    process.env.ATHENA_INTEGRATION_API_KEY ??
-    APP_CONFIG.athena?.api_key ??
-    process.env.NEXT_PUBLIC_ATHENA_API_KEY ??
-    process.env.ATHENA_API_KEY ??
-    ""
-  );
-}
-
-function createAthenaSdkClient(config: AthenaGatewayConfig = {}) {
-  const headers = buildAthenaHeaders(config, { isMutation: false });
-  return createClient(
-    config.baseUrl ?? getAthenaBaseUrl(),
-    config.apiKey ?? getAthenaApiKey(),
-    {
-      client: config.client ?? getAthenaClient(),
-      backend: Backend.Athena,
-      headers,
-    },
-  );
-}
-
-function createRequestId(): string {
-  try {
-    return crypto.randomUUID();
-  } catch {
-    return `athena-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+function toAthenaJsonValue(value: unknown): AthenaJsonValue | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (typeof value === "string" || typeof value === "boolean") return value;
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) {
+      throw new TypeError("Athena payload numbers must be finite.");
+    }
+    return value;
   }
+  if (value instanceof Date) return value.toISOString();
+  if (Array.isArray(value)) {
+    return value.map((item) => toAthenaJsonValue(item) ?? null);
+  }
+  if (typeof value === "object") {
+    const normalized: Record<string, AthenaJsonValue> = {};
+    for (const [key, item] of Object.entries(value)) {
+      const normalizedItem = toAthenaJsonValue(item);
+      if (normalizedItem !== undefined) normalized[key] = normalizedItem;
+    }
+    return normalized;
+  }
+  throw new TypeError(`Athena payload contains unsupported ${typeof value} data.`);
 }
 
-function buildAthenaHeaders(
-  config: AthenaGatewayConfig = {},
-  options: { isMutation: boolean },
-): Record<string, string> {
-  const requestId = config.requestId ?? createRequestId();
-  const headers: Record<string, string> = {
-    ...(config.headers ?? {}),
-    "X-Request-Id": requestId,
-  };
-
-  if (options.isMutation) {
-    const idempotencyKey = config.idempotencyKey ?? requestId;
-    headers["Idempotency-Key"] = idempotencyKey;
-    headers["X-Idempotency-Key"] = idempotencyKey;
-  }
-
-  return headers;
+function toAthenaWriteRow(value: Record<string, unknown>): AthenaWriteRow {
+  return toAthenaJsonValue(value) as AthenaWriteRow;
 }
 
 function firstRow<T>(value: T | T[] | null | undefined): T | null {
@@ -123,20 +93,39 @@ function firstRow<T>(value: T | T[] | null | undefined): T | null {
   return (value ?? null) as T | null;
 }
 
+function parseOrderBy(orderBy: string): { column: string; ascending: boolean } {
+  const match = orderBy.trim().match(/^([^\s,]+)(?:[\s.]+(asc|desc))?$/i);
+  if (!match?.[1]) {
+    throw new TypeError(`Invalid Athena order_by value: ${orderBy}`);
+  }
+
+  return {
+    column: match[1],
+    ascending: match[2]?.toLowerCase() !== "desc",
+  };
+}
+
 export async function fetchDataViaAthena<T = unknown[]>(
   params: FetchDataParams,
   config?: AthenaGatewayConfig,
 ): Promise<DataResponse<T>> {
   try {
-    const athena = createAthenaSdkClient({
-      ...config,
-      headers: buildAthenaHeaders(config, { isMutation: false }),
-    });
+    const athena = createAthenaAdapterClient(config, { mutation: false });
     const columns = params.columns?.length ? params.columns.join(", ") : "*";
-    let query = athena.from<T extends Array<infer Row> ? Row : T>(params.table_name);
+    let query = params.schema
+      ? athena.from<AthenaRow, AthenaWriteRow, AthenaWriteRow>(
+        params.table_name,
+        { schema: params.schema },
+      )
+      : athena.from<AthenaRow, AthenaWriteRow, AthenaWriteRow>(params.table_name);
 
     for (const condition of params.conditions ?? []) {
       query = query.eq(condition.eq_column, condition.eq_value);
+    }
+
+    if (params.order_by) {
+      const order = parseOrderBy(params.order_by);
+      query = query.order(order.column, { ascending: order.ascending });
     }
 
     if (typeof params.offset === "number") {
@@ -150,7 +139,7 @@ export async function fetchDataViaAthena<T = unknown[]>(
     const response = await query.select(columns);
     return {
       data: (response.data as T | null) ?? null,
-      error: response.error,
+      error: response.error?.message ?? null,
     };
   } catch (error) {
     return {
@@ -165,21 +154,24 @@ export async function insertDataViaAthena<T = unknown>(
   config?: AthenaGatewayConfig,
 ): Promise<DataResponse<T>> {
   try {
-    const athena = createAthenaSdkClient({
-      ...config,
-      headers: buildAthenaHeaders(config, { isMutation: true }),
-    });
+    const athena = createAthenaAdapterClient(config, { mutation: true });
     const columns = params.columns?.length ? params.columns.join(", ") : "*";
-    const response = await athena
-      .from(params.table_name)
-      .insert(params.insert_body)
-      .select(columns);
+    const table = params.schema
+      ? athena.from<AthenaRow, AthenaWriteRow, AthenaWriteRow>(
+        params.table_name,
+        { schema: params.schema },
+      )
+      : athena.from<AthenaRow, AthenaWriteRow, AthenaWriteRow>(params.table_name);
+    const mutation = Array.isArray(params.insert_body)
+      ? table.insert(params.insert_body.map(toAthenaWriteRow))
+      : table.insert(toAthenaWriteRow(params.insert_body));
+    const response = await mutation.select(columns);
 
     return {
       data: (Array.isArray(params.insert_body)
         ? response.data
         : firstRow(response.data)) as T | null,
-      error: response.error,
+      error: response.error?.message ?? null,
     };
   } catch (error) {
     return {
@@ -194,11 +186,14 @@ export async function updateDataViaAthena<T = unknown>(
   config?: AthenaGatewayConfig,
 ): Promise<DataResponse<T>> {
   try {
-    const athena = createAthenaSdkClient({
-      ...config,
-      headers: buildAthenaHeaders(config, { isMutation: true }),
-    });
-    let query = athena.from(params.table_name).update(params.update_body ?? {});
+    const athena = createAthenaAdapterClient(config, { mutation: true });
+    const table = params.schema
+      ? athena.from<AthenaRow, AthenaWriteRow, AthenaWriteRow>(
+        params.table_name,
+        { schema: params.schema },
+      )
+      : athena.from<AthenaRow, AthenaWriteRow, AthenaWriteRow>(params.table_name);
+    let query = table.update(toAthenaWriteRow(params.update_body ?? {}));
 
     if (params.x_column && params.x_id !== undefined) {
       query = query.eq(params.x_column, params.x_id);
@@ -211,7 +206,7 @@ export async function updateDataViaAthena<T = unknown>(
     const response = await query.select("*");
     return {
       data: firstRow(response.data) as T | null,
-      error: response.error,
+      error: response.error?.message ?? null,
     };
   } catch (error) {
     return {
@@ -226,11 +221,13 @@ export async function deleteDataViaAthena<T = unknown>(
   config?: AthenaGatewayConfig,
 ): Promise<DataResponse<T>> {
   try {
-    const athena = createAthenaSdkClient({
-      ...config,
-      headers: buildAthenaHeaders(config, { isMutation: true }),
-    });
-    let query = athena.from(params.table_name);
+    const athena = createAthenaAdapterClient(config, { mutation: true });
+    let query = params.schema
+      ? athena.from<AthenaRow, AthenaWriteRow, AthenaWriteRow>(
+        params.table_name,
+        { schema: params.schema },
+      )
+      : athena.from<AthenaRow, AthenaWriteRow, AthenaWriteRow>(params.table_name);
 
     if (params.x_column && params.x_id !== undefined) {
       query = query.eq(params.x_column, params.x_id);
@@ -242,7 +239,7 @@ export async function deleteDataViaAthena<T = unknown>(
 
     return {
       data: firstRow(response.data) as T | null,
-      error: response.error,
+      error: response.error?.message ?? null,
     };
   } catch (error) {
     return {

@@ -115,9 +115,7 @@ export function KycReviewCard({ schema: _schema, values }: KycReviewCardProps) {
         .filter((n) => n.trim().length > 0);
 
     return (
-        <Card
-            className={cn("w-full space-y-6 border border-border bg-card p-4")}
-        >
+        <Card className={cn("w-full space-y-6 p-4")}>
             <div className={cn("mb-2")}>
                 <h3 className={cn("text-lg font-semibold text-primary")}>
                     Review your details

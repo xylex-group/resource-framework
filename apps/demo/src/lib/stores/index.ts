@@ -50,7 +50,7 @@ export const useBackButtonStore = create<BackButtonState>((set) => ({
   },
 }));
 
-export type HeaderAction = {
+type HeaderAction = {
   id?: string;
   label?: string;
   icon?: ReactNode;

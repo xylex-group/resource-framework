@@ -13,13 +13,9 @@ import {
   Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Dropdown } from "@heroui/react";
 import { cn } from "@/lib/utils";
 import { DrilldownSection } from "./drilldown-section";
 import { FilePreview } from "./FilePreview";
@@ -139,53 +135,56 @@ function FileListRow({
           </p>
         </div>
       </div>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon_v2"
-            className="h-8 w-8 shrink-0"
-            disabled={deletingId === file.id}
-            onClick={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
-          >
+      <Dropdown>
+        <Dropdown.Trigger
+          aria-label={`Actions for ${file.name}`}
+          className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg hover:bg-default"
+          isDisabled={deletingId === file.id}
+          onPress={(e) => e.continuePropagation()}
+        >
             {deletingId === file.id
               ? <Loader2 className="h-4 w-4 animate-spin" />
               : <MoreVertical className="h-4 w-4" />}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            disabled={!file.hasValidUrl}
-            onClick={() => onPreview(file)}
+        </Dropdown.Trigger>
+        <Dropdown.Popover placement="bottom end">
+          <Dropdown.Menu>
+          <Dropdown.Item
+            id="preview"
+            isDisabled={!file.hasValidUrl}
+            onAction={() => onPreview(file)}
           >
             <Eye className="h-4 w-4 mr-2" />
             Preview
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={!file.hasValidUrl || !downloadAllowed}
-            onClick={() => onDownload(file)}
+          </Dropdown.Item>
+          <Dropdown.Item
+            id="download"
+            isDisabled={!file.hasValidUrl || !downloadAllowed}
+            onAction={() => onDownload(file)}
           >
             <Download className="h-4 w-4 mr-2" />
             Download
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={!file.hasValidUrl}
-            onClick={() => onOpenInNewTab(file)}
+          </Dropdown.Item>
+          <Dropdown.Item
+            id="open"
+            isDisabled={!file.hasValidUrl}
+            onAction={() => onOpenInNewTab(file)}
           >
             <ExternalLink className="h-4 w-4 mr-2" />
             Open in new tab
-          </DropdownMenuItem>
+          </Dropdown.Item>
           {allowDelete && (
-            <DropdownMenuItem
-              onClick={() => onDelete(file.id)}
+            <Dropdown.Item
+              id="delete"
+              onAction={() => onDelete(file.id)}
               className="text-destructive focus:text-destructive"
             >
               <Trash2 className="h-4 w-4 mr-2" />
               Delete
-            </DropdownMenuItem>
+            </Dropdown.Item>
           )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </Dropdown.Menu>
+        </Dropdown.Popover>
+      </Dropdown>
     </div>
   );
 }
@@ -236,7 +235,7 @@ function FileGridTile({
           variant="secondary"
           size="icon_v2"
           className="h-6 w-6"
-          onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+          onClick={(e) => {
             e.stopPropagation();
             e.preventDefault();
             onDownload(file);
@@ -250,7 +249,7 @@ function FileGridTile({
             variant="secondary"
             size="icon_v2"
             className="h-6 w-6"
-            onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+            onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
               onDelete(file.id);
@@ -564,7 +563,7 @@ export function DrilldownFileExplorer({
 
         {allowUpload && onUpload && (
           <div className="relative">
-            <input
+            <Input
               type="file"
               multiple
               onChange={handleFileSelect}
@@ -605,7 +604,7 @@ export function DrilldownFileExplorer({
             isUploading && "pointer-events-none opacity-60",
           )}
         >
-          <input
+          <Input
             type="file"
             multiple
             onChange={handleFileSelect}

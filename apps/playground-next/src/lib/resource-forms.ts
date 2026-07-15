@@ -8,7 +8,6 @@ import {
 } from "@xylex-group/resource-framework";
 
 export type PlaygroundResourceFormRow = ResourceFormRow;
-export type PlaygroundFormDefinition = (typeof playgroundFormDefinitions)[number];
 export type ResolvedPlaygroundResourceForm = ResolvedResourceForm;
 
 export {

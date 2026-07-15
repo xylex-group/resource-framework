@@ -2,16 +2,13 @@
 
 import {
   ReactElement,
-  MouseEvent,
-  cloneElement,
-  isValidElement,
   useMemo,
   useState,
 } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, Dropdown, EmptyState, Input, Separator } from "@heroui/react";
 import { cn } from "@/lib/utils";
 
-export type ResponsiveDropdownItem = {
+type ResponsiveDropdownItem = {
   buttonText?: string;
   onClick?: () => void;
   type?: "separator";
@@ -27,7 +24,6 @@ export interface ResponsiveDropdownV2Props {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   enableSearch?: boolean;
-  inputPlaceholder?: string;
   noResultsMessage?: string;
   forceNativeOnMobile?: boolean;
   scrollBarInvisible?: boolean;
@@ -40,7 +36,6 @@ export function ResponsiveDropdownV2({
   open,
   onOpenChange,
   enableSearch = false,
-  inputPlaceholder = "Search...",
   noResultsMessage = "No options",
   scrollBarInvisible = false,
 }: ResponsiveDropdownV2Props) {
@@ -68,77 +63,63 @@ export function ResponsiveDropdownV2({
     });
   }, [items, enableSearch, query]);
 
-  const typedTrigger = triggerButton as
-    | ReactElement<{ onClick?: (event: MouseEvent<HTMLElement>) => void }>
-    | undefined;
-
-  const renderTrigger = typedTrigger && isValidElement(typedTrigger)
-    ? cloneElement(typedTrigger, {
-      onClick(event: MouseEvent<HTMLElement>) {
-        setOpen(!isOpen);
-        typedTrigger.props.onClick?.(event);
-      },
-    })
-    : (
-      <Button
-        variant="ghost"
-        onClick={() => setOpen(!isOpen)}
-      >
-        {dropdownLabel || "Actions"}
-      </Button>
-    );
+  const renderTrigger = triggerButton ?? (
+    <Button variant="ghost">{dropdownLabel || "Actions"}</Button>
+  );
 
   return (
-    <div className="relative inline-flex">
-      {renderTrigger}
-      {isOpen && (
-        <div className="absolute right-0 z-10 mt-2 w-56 rounded-md border border-border bg-popover p-2 shadow-lg">
+    <Dropdown isOpen={isOpen} onOpenChange={setOpen}>
+      <Dropdown.Trigger>{renderTrigger}</Dropdown.Trigger>
+      <Dropdown.Popover className="w-64 rounded-xl" placement="bottom end">
+        <div className="p-2">
           {enableSearch && (
-            <input
+            <Input
+              aria-label={`Search ${dropdownLabel || "options"}`}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder={inputPlaceholder}
-              className="mb-2 w-full rounded-sm border border-input bg-card px-2 py-1 text-xs text-foreground"
+              className="mb-2 w-full rounded-lg"
             />
           )}
 
-          <div className={cn("max-h-64 overflow-auto", scrollBarInvisible && "scrollbar-thin") }>
+          <Dropdown.Menu
+            aria-label={dropdownLabel || "Actions"}
+            className={cn("max-h-64 overflow-auto", scrollBarInvisible && "scrollbar-thin")}
+          >
             {filteredItems.length === 0 ? (
-              <div className="px-2 py-1 text-xs text-muted-foreground">{noResultsMessage}</div>
+              <EmptyState className="min-h-20 rounded-lg px-3 py-4 text-sm">
+                {noResultsMessage}
+              </EmptyState>
             ) : (
               filteredItems.map((item, idx) => {
                 if (item.type === "separator") {
-                  return <hr key={`sep-${idx}`} className="my-1 border-border" />;
+                  return <Separator key={`sep-${idx}`} className="my-1" />;
                 }
 
                 return (
-                  <button
+                  <Dropdown.Item
+                    id={`item-${idx}`}
                     key={`item-${idx}`}
-                    type="button"
-                    onClick={() => {
+                    isDisabled={item.disabled}
+                    onAction={() => {
                       setOpen(false);
-                      if (!item.disabled) {
-                        item.onClick?.();
-                      }
+                      item.onClick?.();
                     }}
-                    disabled={item.disabled}
                     className={cn(
-                      "w-full rounded-sm px-2 py-1 text-left text-sm",
+                      "rounded-lg",
                       item.variant === "destructive"
-                        ? "text-destructive hover:bg-destructive/10"
-                        : "text-popover-foreground hover:bg-accent",
+                        ? "text-danger"
+                        : "text-foreground",
                       item.isActive && "bg-accent",
-                      item.disabled && "cursor-not-allowed text-muted-foreground",
                     )}
                   >
                     {item.buttonText}
-                  </button>
+                  </Dropdown.Item>
                 );
               })
             )}
-          </div>
+          </Dropdown.Menu>
         </div>
-      )}
-    </div>
+      </Dropdown.Popover>
+    </Dropdown>
   );
 }

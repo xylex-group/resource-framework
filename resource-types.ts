@@ -2,7 +2,7 @@
 
 import { type ComponentType, type ReactNode } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { DrizzleTableName } from "./types/drizzle-schema";
+import type { AthenaResourceModelName } from "./athena/models/resource-models";
 
 export type ResourceRouteRegistry = Record<string, ResourceRouteEntry>;
 
@@ -43,6 +43,8 @@ export type ResourceCreateConfig = {
   required: string[];
   optional?: string[];
   columns?: Array<ColumnConfig>;
+  defaultValues?: Partial<Record<string, FieldValue>>;
+  navigateToCreatedResource?: boolean;
   dialog?: ComponentType<{
     onSubmit(values: Record<string, unknown>): void;
     onCancel(): void;
@@ -53,7 +55,7 @@ export type ResourceCreateConfig = {
 export type ResourceRoute = {
   table: string;
   idColumn: string;
-  drizzleTable?: DrizzleTableName;
+  athenaModel?: AthenaResourceModelName | string;
   path?: string;
   force_no_cache?: boolean;
   force_external_api_updates?: boolean;
@@ -80,33 +82,7 @@ export type ResourceRoute = {
   deferTitleToHeader?: boolean;
   deferSubtitleToHeader?: boolean;
   deferNewButtonToHeader?: boolean;
-  columns?: Array<
-    | string
-    | {
-        column_name: string;
-        header?: string;
-        header_label?: string;
-        use?: string;
-        order?: number;
-        href?: string;
-        hidden?: boolean;
-        label?: string;
-        cell_value_mask_label?: string;
-        formatter?: (value: unknown, row: Record<string, unknown>) => unknown;
-        minWidth?: number;
-        maxWidth?: number;
-        widthFit?: boolean;
-        data_type?: FieldDataType;
-        editable?: {
-          type: "text" | "select" | "boolean" | "textarea";
-          update_table?: string;
-          update_id_column?: string;
-          update_column?: string;
-          options?: Array<{ label: string; value: string | number | boolean }>;
-          data_source?: string | { table: string; column: string };
-        };
-      }
-  >;
+  columns?: Array<BuiltColumnSpec | string>;
   companyIdColumn?: string;
   filterableColumnBlacklist?: string[];
   edit?: {
@@ -183,16 +159,14 @@ export type ResourceFieldSpec = {
   field_type?: FieldInputType;
   options?: SelectOption[];
   data_source?: DataSourceRef;
-  editor?: {
-    data_source: DataSourceRef;
-  };
+  editor?: FieldEditorSpec;
   editable?: {
     type?: "text" | "textarea" | "select" | "boolean";
     update_table?: string;
     update_id_column?: string;
     update_column?: string;
     options?: Array<{ label: string; value: string | number | boolean }>;
-    data_source?: DataSourceRef;
+    data_source?: FieldEditorSpec["data_source"];
   };
   update_table?: string;
   update_id_column?: string;
@@ -229,13 +203,14 @@ export type BuiltColumnSpec = {
   maxWidth?: number;
   widthFit?: boolean;
   data_type?: FieldDataType;
+  editor?: FieldEditorSpec;
   editable?: {
     type: "text" | "textarea" | "select" | "boolean";
     update_table?: string;
     update_id_column?: string;
     update_column?: string;
     options?: Array<{ label: string; value: string | number | boolean }>;
-    data_source?: string | { table: string; column: string };
+    data_source?: FieldEditorSpec["data_source"];
   };
 };
 
@@ -358,17 +333,6 @@ export type DrilldownSectionWidgetSpec =
       props?: Record<string, unknown>;
     });
 
-export type S3Provider = "aws" | "digital_ocean" | "hetzner" | "minio";
-
-export type S3ClientConfig = {
-  bucket_name: string;
-  access_key: string;
-  secret_key: string;
-  use_ssl?: boolean;
-  provider: S3Provider;
-  base_url: string;
-};
-
 export type FileExplorerWidgetProps = {
   table?: string;
   conditions?: TableWidgetCondition[];
@@ -387,7 +351,8 @@ export type FileExplorerWidgetProps = {
   fileIdColumn?: string;
   organizationIdColumn?: string;
   resourceIdColumn?: string;
-  s3_client?: S3ClientConfig;
+  /** Athena managed-storage catalog ID. Browser-side S3 credentials are not supported. */
+  s3Id?: string;
 };
 
 export type FileExplorerWidgetSpec = BaseWidgetSpec & {
@@ -654,7 +619,7 @@ declare global {
 }
 
 export type FieldEditorSpec = {
-  type?: "text" | "number" | "boolean" | "select" | "date";
+  type?: "text" | "number" | "boolean" | "select" | "date" | "textarea";
   options?: Array<{ label: string; value: string | number | boolean }>;
   data_source?:
     | string
@@ -842,7 +807,7 @@ export type ColumnConfig =
       nullable?: boolean;
       default_value?: FieldValue;
       editor?: {
-        type?: "text" | "number" | "boolean" | "select" | "date";
+        type?: "text" | "number" | "boolean" | "select" | "date" | "textarea";
         options?: Array<{ label: string; value: string | number | boolean }>;
         data_source?:
           | string

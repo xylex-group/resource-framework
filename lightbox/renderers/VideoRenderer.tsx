@@ -1,18 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Spinner } from "@heroui/react";
+import { Card } from "@xylex-group/athena-auth-ui/primitives";
 import type { LightboxRendererProps } from "../types";
-import {
-  VideoPlayer,
-  VideoPlayerContent,
-  VideoPlayerControlBar,
-  VideoPlayerMuteButton,
-  VideoPlayerPlayButton,
-  VideoPlayerTimeDisplay,
-  VideoPlayerTimeRange,
-  VideoPlayerVolumeRange,
-} from "@/components/ui/video-player";
 import { useAuthorizedFileUrl } from "../hooks/useAuthorizedFileUrl";
 
 /**
@@ -93,15 +84,15 @@ export function VideoRenderer({
       {(isLoading || isRefreshing) && (
         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
           <div className="flex flex-col items-center gap-2">
-            <Loader2 className="w-8 h-8 stroke-icon animate-spin" />
+            <Spinner size="lg" />
             {isRefreshing && (
               <div className="text-xs text-secondary">Refreshing URL...</div>
             )}
           </div>
         </div>
       )}
-      <VideoPlayer
-        className="max-w-full max-h-full cursor-default rounded-md"
+      <Card
+        className="max-h-full max-w-full cursor-default overflow-hidden rounded-xl p-2"
         style={{
           width: "fit-content",
           height: "fit-content",
@@ -114,14 +105,13 @@ export function VideoRenderer({
           onClose?.();
         }}
       >
-        <VideoPlayerContent
+        <video
           key={videoUrl}
-          crossOrigin=""
+          crossOrigin="anonymous"
           preload={isActive ? "auto" : "none"}
-          slot="media"
           src={videoUrl}
-          controls={false}
-          className="object-contain rounded-md"
+          controls
+          className="block max-w-full rounded-lg object-contain"
           style={{
             maxWidth: "100%",
             maxHeight: maxMediaHeight,
@@ -129,19 +119,7 @@ export function VideoRenderer({
           onLoadedData={handleLoadedData}
           onError={handleError}
         />
-        <VideoPlayerControlBar className="max-h-16">
-          <VideoPlayerPlayButton noTooltip />
-          {/* <VideoPlayerSeekBackwardButton /> */}
-          {/* <VideoPlayerSeekForwardButton /> */}
-          <VideoPlayerTimeRange />
-          <VideoPlayerTimeDisplay
-            showDuration
-            className="text-white dark:text-secondary"
-          />
-          <VideoPlayerMuteButton />
-          <VideoPlayerVolumeRange />
-        </VideoPlayerControlBar>
-      </VideoPlayer>
+      </Card>
     </div>
   );
 }

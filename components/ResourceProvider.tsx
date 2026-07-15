@@ -19,6 +19,7 @@ import type {
   UserPreference,
 } from "../resource-types";
 
+// Retained for public API compatibility; document hydration belongs to the host layout.
 export const suppressHydrationWarning = true;
 
 export type {
@@ -395,13 +396,9 @@ export const ResourceProvider: React.FC<ResourceProviderProps> = ({
   );
 
   return (
-    <html suppressHydrationWarning={suppressHydrationWarning}>
-      <body id="resource-provider-body">
-        <ResourceContext.Provider value={value}>
-          {children}
-        </ResourceContext.Provider>
-      </body>
-    </html>
+    <ResourceContext.Provider value={value}>
+      {children}
+    </ResourceContext.Provider>
   );
 };
 

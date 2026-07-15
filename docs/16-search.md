@@ -23,24 +23,6 @@ const { data } = useApiClient({
 });
 ```
 
-## Advanced Search
-
-```typescript
-import { useQueryFilters } from '@/packages/resource-framework/hooks/useQueryFilters';
-
-function SearchComponent() {
-  const { query, setQuery } = useQueryFilters();
-
-  return (
-    <input
-      placeholder="Search..."
-      value={query}
-      onChange={(e) => setQuery(e.target.value)}
-    />
-  );
-}
-```
-
 ## Dork Query Parser
 
 Parse complex search queries:

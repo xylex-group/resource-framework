@@ -31,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckCircle2, XCircle, RotateCcw, FileText } from "lucide-react";
 
 type ResourceFormsRuntimeProps = {
@@ -209,7 +210,7 @@ export function ResourceFormsRuntime({
                     const requiredCount = getRequiredResourceFormFieldKeys(form.schema).length;
                     const isSelected = form.id === selectedFormId;
                     return (
-                      <button
+                      <Button
                         key={form.id}
                         type="button"
                         onClick={() => setSelectedFormId(form.id)}
@@ -237,7 +238,7 @@ export function ResourceFormsRuntime({
                             {requiredCount} required
                           </Badge>
                         </div>
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>
@@ -343,7 +344,7 @@ export function ResourceFormsRuntime({
                 ) : (
                   <div className="space-y-4 text-sm">
                     <div>
-                      <p className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      <p className="mb-1 text-xs font-medium uppercase text-muted-foreground">
                         Validation
                       </p>
                       <div className="flex items-center gap-1.5">
@@ -366,7 +367,7 @@ export function ResourceFormsRuntime({
                     <Separator />
 
                     <div>
-                      <p className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      <p className="mb-1 text-xs font-medium uppercase text-muted-foreground">
                         Step order
                       </p>
                       <ol className="list-decimal space-y-0.5 pl-5 text-muted-foreground">
@@ -384,7 +385,7 @@ export function ResourceFormsRuntime({
                     <Separator />
 
                     <div>
-                      <p className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      <p className="mb-1 text-xs font-medium uppercase text-muted-foreground">
                         Required fields
                       </p>
                       <div className="flex flex-wrap gap-1">
@@ -403,7 +404,7 @@ export function ResourceFormsRuntime({
                     <Separator />
 
                     <div>
-                      <p className="mb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                      <p className="mb-1 text-xs font-medium uppercase text-muted-foreground">
                         Migration
                       </p>
                       <p className="text-muted-foreground">
@@ -423,17 +424,21 @@ export function ResourceFormsRuntime({
                 <div className="flex items-center justify-between gap-3">
                   <CardTitle>Submission preview</CardTitle>
                   {selectedForm ? (
-                    <select
+                    <Select
                       value={String(targetVersion)}
-                      onChange={(event) => setTargetVersion(Number(event.target.value))}
-                      className="rounded-md border border-border bg-muted px-2.5 py-1 text-xs"
+                      onValueChange={(next) => setTargetVersion(Number(next))}
                     >
-                      {availableVersions.map((version: number) => (
-                        <option key={version} value={version}>
-                          Target v{version}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableVersions.map((version: number) => (
+                          <SelectItem key={version} value={String(version)}>
+                            Target v{version}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   ) : null}
                 </div>
               </CardHeader>
@@ -443,7 +448,7 @@ export function ResourceFormsRuntime({
                 </p>
                 <div className="space-y-3">
                   <div>
-                    <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <p className="mb-1.5 text-xs font-medium uppercase text-muted-foreground">
                       Raw form values
                     </p>
                     <ScrollArea className="h-[180px]">
@@ -453,7 +458,7 @@ export function ResourceFormsRuntime({
                     </ScrollArea>
                   </div>
                   <div>
-                    <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    <p className="mb-1.5 text-xs font-medium uppercase text-muted-foreground">
                       Migrated payload{" "}
                       {selectedForm ? `(target v${targetVersion})` : ""}
                     </p>

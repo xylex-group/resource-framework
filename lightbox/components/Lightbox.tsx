@@ -9,8 +9,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogOverlay,
-  DialogPortal,
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { LightboxProps } from "../types";
@@ -136,8 +134,6 @@ export function Lightbox({
         }
       }}
     >
-      <DialogPortal>
-        <DialogOverlay className="bg-foreground" />
         <DialogContent
           forceFullScreen
           onEscapeKeyDown={handleDialogEscapeKeyDown}
@@ -206,7 +202,6 @@ export function Lightbox({
             </div>
           </div>
         </DialogContent>
-      </DialogPortal>
     </Dialog>
   );
 }

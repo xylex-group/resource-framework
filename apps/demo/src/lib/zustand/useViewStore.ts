@@ -2,16 +2,6 @@ import { create } from "zustand";
 
 type DisplaySettings = Record<string, Record<string, unknown>>;
 
-type DisplayOptionValue = string | number | boolean;
-
-export type DisplayConfigOption = {
-  type?: "toggle" | "group" | "rows_per_page" | "sort" | string;
-  label: string;
-  value: string;
-  defaultValue?: DisplayOptionValue;
-  options?: Array<{ label: string; value: string }>;
-};
-
 type StylingState = {
   tables_extra_side_padding?: boolean;
 };

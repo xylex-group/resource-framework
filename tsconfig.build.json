@@ -17,8 +17,6 @@
     "registries/filter-registry.tsx",
     "hooks/useUserScopes.ts",
     "hooks/useUserPreferences.ts",
-    "hooks/useQueryFilters.ts",
-    "hooks/useResourceColumns.ts",
     "types/**/*.d.ts",
     "utils/**/*.ts",
     "resource-types.ts",

@@ -127,16 +127,6 @@ const grouped = groupByCategory(items, 'category');
 // { 'group1': [...], 'group2': [...] }
 ```
 
-## Helpers
-
-```typescript
-import { debounce, throttle, memoize } from '@/packages/resource-framework/utils/helpers';
-
-const debouncedFn = debounce(fn, 300);
-const throttledFn = throttle(fn, 1000);
-const memoizedFn = memoize(fn);
-```
-
 ## Format
 
 ```typescript

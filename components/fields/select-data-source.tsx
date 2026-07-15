@@ -130,7 +130,6 @@ const DataSourceSelect = ({
                     </Button>
                 }
                 enableSearch
-                inputPlaceholder="Search..."
                 noResultsMessage="No options"
                 forceNativeOnMobile
                 scrollBarInvisible

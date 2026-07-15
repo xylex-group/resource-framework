@@ -41,7 +41,8 @@ describe("buildColumnsFromRegistry", () => {
     const markup = renderToStaticMarkup(cell as React.ReactElement);
 
     expect(markup).toContain("Customer 123");
-    expect(markup).toContain('button type="button"');
+    expect(markup).toContain('data-slot="button"');
+    expect(markup).toContain('type="button"');
   });
 
   it("honors viewHook/viewRender overrides", () => {

@@ -19,23 +19,23 @@ import {
   resolveResourceFormRows,
   type PlaygroundResourceFormRow,
 } from "../lib/resource-forms";
+import { Button } from "../components/ui/button";
+import { Card } from "../components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 
-const sectionStyle: CSSProperties = {
-  backdropFilter: "blur(18px)",
-  background: "var(--panel)",
-  border: "1px solid var(--line)",
-  borderRadius: 24,
-  padding: 24,
-  boxShadow: "0 24px 60px rgba(30, 28, 26, 0.08)",
-};
-
-const buttonStyle: CSSProperties = {
-  borderRadius: 999,
-  border: "1px solid var(--line)",
+const linkStyle: CSSProperties = {
+  borderRadius: "var(--athena-auth-ui-control-radius)",
+  border: "1px solid var(--border)",
   padding: "12px 18px",
   font: "600 0.95rem var(--font-sans)",
-  background: "var(--ink)",
-  color: "#fff",
+  background: "var(--accent)",
+  color: "var(--accent-foreground)",
   cursor: "pointer",
 };
 
@@ -162,12 +162,11 @@ export function ResourceFormsPlaygroundClient() {
           gap: 20,
         }}
       >
-        <section style={{ ...sectionStyle, padding: 32 }}>
+        <Card style={{ padding: 32 }}>
           <div style={{ display: "grid", gap: 12 }}>
             <span
               style={{
                 font: "600 0.75rem var(--font-mono)",
-                letterSpacing: "0.18em",
                 textTransform: "uppercase",
                 color: "var(--accent)",
               }}
@@ -190,30 +189,24 @@ export function ResourceFormsPlaygroundClient() {
               then rendered into `EntityFormV2` at runtime.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-              <button style={buttonStyle} onClick={handleSeedForms}>
+              <Button onPress={handleSeedForms}>
                 Seed demo forms
-              </button>
-              <button style={{ ...buttonStyle, background: "transparent", color: "var(--ink)" }} onClick={resetValues}>
+              </Button>
+              <Button variant="outline" onPress={resetValues}>
                 Reset active defaults
-              </button>
-              <Link href="/admin/resource-forms" style={{ ...buttonStyle, background: "transparent", color: "var(--ink)", textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+              </Button>
+              <Link href="/admin/resource-forms" style={{ ...linkStyle, background: "transparent", color: "var(--foreground)", textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
                 Open admin builder
               </Link>
-              <Link href="/bench" style={{ ...buttonStyle, textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+              <Link href="/bench" style={{ ...linkStyle, textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
                 Open Athena bench
               </Link>
             </div>
           </div>
-        </section>
+        </Card>
 
-        <section
-          style={{
-            display: "grid",
-            gap: 20,
-            gridTemplateColumns: "minmax(280px, 320px) minmax(0, 1fr) minmax(280px, 360px)",
-          }}
-        >
-          <div style={sectionStyle}>
+        <section className="playground-runtime-grid">
+          <Card style={{ padding: 24 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
               <h2 style={{ margin: 0 }}>resource_forms</h2>
               <span style={{ color: "var(--muted)", fontSize: 12 }}>{forms.length}</span>
@@ -233,20 +226,14 @@ export function ResourceFormsPlaygroundClient() {
                   const stepCount = getOrderedResourceFormSteps(form.schema).length;
                   const requiredCount = getRequiredResourceFormFieldKeys(form.schema).length;
                   return (
-                    <button
+                    <Button
                       key={form.id}
                       type="button"
-                      onClick={() => setSelectedFormId(form.id)}
+                      onPress={() => setSelectedFormId(form.id)}
                       style={{
-                        borderRadius: 18,
-                        border: form.id === selectedFormId
-                          ? "1px solid var(--accent)"
-                          : "1px solid var(--line)",
-                        background: "rgba(255,255,255,0.45)",
-                        padding: 14,
                         textAlign: "left",
-                        cursor: "pointer",
                       }}
+                      variant={form.id === selectedFormId ? "secondary" : "ghost"}
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                         <strong>{form.title}</strong>
@@ -261,18 +248,18 @@ export function ResourceFormsPlaygroundClient() {
                         <span>{stepCount} steps</span>
                         <span>{requiredCount} required</span>
                       </div>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
             )}
-          </div>
+          </Card>
 
-          <div style={{ ...sectionStyle, background: "rgba(255,255,255,0.58)" }}>
+          <Card style={{ padding: 24 }}>
             {selectedForm ? (
               <>
                 <div style={{ marginBottom: 18 }}>
-                  <div style={{ color: "var(--muted)", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.18em" }}>
+                  <div style={{ color: "var(--muted)", fontSize: 12, textTransform: "uppercase" }}>
                     Active form
                   </div>
                   <h2 style={{ marginBottom: 6 }}>{selectedForm.title}</h2>
@@ -298,10 +285,10 @@ export function ResourceFormsPlaygroundClient() {
                 Select a row from `resource_forms` to render it.
               </p>
             )}
-          </div>
+          </Card>
 
           <div style={{ display: "grid", gap: 20 }}>
-            <section style={sectionStyle}>
+            <Card style={{ padding: 24 }}>
               <h2 style={{ marginTop: 0 }}>Row contract</h2>
               <pre style={{ margin: 0, overflow: "auto", fontSize: 12 }}>
 {`{
@@ -320,9 +307,9 @@ export function ResourceFormsPlaygroundClient() {
   sort_order
 }`}
               </pre>
-            </section>
+            </Card>
 
-            <section style={sectionStyle}>
+            <Card style={{ padding: 24 }}>
               <h2 style={{ marginTop: 0 }}>Contract analysis</h2>
               {!selectedForm ? (
                 <p style={{ color: "var(--muted)", margin: 0 }}>
@@ -331,15 +318,15 @@ export function ResourceFormsPlaygroundClient() {
               ) : (
                 <div style={{ display: "grid", gap: 14 }}>
                   <div>
-                    <div style={{ color: "var(--muted)", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em" }}>
+                    <div style={{ color: "var(--muted)", fontSize: 12, textTransform: "uppercase" }}>
                       Validation
                     </div>
-                    <p style={{ marginBottom: 0, color: selectedValidation.ok ? "#0f766e" : "#b91c1c" }}>
+                    <p style={{ marginBottom: 0, color: selectedValidation.ok ? "var(--success)" : "var(--danger)" }}>
                       {selectedValidation.ok ? "Schema valid" : formatResourceFormIssues(selectedValidation.issues)}
                     </p>
                   </div>
                   <div>
-                    <div style={{ color: "var(--muted)", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em" }}>
+                    <div style={{ color: "var(--muted)", fontSize: 12, textTransform: "uppercase" }}>
                       Ordered steps
                     </div>
                     <ol style={{ marginBottom: 0, paddingLeft: 18, color: "var(--muted)", lineHeight: 1.7 }}>
@@ -349,7 +336,7 @@ export function ResourceFormsPlaygroundClient() {
                     </ol>
                   </div>
                   <div>
-                    <div style={{ color: "var(--muted)", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em" }}>
+                    <div style={{ color: "var(--muted)", fontSize: 12, textTransform: "uppercase" }}>
                       Required fields
                     </div>
                     <p style={{ marginBottom: 0, color: "var(--muted)" }}>
@@ -359,7 +346,7 @@ export function ResourceFormsPlaygroundClient() {
                     </p>
                   </div>
                   <div>
-                    <div style={{ color: "var(--muted)", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em" }}>
+                    <div style={{ color: "var(--muted)", fontSize: 12, textTransform: "uppercase" }}>
                       Migration
                     </div>
                     <p style={{ marginBottom: 0, color: "var(--muted)" }}>
@@ -371,32 +358,32 @@ export function ResourceFormsPlaygroundClient() {
                   </div>
                 </div>
               )}
-            </section>
+            </Card>
 
-            <section style={sectionStyle}>
+            <Card style={{ padding: 24 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
                 <h2 style={{ margin: 0 }}>Submission payloads</h2>
                 {selectedForm ? (
-                  <label style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "var(--muted)", fontSize: 12 }}>
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "var(--muted)", fontSize: 12 }}>
                     Target version
-                    <select
+                    <Select
                       value={String(targetVersion)}
-                      onChange={(event) => setTargetVersion(Number(event.target.value))}
-                      style={{ borderRadius: 999, border: "1px solid var(--line)", padding: "6px 10px", background: "#fff" }}
+                      onValueChange={(value) => setTargetVersion(Number(value))}
                     >
-                      {availableVersions.map((version) => (
-                        <option key={version} value={version}>
-                          v{version}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {availableVersions.map((version) => (
+                          <SelectItem key={version} value={String(version)}>v{version}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 ) : null}
               </div>
               <p style={{ color: "var(--muted)" }}>{message}</p>
               <div style={{ display: "grid", gap: 12 }}>
                 <div>
-                  <div style={{ color: "var(--muted)", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 6 }}>
+                  <div style={{ color: "var(--muted)", fontSize: 12, textTransform: "uppercase", marginBottom: 6 }}>
                     Raw form values
                   </div>
                   <pre style={{ margin: 0, maxHeight: 220, overflow: "auto", fontSize: 12 }}>
@@ -404,7 +391,7 @@ export function ResourceFormsPlaygroundClient() {
                   </pre>
                 </div>
                 <div>
-                  <div style={{ color: "var(--muted)", fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 6 }}>
+                  <div style={{ color: "var(--muted)", fontSize: 12, textTransform: "uppercase", marginBottom: 6 }}>
                     Migrated payload {selectedForm ? `(target v${targetVersion})` : ""}
                   </div>
                   {migratedPayloadResult.ok ? (
@@ -412,13 +399,13 @@ export function ResourceFormsPlaygroundClient() {
                       {JSON.stringify(migratedPayloadResult.payload, null, 2)}
                     </pre>
                   ) : (
-                    <p style={{ margin: 0, color: "#b91c1c", lineHeight: 1.6 }}>
+                    <p style={{ margin: 0, color: "var(--danger)", lineHeight: 1.6 }}>
                       {migratedPayloadResult.error}
                     </p>
                   )}
                 </div>
               </div>
-            </section>
+            </Card>
           </div>
         </section>
       </div>

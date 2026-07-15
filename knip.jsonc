@@ -1,0 +1,26 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreFiles": [
+    "apps/demo/src/components/ui/{checkbox,combo-box,dialog,popover,skeleton,switch,textarea}.tsx",
+    "lightbox/examples/**"
+  ],
+  "ignoreDependencies": [
+    "clsx",
+    "media-chrome",
+    "tailwind-merge"
+  ],
+  "workspaces": {
+    "apps/demo": {
+      "entry": [
+        "open-next.config.ts",
+        "src/app/**/{layout,page,not-found,error}.tsx"
+      ],
+      "ignoreDependencies": [
+        "@xylex-group/resource-framework",
+        "date-fns",
+        "md5",
+        "react-error-boundary"
+      ]
+    }
+  }
+}

@@ -85,10 +85,13 @@ import { useUserStore } from '@/lib/stores';
 
 function ResourceContent() {
   const { user } = useUserStore();
-  const resource = useResourceContext();
+  const { data: resource } = useApiClient({
+    table: 'customers',
+    single: true
+  });
 
   // Only allow access if same organization
-  if (resource.organization_id !== user.organization_id) {
+  if (resource?.organization_id !== user.organization_id) {
     return <AccessDenied />;
   }
 

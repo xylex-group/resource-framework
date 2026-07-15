@@ -1,10 +1,10 @@
 import type React from "react";
-import { MouseEvent, ReactNode } from "react";
+import { ReactNode } from "react";
+import { Link } from "@heroui/react";
 
 import { AvatarCard } from "@/components/cards/avatar-card";
 import { DrilldownSection } from "./drilldown-section";
 import { DrilldownSummary, DrilldownSummaryItem } from "../drilldown-summary";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { SectionWidgetGroup } from "../sections/section-widget";
@@ -175,21 +175,15 @@ export function DrilldownEntityRenderer<T extends Record<string, unknown>>({
 										? String(field.label)
 										: String(formattedValue);
 									displayValue = (
-										<Button
-											asChild
-											variant="link"
-											onClick={(e: MouseEvent) =>
-												e.stopPropagation()}
+										<Link
+											className="rounded-lg text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2"
+											href={resolvedHref}
+											target={field.target || "_blank"}
+											rel="noopener noreferrer"
+											onClick={(event) => event.stopPropagation()}
 										>
-											<a
-												href={resolvedHref}
-												target={field.target ||
-													"_blank"}
-												rel="noopener noreferrer"
-											>
-												{linkLabel}
-											</a>
-										</Button>
+											{linkLabel}
+										</Link>
 									);
 								} else if (field.is_user_id) {
 									displayValue = (

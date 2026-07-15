@@ -1,81 +1,72 @@
-import type { HTMLAttributes, ReactNode } from "react";
+"use client";
 
-type DialogProps = {
-  children: ReactNode;
-  open?: boolean;
+import { Button as HeroUIButton, Modal } from "@heroui/react";
+import { createContext, useContext } from "react";
+import type { ComponentProps, KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
+
+type DialogState = {
+  open: boolean;
   onOpenChange?: (open: boolean) => void;
 };
 
-type DialogPartProps = HTMLAttributes<HTMLDivElement> & {
+const DialogContext = createContext<DialogState>({ open: false });
+
+export interface DialogProps extends Omit<ComponentProps<typeof Modal>, "isOpen" | "onOpenChange"> {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function Dialog({ open = false, onOpenChange, children, ...props }: DialogProps) {
+  return (
+    <DialogContext.Provider value={{ open, onOpenChange }}>
+      <Modal {...props}>
+        <HeroUIButton className="hidden" aria-hidden="true">
+          Open dialog
+        </HeroUIButton>
+        {children}
+      </Modal>
+    </DialogContext.Provider>
+  );
+}
+
+export interface DialogContentProps extends Omit<ComponentProps<typeof Modal.Dialog>, "children" | "onKeyDown"> {
   children?: ReactNode;
   forceFullScreen?: boolean;
   onEscapeKeyDown?: (event: KeyboardEvent) => void;
-};
+}
 
-export const Dialog = ({ children }: DialogProps) => (
-  <div>{children}</div>
-);
-
-export const DialogPortal = ({ children }: DialogPartProps) => <>{children}</>;
-
-export const DialogOverlay = ({
-  children,
-  className,
-  ...props
-}: DialogPartProps) => (
-  <div className={className} {...props}>
-    {children}
-  </div>
-);
-
-export const DialogContent = ({
-  children,
-  className,
-  onEscapeKeyDown,
-  forceFullScreen,
-  ...props
-}: DialogPartProps) => {
-  const contentClassName = forceFullScreen
-    ? `${className ?? ""} fixed inset-0 z-50`
-    : className;
+export function DialogContent({ children, className, forceFullScreen, onEscapeKeyDown, ...props }: DialogContentProps) {
+  const { open, onOpenChange } = useContext(DialogContext);
+  const handleKeyDown = (event: ReactKeyboardEvent) => {
+    if (event.key === "Escape") {
+      onEscapeKeyDown?.(event.nativeEvent);
+    }
+  };
 
   return (
-    <div
-      className={contentClassName}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") {
-          onEscapeKeyDown?.(event.nativeEvent);
-        }
-      }}
-      {...props}
+    <Modal.Backdrop
+      className="bg-black/60"
+      isOpen={open}
+      onOpenChange={onOpenChange}
     >
-      {children}
-    </div>
+      <Modal.Container
+        className={forceFullScreen ? "h-dvh max-h-dvh w-screen max-w-none p-0" : undefined}
+        placement="center"
+        size={forceFullScreen ? "full" : "lg"}
+      >
+        <Modal.Dialog
+          {...props}
+          className={forceFullScreen ? `h-dvh w-screen max-w-none rounded-none ${className ?? ""}` : className}
+        >
+          <div className="contents" onKeyDown={handleKeyDown}>
+            {children}
+          </div>
+        </Modal.Dialog>
+      </Modal.Container>
+    </Modal.Backdrop>
   );
-};
+}
 
-export const DialogHeader = ({
-  children,
-  className,
-  ...props
-}: DialogPartProps) => (
-  <div className={className} {...props}>
-    {children}
-  </div>
-);
-
-export const DialogFooter = ({
-  children,
-  className,
-  ...props
-}: DialogPartProps) => (
-  <div className={className} {...props}>
-    {children}
-  </div>
-);
-
-export const DialogTitle = ({ children, className, ...props }: DialogPartProps) => (
-  <h2 className={className} {...props}>
-    {children}
-  </h2>
-);
+export const DialogHeader = Modal.Header;
+export const DialogFooter = Modal.Footer;
+export const DialogTitle = Modal.Heading;

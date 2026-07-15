@@ -7,5 +7,4 @@ export { ImageRenderer } from "./ImageRenderer";
 export { VideoRenderer } from "./VideoRenderer";
 export { PdfRenderer } from "./PdfRenderer";
 export { AudioRenderer } from "./AudioRenderer";
-export { DocumentRenderer } from "./DocumentRenderer";
 export { UnsupportedRenderer } from "./UnsupportedRenderer";

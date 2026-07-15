@@ -2,16 +2,11 @@
 
 import { MoreHorizontal } from "lucide-react";
 import { ReactNode } from "react";
+import { Dropdown } from "@heroui/react";
 import { Button } from "@/components/ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-export interface DrilldownAction {
+interface DrilldownAction {
 	label: string;
 	icon?: ReactNode;
 	onClick: () => void;
@@ -64,21 +59,21 @@ export function DrilldownActions({
 
 			{/* Dropdown menu for extra actions */}
 			{dropdownActions.length > 0 && (
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button
-							size="icon"
-							variant="ghost"
-						>
-							<MoreHorizontal className="h-4 w-4" />
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end">
+				<Dropdown>
+					<Dropdown.Trigger
+						aria-label="More actions"
+						className="inline-flex size-8 items-center justify-center rounded-lg hover:bg-default"
+					>
+						<MoreHorizontal className="h-4 w-4" />
+					</Dropdown.Trigger>
+					<Dropdown.Popover placement="bottom end">
+						<Dropdown.Menu>
 						{dropdownActions.map((action, index) => (
-							<DropdownMenuItem
+							<Dropdown.Item
 								key={index}
-								onClick={action.onClick}
-								disabled={action.disabled}
+								id={`${action.label}-${index}`}
+								onAction={action.onClick}
+								isDisabled={action.disabled}
 								className={cn(
 									action.variant === "destructive" &&
 										"text-destructive",
@@ -87,10 +82,11 @@ export function DrilldownActions({
 							>
 								{action.icon}
 								{action.label}
-							</DropdownMenuItem>
+							</Dropdown.Item>
 						))}
-					</DropdownMenuContent>
-				</DropdownMenu>
+						</Dropdown.Menu>
+					</Dropdown.Popover>
+				</Dropdown>
 			)}
 		</div>
 	);

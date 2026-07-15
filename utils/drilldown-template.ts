@@ -1,7 +1,7 @@
 /**
  * Helper to resolve nested payload values using dot notation keys.
  */
-export const resolveDrilldownPayloadValue = (
+const resolveDrilldownPayloadValue = (
   payload: Record<string, unknown>,
   key: string,
 ): unknown => {

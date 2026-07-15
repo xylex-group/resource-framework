@@ -26,7 +26,10 @@ import type {
 import { Container } from "@/components/ui/container";
 import { useToast } from "@/hooks/use-toast";
 import { useUserStore } from "@/lib/stores";
-import { uploadFileViaAthena } from "../../../adapters/athena-files";
+import {
+  refreshFileUrlViaAthena,
+  uploadFileViaAthena,
+} from "../../../adapters/athena-files";
 import { useFileUploadStatus } from "../../../notifications";
 
 type FileRow = Record<string, unknown> & {
@@ -58,7 +61,6 @@ const DEFAULT_COLUMNS = [
   "created_at",
   "updated_at",
 ];
-const DEFAULT_PROJECT_ID = "files";
 const DEFAULT_FILE_ID_COLUMN = "file_id";
 const DEFAULT_RESOURCE_COLUMN = "resource_id";
 const DEFAULT_ORGANIZATION_COLUMN = "organization_id";
@@ -231,9 +233,6 @@ function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
   );
 
   const uploadDir = evaluateStringTemplate(props.uploadDir, templateContext);
-  const resolvedProjectId =
-    evaluateStringTemplate(props.projectId, templateContext) ??
-      DEFAULT_PROJECT_ID;
   const objectPath = evaluateStringTemplate(props.objectPath, templateContext);
 
   const resourceNameFromTemplate = evaluateStringTemplate(
@@ -306,6 +305,10 @@ function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
         return;
       }
 
+      if (!props.s3Id) {
+        throw new Error("File uploads require an Athena managed-storage s3Id.");
+      }
+
       setIsUploading(true);
       
       // Start upload status tracking
@@ -317,61 +320,41 @@ function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
       try {
         for (const file of selectedFiles) {
           try {
-            const payload = new FormData();
-            payload.append("file", file);
-            if (resolvedOrganizationId) {
-              payload.append("resolvedOrganizationId", resolvedOrganizationId);
+            const uploadResult = await uploadFileViaAthena({
+              s3_id: props.s3Id,
+              bucket: storageBucket,
+              files: file,
+              fileName: file.name,
+              prefixPath: resolvedObjectPath ?? uploadDir,
+              organizationId: resolvedOrganizationId,
+              resourceId,
+              userId: user?.user_id,
+              maxFileSizeMb: props.maxFileSizeMB ?? 20,
+            });
+            const uploadedFile = uploadResult.files[0];
+            if (!uploadedFile) {
+              throw new Error("Athena storage returned no uploaded file.");
             }
-
-            payload.append("projectId", resolvedProjectId);
-
-            if (uploadDir) {
-              payload.append("dir", uploadDir);
-            }
-            if (resolvedObjectPath) {
-              payload.append("objectPath", resolvedObjectPath);
-              payload.append("object_path", resolvedObjectPath);
-            }
-
-            if (props.s3_client) {
-              payload.append("s3_client", JSON.stringify(props.s3_client));
-            }
-
-            const uploadResult = await uploadFileViaAthena(payload);
-            const url = uploadResult?.url;
-            if (!url) {
-              throw new Error("Upload returned no url");
-            }
-
-            const fileUrlFromResponse = uploadResult?.file_url ?? url;
-            const storageKey = uploadResult?.storage_key ??
-              resolvedObjectPath ??
-              defaultObjectPath ??
-              undefined;
-            const bucketPath = storageKey
-              ? `${storageBucket}/${storageKey}`
-              : undefined;
-            const minioBase = "https://console-production-a53c.up.railway.app";
-            const constructedUrl = bucketPath
-              ? `${minioBase}/${bucketPath}`
-              : url;
-            const finalUrl = fileUrlFromResponse ?? constructedUrl;
-            const currentTime = Number(
-              uploadResult?.time ?? Math.floor(Date.now() / 1000),
+            const refreshed = await refreshFileUrlViaAthena({
+              fileId: uploadedFile.file.id,
+              purpose: "stream",
+            });
+            const storageKey = uploadedFile.storage_key;
+            const currentTime = Math.floor(
+              new Date(uploadedFile.file.created_at).getTime() / 1000,
             );
-            // THIS CONTROLS THE FILES UPLOAD
             const insertBody: Record<string, unknown> = {
               file_name: file.name,
               name: file.name,
-              url: finalUrl,
-              file_url: finalUrl,
+              url: refreshed.url,
+              file_url: refreshed.url,
               mime_type: file.type,
               file_size: file.size,
-              s3_bucket: storageBucket,
+              s3_bucket: uploadedFile.file.bucket,
               time: currentTime,
               uploaded_by: user?.user_id,
               storage_key: storageKey,
-              prefix_path: uploadResult?.prefixPath,
+              prefix_path: uploadedFile.file.prefix_path,
             };
 
             if (resourceId) {
@@ -381,7 +364,7 @@ function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
             if (resolvedOrganizationId) {
               insertBody[organizationColumn] = resolvedOrganizationId;
             }
-            const prefixPath = uploadResult?.prefixPath ?? resolvedObjectPath;
+            const prefixPath = uploadedFile.file.prefix_path ?? resolvedObjectPath;
             if (prefixPath) {
               insertBody.prefix_path = prefixPath;
             }
@@ -430,11 +413,9 @@ function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
     },
     [
       resolvedOrganizationId,
-      resolvedProjectId,
       uploadDir,
       resolvedObjectPath,
       storageBucket,
-      fileIdColumn,
       insert,
       organizationColumn,
       resourceColumn,
@@ -443,6 +424,8 @@ function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
       user?.user_id,
       startUpload,
       finishUpload,
+      props.maxFileSizeMB,
+      props.s3Id,
     ],
   );
 
@@ -477,6 +460,11 @@ function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
 
   return (
     <Container>
+      {(props.allowUpload ?? true) && !props.s3Id && (
+        <div className="mb-4 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning-foreground">
+          Uploads are unavailable until this widget is configured with an Athena storage catalog ID.
+        </div>
+      )}
       <DrilldownFileExplorer
         title={props.title}
         files={files}
@@ -486,9 +474,11 @@ function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
         organizationId={String(resolvedOrganizationId)}
         maxFileSize={props.maxFileSizeMB ?? 20}
         acceptedTypes={props.acceptedTypes}
-        allowUpload={props.allowUpload ?? true}
+        allowUpload={(props.allowUpload ?? true) && Boolean(props.s3Id)}
         allowDelete={props.allowDelete ?? true}
-        onUpload={props.allowUpload === false ? undefined : handleUpload}
+        onUpload={
+          props.allowUpload === false || !props.s3Id ? undefined : handleUpload
+        }
         onDelete={props.allowDelete === false ? undefined : handleDelete}
         disableSectionWrapper
       />
@@ -497,5 +487,3 @@ function FileExplorerWidget({ spec, entity }: SectionWidgetRendererProps) {
 }
 
 registerSectionWidget("file_explorer", FileExplorerWidget);
-
-export { FileExplorerWidget };

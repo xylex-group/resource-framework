@@ -12,10 +12,15 @@ import { useUserStore } from "@/lib/stores";
 import { useNotification } from "@/hooks/use-notifications";
 import { insertRow } from "../utils/insert";
 import { insertDataViaAthena } from "../adapters/athena-gateway";
+import {
+  compactCreatePayload,
+  extractCreatedRow,
+  getMissingRequiredFields,
+} from "../utils/create-resource";
 import { defaultEditorByColumn } from "../constructors/column-registry";
 import {
-  getDrizzleColumnInfo,
-} from "../utils/drizzle-editor";
+  getAthenaColumnInfo,
+} from "../athena/model-metadata";
 import {
   ColumnConfig,
   type FieldEditorSpec,
@@ -48,10 +53,6 @@ const isUuidV4GenDataSource = (
   dataSource: unknown,
 ): dataSource is "uuid_v4_gen" => {
   return typeof dataSource === "string" && dataSource === "uuid_v4_gen";
-};
-
-const snakeToCamel = (str: string): string => {
-  return str.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
 };
 
 const isDbDataSource = (dataSource: unknown): boolean => {
@@ -107,7 +108,7 @@ const buildFieldEditorSpec = (
   if (typeof column === "string") return undefined;
   const columnName = column.column_name;
   if (!columnName) return undefined;
-  const info = getDrizzleColumnInfo(tableName, columnName);
+  const info = getAthenaColumnInfo(tableName, columnName);
   const editorConfig = column.editor;
   const fallbackEditor =
     defaultEditorByColumn[String(columnName).toLowerCase()] ??
@@ -152,7 +153,7 @@ const mapColumnConfigToFieldSpec = (
     editorSource?: ColumnConfig,
   ): NormalizedFieldSpec | null => {
     if (!columnName) return null;
-    const info = getDrizzleColumnInfo(tableName, columnName);
+    const info = getAthenaColumnInfo(tableName, columnName);
     const configObject = config && typeof config !== "string"
       ? config
       : undefined;
@@ -186,7 +187,11 @@ export function CreateResourceDialog(props: {
   required?: string[];
   optional?: string[];
   table?: string;
+  schema?: string;
   onCreatedAction?: (createdRow: TableRowData | null) => void;
+  createAction?: (
+    payload: Record<string, unknown>,
+  ) => Promise<TableRowData>;
   /**
    * Error callback - called when create fails.
    */
@@ -226,7 +231,9 @@ export function CreateResourceDialog(props: {
     required = [],
     optional = [],
     table,
+    schema = "public",
     onCreatedAction,
+    createAction,
     onCreateError,
     onOptimisticAction,
     DialogComponent,
@@ -241,6 +248,7 @@ export function CreateResourceDialog(props: {
   const { user } = useUserStore();
   const [values, setValues] = useState<Record<string, FieldValue>>({});
   const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Derived config from DB when explicit config is not supplied
   const [derivedTable, setDerivedTable] = useState<string | undefined>(table);
@@ -430,7 +438,7 @@ export function CreateResourceDialog(props: {
     effectiveColumnSpecs.forEach((spec) => {
       const key = spec.column_name;
       if (!key || spec.hidden) return;
-      const info = getDrizzleColumnInfo(schemaTableForInference, key);
+      const info = getAthenaColumnInfo(schemaTableForInference, key);
       if (info.isNullable === false) {
         inferredRequired.push(key);
       } else {
@@ -529,6 +537,7 @@ export function CreateResourceDialog(props: {
 
   async function handleSubmit(payload?: Record<string, unknown>) {
     try {
+      setSubmitError(null);
       // Merge defaults with user payload/values. Explicit payload overrides defaults.
       const mergedDefaults: Record<string, unknown> = {};
       effectiveColumnSpecs.forEach((spec) => {
@@ -585,11 +594,14 @@ export function CreateResourceDialog(props: {
           }
         }
       });
-      const missing = validDerivedRequired.filter((k) => {
-        const v = resolvedSource[k];
-        return v == null || String(v).trim() === "";
-      });
+      const missing = getMissingRequiredFields(
+        resolvedSource,
+        validDerivedRequired,
+      );
       if (missing.length > 0) {
+        setSubmitError(
+          `Complete ${missing.length === 1 ? "the required field" : "all required fields"} before creating this record.`,
+        );
         notification({
           message: "Please complete required fields",
           success: false,
@@ -597,6 +609,7 @@ export function CreateResourceDialog(props: {
         return;
       }
       if (!derivedTable || String(derivedTable).trim() === "") {
+        setSubmitError("This resource does not have a target Athena table.");
         notification({
           message: "Unknown target table",
           success: false,
@@ -606,44 +619,12 @@ export function CreateResourceDialog(props: {
       setLoading(true);
       // When using DialogComponent, we trust the payload directly and merge with defaultValues
       // because the custom component handles its own validation and data structure
-      const body: Record<string, unknown> = {};
+      let body: Record<string, unknown> = {};
 
       if (DialogComponent && payload) {
-        // For custom DialogComponent, merge payload with defaultValues, then filter
-        // Normalize defaultValues keys (snake_case -> camelCase) to match Drizzle schema
-        const normalizedDefaults: Record<string, unknown> = {};
-        Object.entries(defaultValues || {}).forEach(([k, v]) => {
-          const camelKey = snakeToCamel(k);
-          normalizedDefaults[camelKey] = v;
-        });
-        const mergedPayload = { ...normalizedDefaults, ...payload };
-
-        Object.entries(mergedPayload).forEach(([k, v]) => {
-          // Skip empty strings and undefined, but keep null values
-          if (v === "" || v === undefined) {
-            return;
-          }
-          body[k] = v as unknown;
-        });
+        body = compactCreatePayload({ ...defaultValues, ...payload });
       } else {
-        // For standard form, filter by effectiveColumnSpecs
-        Object.entries(resolvedSource).forEach(([k, v]) => {
-          // Skip empty strings and undefined, but keep null values
-          if (v === "" || v === undefined) {
-            return;
-          }
-          // Keep null values - they're needed for JSONB fields
-          // For JSONB fields, ensure they're proper objects/arrays, not strings
-          if (
-            v !== null && typeof v === "object" && !Array.isArray(v) &&
-            !(v instanceof Date)
-          ) {
-            // Already an object, keep as is
-            body[k] = v;
-          } else {
-            body[k] = v as unknown;
-          }
-        });
+        body = compactCreatePayload(resolvedSource);
       }
 
       // Call optimistic action before API call for immediate UI update
@@ -656,13 +637,16 @@ export function CreateResourceDialog(props: {
         }
       }
 
-      const result = useDataApi
-        ? await insertRowViaDataApi(derivedTable, body, user)
-        : await insertRow(derivedTable, body);
+      const result = createAction
+        ? { ok: true, data: await createAction(body) }
+        : useDataApi
+        ? await insertRowViaDataApi(derivedTable, body, user, schema)
+        : await insertRow(derivedTable, body, { schema });
       if (!result.ok) {
         const errorMsg = ("error" in result && typeof result.error === "string"
           ? result.error
-          : null) || "Could not create – try again";
+          : null) || "Could not create this record. Try again.";
+        setSubmitError(errorMsg);
         console.error("Insert failed:", errorMsg, {
           table: derivedTable,
           body,
@@ -682,19 +666,20 @@ export function CreateResourceDialog(props: {
         });
         return;
       }
-      const j = (result.data || {}) as { data?: unknown };
       // Only show generic notification if onCreatedAction is not provided
       // (onCreatedAction should handle its own notification)
       if (!onCreatedAction) {
         notification({ message: "Created successfully", success: true });
       }
       onCloseAction?.();
-      const row = (j?.data && Array.isArray(j.data) ? j.data[0] : j?.data) ||
-        null;
-      onCreatedAction?.((row as TableRowData | null) ?? null);
-    } catch {
+      onCreatedAction?.(extractCreatedRow(result.data));
+    } catch (error) {
+      const message = error instanceof Error
+        ? error.message
+        : "Could not create this record. Try again.";
+      setSubmitError(message);
       notification({
-        message: "Could not create – try again",
+        message,
         success: false,
       });
     } finally {
@@ -763,6 +748,7 @@ export function CreateResourceDialog(props: {
       onSubmit={(vals: Record<string, unknown>) => void handleSubmit(vals)}
       stripEmpty
       cacheEnabled={cacheEnabled}
+      errorMessage={submitError}
     />
   );
 }
@@ -775,6 +761,7 @@ async function insertRowViaDataApi(
     organization_id?: string | null;
     user_id?: string | null;
   },
+  schema = "public",
 ): Promise<{ ok: boolean; data?: unknown; error?: string }> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -788,6 +775,7 @@ async function insertRowViaDataApi(
   try {
     const response = await insertDataViaAthena({
       table_name: table,
+      schema,
       insert_body: insertBody,
     }, {
       headers,

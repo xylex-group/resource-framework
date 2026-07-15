@@ -1,141 +1,108 @@
-import { APP_CONFIG } from "@/lib/config";
+import type {
+  AthenaStorageFileUploadInput,
+  AthenaStorageFileModule,
+  AthenaStorageFileUploadResult,
+  ManagedFileRecord,
+} from "@xylex-group/athena/browser";
+import {
+  createAthenaStorageClient,
+  type AthenaAdapterConfig,
+  resolveAthenaStorageCatalogId,
+} from "./athena-client-config";
 
-export interface AthenaFileConfig {
-  baseUrl?: string;
-  apiKey?: string;
-  headers?: Record<string, string>;
-  requestId?: string;
-  idempotencyKey?: string;
-}
+export type AthenaFileConfig = AthenaAdapterConfig;
 
-export interface AthenaUploadResponseData {
-  id?: string;
-  url?: string;
-  file_url?: string;
-  storage_key?: string;
-  prefixPath?: string;
-  time?: number;
-  [key: string]: unknown;
-}
-
-export interface AthenaUploadResponse {
-  data?: AthenaUploadResponseData;
-  error?: string;
-  message?: string;
-}
+export type AthenaFileUploadInput = Omit<AthenaStorageFileUploadInput, "s3_id"> & {
+  s3_id?: string;
+};
 
 export interface RefreshFileUrlParams {
-  fileKey: string;
+  fileId?: string;
+  fileKey?: string;
   bucket?: string | null;
+  s3Id?: string;
+  purpose?: "download" | "preview" | "stream";
 }
 
 export interface RefreshFileUrlResponse {
-  success?: boolean;
-  url?: string;
+  success: true;
+  fileId: string;
+  url: string;
   expiresIn?: number;
-  message?: string;
 }
 
-const DEFAULT_ATHENA_BASE_URL = "https://athena-db.com";
-
-function getAthenaBaseUrl(): string {
-  return APP_CONFIG.athena?.db_api_url ?? DEFAULT_ATHENA_BASE_URL;
+function createStorageClient(config?: AthenaFileConfig) {
+  return createAthenaStorageClient(config);
 }
 
-function buildAthenaUrl(path: string, config?: AthenaFileConfig): string {
-  return `${(config?.baseUrl ?? getAthenaBaseUrl()).replace(/\/$/, "")}${path}`;
+function readString(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value : undefined;
 }
 
-function createRequestId(): string {
-  try {
-    return crypto.randomUUID();
-  } catch {
-    return `athena-file-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-  }
+function readNumber(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
-function buildFileHeaders(
-  config: AthenaFileConfig | undefined,
-  options: { isMutation: boolean; includeJsonContentType?: boolean },
-): Record<string, string> {
-  const requestId = config?.requestId ?? createRequestId();
-  const apiKey =
-    config?.apiKey ??
-    process.env.ATHENA_INTEGRATION_API_KEY ??
-    APP_CONFIG.athena?.api_key ??
-    process.env.NEXT_PUBLIC_ATHENA_API_KEY ??
-    process.env.ATHENA_API_KEY;
-  const headers: Record<string, string> = {
-    ...(config?.headers ?? {}),
-    "X-Request-Id": requestId,
-  };
-
-  if (apiKey) {
-    headers.apikey = apiKey;
-    headers["x-api-key"] = apiKey;
+async function resolveManagedFile(
+  params: RefreshFileUrlParams,
+  config?: AthenaFileConfig,
+): Promise<ManagedFileRecord> {
+  if (!params.fileKey) {
+    throw new Error("Refreshing an Athena file URL requires fileId or fileKey.");
   }
 
-  if (options.includeJsonContentType) {
-    headers["Content-Type"] = "application/json";
+  const client = createStorageClient(config);
+  const s3Id = resolveAthenaStorageCatalogId({
+    ...config,
+    s3Id: params.s3Id ?? config?.s3Id,
+  });
+  const page = await client.storage.file.list({
+    s3_id: s3Id,
+    prefix: params.fileKey,
+    bucket: params.bucket ?? undefined,
+    limit: 100,
+  });
+  const file = page.files.find((item) => item.storage_key === params.fileKey);
+
+  if (!file) {
+    throw new Error(`Athena managed file was not found for key ${params.fileKey}.`);
   }
 
-  if (options.isMutation) {
-    const idempotencyKey = config?.idempotencyKey ?? requestId;
-    headers["Idempotency-Key"] = idempotencyKey;
-    headers["X-Idempotency-Key"] = idempotencyKey;
-  }
-
-  return headers;
+  return file;
 }
 
 export async function uploadFileViaAthena(
-  payload: FormData,
+  input: AthenaFileUploadInput,
   config?: AthenaFileConfig,
-): Promise<AthenaUploadResponseData> {
-  const response = await fetch(buildAthenaUrl("/api/upload", config), {
-    method: "POST",
-    headers: buildFileHeaders(config, { isMutation: true }),
-    body: payload,
-  });
+): Promise<AthenaStorageFileUploadResult> {
+  const client = createStorageClient(config);
+  const s3Id = input.s3_id || resolveAthenaStorageCatalogId(config);
 
-  const parsed = await response.json().catch(() => ({})) as AthenaUploadResponse;
-
-  if (!response.ok || parsed?.error) {
-    throw new Error(
-      parsed?.error ||
-        parsed?.message ||
-        `Athena upload failed with status ${response.status}`,
-    );
-  }
-
-  if (!parsed?.data) {
-    throw new Error("Athena upload returned no data");
-  }
-
-  return parsed.data;
+  const upload = client.storage.file.upload as AthenaStorageFileModule["upload"];
+  return upload({ ...input, s3_id: s3Id });
 }
 
 export async function refreshFileUrlViaAthena(
   params: RefreshFileUrlParams,
   config?: AthenaFileConfig,
 ): Promise<RefreshFileUrlResponse> {
-  const response = await fetch(buildAthenaUrl("/api/files/refresh-url", config), {
-    method: "POST",
-    headers: buildFileHeaders(config, {
-      isMutation: true,
-      includeJsonContentType: true,
-    }),
-    body: JSON.stringify(params),
+  const client = createStorageClient(config);
+  const fileId = params.fileId ?? (await resolveManagedFile(params, config)).id;
+  const response = await client.storage.file.proxyUrl(fileId, {
+    purpose: params.purpose ?? "stream",
   });
+  const url = readString(response.url);
 
-  const parsed = await response.json().catch(() => ({})) as RefreshFileUrlResponse;
-
-  if (!response.ok || !parsed?.url) {
-    throw new Error(
-      parsed?.message ||
-        `Athena refresh-url failed with status ${response.status}`,
-    );
+  if (!url) {
+    throw new Error(`Athena returned no proxy URL for managed file ${fileId}.`);
   }
 
-  return parsed;
+  return {
+    success: true,
+    fileId,
+    url,
+    expiresIn:
+      readNumber(response.expires_in) ??
+      readNumber(response.expiresIn),
+  };
 }

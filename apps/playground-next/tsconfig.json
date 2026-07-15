@@ -72,9 +72,6 @@
       ],
       "@/ui/*": [
         "../../apps/demo/src/components/ui/*"
-      ],
-      "@/drizzle/*": [
-        "../../drizzle/*"
       ]
     },
     "plugins": [

@@ -1,5 +1,5 @@
 {
-  "extends": ["../../turbo.json"],
+  "extends": ["//"],
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
     "dev": {

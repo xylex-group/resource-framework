@@ -24,7 +24,6 @@ process.env.ATHENA_INTEGRATION_INSERT_BODY_JSON ??= JSON.stringify({
 process.env.ATHENA_INTEGRATION_UPDATE_BODY_JSON ??= JSON.stringify({
   name: `Athena Integration Updated ${timestamp}`,
 });
-process.env.ATHENA_INTEGRATION_UPLOAD_PROJECT_ID ??= "customers";
 process.env.ATHENA_INTEGRATION_UPLOAD_OBJECT_PATH ??=
   `rsf/${organizationId}/customers/athena-integration`;
 process.env.ATHENA_INTEGRATION_UPLOAD_BUCKET ??= "suitsconnect";
@@ -42,7 +41,7 @@ if (missing.length > 0) {
 console.error("Athena integration target:");
 console.error(`- table: ${process.env.ATHENA_INTEGRATION_TABLE}`);
 console.error(`- id column: ${process.env.ATHENA_INTEGRATION_ID_COLUMN}`);
-console.error(`- upload project: ${process.env.ATHENA_INTEGRATION_UPLOAD_PROJECT_ID}`);
+console.error(`- storage catalog: ${process.env.ATHENA_INTEGRATION_STORAGE_S3_ID ?? "not configured"}`);
 console.error(`- upload bucket: ${process.env.ATHENA_INTEGRATION_UPLOAD_BUCKET}`);
 
 const timeoutMs = Number(process.env.ATHENA_INTEGRATION_TIMEOUT_MS ?? "180000");
@@ -50,7 +49,7 @@ const args = ["vitest", "run", "tests/athena-integration.test.ts"];
 
 function detectFileRoutes() {
   return new Promise((resolve) => {
-    const url = new URL("/api/upload", process.env.ATHENA_INTEGRATION_BASE_URL);
+    const url = new URL("/storage/files/list", process.env.ATHENA_INTEGRATION_BASE_URL);
     const req = httpsRequest(
       url,
       {

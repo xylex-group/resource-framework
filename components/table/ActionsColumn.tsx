@@ -1,5 +1,4 @@
-import { Button } from "@/components/ui/button";
-import { ResponsiveDropdownV2 } from "@/components/ui-responsive/responsive-dropdown-v2";
+import { Button, Dropdown } from "@heroui/react";
 import { Ellipsis } from "lucide-react";
 import type { ResourceRoute, TableRowData } from "../../resource-types";
 import type { ColumnDef, Row } from "@tanstack/react-table";
@@ -13,11 +12,10 @@ type RowActionItem = {
   disabled?: boolean | ((row: TableRowData) => boolean);
 };
 
-type DropdownItem = {
-  type?: "separator";
-  buttonText?: string;
-  onClick?: () => void;
-  variant?: "default" | "destructive";
+type MenuAction = {
+  label: string;
+  onClick: () => void;
+  destructive?: boolean;
   disabled?: boolean;
 };
 
@@ -75,9 +73,9 @@ export const createActionsColumn = (
       const href = buildHref();
       const canOpen = Boolean(href) && !href?.includes("undefined");
 
-      const items: DropdownItem[] = [
+      const actions: MenuAction[] = [
         {
-          buttonText: "Open",
+          label: "Open",
           onClick: () => {
             if (!canOpen) return;
             window.location.href = href as string;
@@ -85,20 +83,16 @@ export const createActionsColumn = (
           disabled: !canOpen,
         },
         ...(Array.isArray(resource?.rowActions)
-          ? (resource.rowActions as RowActionItem[]).map((
-            action: RowActionItem,
-          ) =>
-            action?.type === "separator" ? { type: "separator" as const } : {
-              buttonText: action.label,
+          ? (resource.rowActions as RowActionItem[])
+            .filter((action) => action?.type !== "separator" && action.label)
+            .map((action: RowActionItem) => ({
+              label: action.label ?? "Action",
               onClick: () => action.onClick?.(rowData),
-              variant: (action.destructive ? "destructive" : "default") as
-                | "default"
-                | "destructive",
+              destructive: Boolean(action.destructive),
               disabled: typeof action.disabled === "function"
                 ? Boolean(action.disabled(rowData))
                 : Boolean(action.disabled),
-            }
-          )
+            }))
           : []),
       ];
       return (
@@ -107,18 +101,31 @@ export const createActionsColumn = (
           onClick={(e) => e.stopPropagation()}
           className="flex justify-end"
         >
-          <ResponsiveDropdownV2
-            items={items}
-            triggerButton={
-              <Button
-                size="icon"
-                variant="icon_v3"
-                aria-label="Row actions"
-              >
-                <Ellipsis size={16} strokeWidth={2} aria-hidden="true" />
-              </Button>
-            }
-          />
+          <Dropdown>
+            <Button
+              aria-label="Row actions"
+              isIconOnly
+              size="sm"
+              variant="ghost"
+            >
+              <Ellipsis size={16} strokeWidth={2} aria-hidden="true" />
+            </Button>
+            <Dropdown.Popover className="min-w-36">
+              <Dropdown.Menu>
+                {actions.map((action, index) => (
+                  <Dropdown.Item
+                    isDisabled={action.disabled}
+                    key={`${action.label}-${index}`}
+                    onAction={action.onClick}
+                    textValue={action.label ?? "Action"}
+                    variant={action.destructive ? "danger" : undefined}
+                  >
+                    {action.label}
+                  </Dropdown.Item>
+                ))}
+              </Dropdown.Menu>
+            </Dropdown.Popover>
+          </Dropdown>
         </div>
       );
     },

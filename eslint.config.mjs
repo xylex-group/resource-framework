@@ -11,6 +11,8 @@ export default [
       ".npm-cache/**",
       "agent-tools/**",
       "apps/**/.next/**",
+      "apps/**/.open-next/**",
+      "apps/**/.wrangler/**",
       "**/*.d.ts",
     ],
   },

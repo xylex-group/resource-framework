@@ -4,6 +4,7 @@ import { FileIcon } from "lucide-react";
 import type { LightboxFile } from "../types";
 import { detectFileType } from "../utils/file-type-detector";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface LightboxThumbnailsProps {
   files: LightboxFile[];
@@ -34,9 +35,10 @@ export function LightboxThumbnails({
         const isImage = fileType === "image";
 
         return (
-          <button
+          <Button
             key={file.id}
             onClick={() => onSelect(index)}
+            variant="ghost"
             className={cn(
               "shrink-0 w-16 h-16 rounded-sm border-2 overflow-hidden transition-all",
               "hover:border-brand focus:outline-none focus:border-brand",
@@ -57,7 +59,7 @@ export function LightboxThumbnails({
                 <FileIcon className="w-6 h-6 stroke-icon" />
               </div>
             )}
-          </button>
+          </Button>
         );
       })}
     </div>

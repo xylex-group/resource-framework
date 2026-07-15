@@ -1,9 +1,8 @@
 "use client";
 
-import type { HTMLProps } from "react";
-import { cn } from "@/lib/utils";
+import { Alert, Button } from "@heroui/react";
 
-export interface ErrorBlockProps extends HTMLProps<HTMLDivElement> {
+export interface ErrorBlockProps {
   type?: "error" | "info";
   title?: string;
   content?: string;
@@ -11,6 +10,7 @@ export interface ErrorBlockProps extends HTMLProps<HTMLDivElement> {
   isError?: boolean;
   setIsError?: (value: boolean) => void;
   onRetry?: () => void;
+  className?: string;
 }
 
 export default function ErrorBlock({
@@ -19,30 +19,21 @@ export default function ErrorBlock({
   fullPage,
   onRetry,
   className,
-  ...rest
 }: ErrorBlockProps) {
   return (
-    <div
-      className={cn(
-        "rounded-md border border-red-500 bg-red-950/40 p-6 text-sm text-red-100",
-        fullPage ? "min-h-[200px]" : "w-full",
-        className,
-      )}
-      {...rest}
-    >
-      {title && (
-        <p className="mb-2 text-lg font-semibold text-red-100">{title}</p>
-      )}
-      {content && <p className="text-sm text-red-200">{content}</p>}
-      {onRetry && (
-        <button
-          className="mt-4 text-xs font-semibold uppercase tracking-wide text-red-300 hover:text-white"
-          type="button"
-          onClick={onRetry}
-        >
-          Retry
-        </button>
-      )}
+    <div className={fullPage ? "flex min-h-52 items-center justify-center p-6" : "w-full"}>
+      <Alert className={`w-full rounded-xl ${className ?? ""}`} status="danger">
+        <Alert.Indicator />
+        <Alert.Content>
+          {title ? <Alert.Title>{title}</Alert.Title> : null}
+          {content ? <Alert.Description>{content}</Alert.Description> : null}
+          {onRetry ? (
+            <Button className="mt-3" onPress={onRetry} size="sm" variant="secondary">
+              Retry
+            </Button>
+          ) : null}
+        </Alert.Content>
+      </Alert>
     </div>
   );
 }

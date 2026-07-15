@@ -1,7 +1,6 @@
 import React from "react";
 import {
 	buildColumnsFromRegistry,
-	type LeanColumnSpec,
 } from "../constructors/column-registry";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,7 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { useUpdateData } from "../hooks/use-update-data";
 import { cn } from "@/lib/utils";
 import { useNotification } from "@/hooks/use-notifications";
-import type { DrilldownSummaryItemProps } from "../resource-types";
+import type { DrilldownSummaryItemProps, LeanColumnSpec } from "../resource-types";
 
 interface DrilldownSummaryProps {
 	children: React.ReactNode;

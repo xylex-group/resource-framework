@@ -1,4 +1,4 @@
-# Athena API Gateway Migration TODO
+﻿# Athena API Gateway Migration TODO
 
 Target: migrate all data and file operations in this package to Athena API Gateway using `https://athena-db.com/openapi.yaml`.
 
@@ -27,7 +27,7 @@ Target: migrate all data and file operations in this package to Athena API Gatew
 
 ## Phase 3: File pipeline migration
 
-- [x] Replace `/api/upload` integration with Athena-managed upload flow.
+- [x] Replace the legacy upload integration with Athena-managed storage.
 - [x] Migrate signed URL refresh logic to Athena endpoint contract.
 - [ ] Ensure file metadata write + object write consistency (transaction or saga/compensation).
 - [ ] Add reconciliation job spec for orphan object detection and cleanup.

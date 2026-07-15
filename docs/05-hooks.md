@@ -62,34 +62,6 @@ function MyTable() {
 }
 ```
 
-## useResourceContext
-
-Access resource context from ResourceProvider.
-
-```typescript
-import { useResourceContext } from '@/packages/resource-framework/hooks/useResourceContext';
-
-function MyComponent() {
-  const { resource, resourceName, isLoading } = useResourceContext();
-  
-  return <div>{resourceName}: {resource?.name}</div>;
-}
-```
-
-## useResourceColumns
-
-Get parsed column definitions.
-
-```typescript
-import { useResourceColumns } from '@/packages/resource-framework/hooks/useResourceColumns';
-
-function MyComponent() {
-  const columns = useResourceColumns('customers');
-  
-  return columns.map(col => <Column key={col.column_name} {...col} />);
-}
-```
-
 ## useAdvancedFilters
 
 Manage advanced filter state.
@@ -107,20 +79,6 @@ function FilterPanel() {
       ))}
     </>
   );
-}
-```
-
-## useQueryFilters
-
-Sync filters with URL query params.
-
-```typescript
-import { useQueryFilters } from '@/packages/resource-framework/hooks/useQueryFilters';
-
-function FilterSync() {
-  const { filters, setFilters } = useQueryFilters();
-  
-  return <FilterPanel filters={filters} onChange={setFilters} />;
 }
 ```
 

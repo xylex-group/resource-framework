@@ -25,7 +25,7 @@ const env = {
   selectColumns: process.env.ATHENA_INTEGRATION_SELECT_COLUMNS,
   insertBodyJson: process.env.ATHENA_INTEGRATION_INSERT_BODY_JSON,
   updateBodyJson: process.env.ATHENA_INTEGRATION_UPDATE_BODY_JSON,
-  uploadProjectId: process.env.ATHENA_INTEGRATION_UPLOAD_PROJECT_ID,
+  storageS3Id: process.env.ATHENA_INTEGRATION_STORAGE_S3_ID,
   uploadObjectPath: process.env.ATHENA_INTEGRATION_UPLOAD_OBJECT_PATH,
   uploadBucket: process.env.ATHENA_INTEGRATION_UPLOAD_BUCKET,
 };
@@ -48,7 +48,7 @@ const hasFileEnv = Boolean(
     env.userId &&
     env.companyId &&
     env.organizationId &&
-    env.uploadProjectId &&
+    env.storageS3Id &&
     env.uploadObjectPath &&
     env.uploadBucket,
 );
@@ -159,35 +159,35 @@ describe.skipIf(!hasCrudEnv)("Athena integration: CRUD", () => {
 
 describe.skipIf(!hasFileEnv || !fileRoutesAvailable)("Athena integration: files", () => {
   it("uploads a file and refreshes its signed URL against a real Athena environment", async () => {
-    const formData = new FormData();
-    formData.append(
-      "file",
-      new Blob(["athena integration test"], { type: "text/plain" }),
-      `athena-integration-${Date.now()}.txt`,
-    );
-    formData.append("projectId", env.uploadProjectId!);
-    formData.append("resolvedOrganizationId", env.organizationId!);
-    formData.append("objectPath", env.uploadObjectPath!);
-
-    const uploaded = await uploadFileViaAthena(formData, {
+    const fileName = `athena-integration-${Date.now()}.txt`;
+    const uploaded = await uploadFileViaAthena({
+      s3_id: env.storageS3Id,
+      bucket: env.uploadBucket,
+      files: new Blob(["athena integration test"], { type: "text/plain" }),
+      fileName,
+      organizationId: env.organizationId,
+      prefixPath: env.uploadObjectPath,
+    }, {
       baseUrl: env.baseUrl,
       apiKey: env.apiKey,
+      s3Id: env.storageS3Id,
       headers: buildHeaders(),
       requestId: `itest-file-upload-${Date.now()}`,
       idempotencyKey: `itest-file-upload-${Date.now()}`,
     });
 
-    expect(uploaded.url || uploaded.file_url).toBeTruthy();
-    expect(uploaded.storage_key).toBeTruthy();
+    const uploadedFile = uploaded.files[0];
+    expect(uploadedFile).toBeTruthy();
+    expect(uploadedFile?.storage_key).toBeTruthy();
 
     const refreshed = await refreshFileUrlViaAthena(
       {
-        fileKey: String(uploaded.storage_key),
-        bucket: env.uploadBucket!,
+        fileId: uploadedFile!.file.id,
       },
       {
         baseUrl: env.baseUrl,
         apiKey: env.apiKey,
+        s3Id: env.storageS3Id,
         headers: buildHeaders(),
         requestId: `itest-file-refresh-${Date.now()}`,
         idempotencyKey: `itest-file-refresh-${Date.now()}`,

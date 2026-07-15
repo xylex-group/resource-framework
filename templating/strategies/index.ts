@@ -4,4 +4,3 @@ export {
   ResourceStrategy,
   ResourceIdShorthandStrategy,
 } from "./resource-strategy";
-export { ColumnStrategy } from "./column-strategy";

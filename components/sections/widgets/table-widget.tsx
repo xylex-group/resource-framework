@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from "react";
 
-import { LeanTable } from "@/components/ui-responsive/lean-table";
-import type { LeanTableTitleSize } from "@/components/ui-responsive/lean-table";
+import {
+  AthenaResourceTable,
+  type AthenaResourceTableTitleSize,
+} from "../../table/athena-resource-table";
 import { useUserStore } from "@/lib/stores";
 import { cn } from "@/lib/utils";
 import { buildTableColumns } from "../../../utils/column-builder";
@@ -18,7 +20,7 @@ import type {
   TableRowData,
   TableWidgetProps,
 } from "../../../resource-types";
-import ErrorBlock from "@/components/ui/error";
+import { ResourceError } from "../../ui/resource-error";
 import {
   buildWidgetConditions,
   interpolateWidgetValue,
@@ -26,7 +28,7 @@ import {
 import { getValueByKeyCase, getValueByPathCase } from "../../../utils/key-case";
 import { CreateResourceDialog } from "../../create-resource-dialog";
 import { prettyString } from "@/lib/format/string";
-import { Button } from "@/components/ui/button";
+import { Button } from "@heroui/react";
 import { Plus } from "lucide-react";
 
 function TableSectionWidget({
@@ -123,13 +125,10 @@ function TableSectionWidget({
 
   if (hasDataResponse && apiResult.isError) {
     return (
-      <ErrorBlock
+      <ResourceError
         fullPage={false}
-        type="error"
         title={`Could not load ${props.resourceName}`}
         content={apiResult.error ?? "Failed to load table data"}
-        isError={true}
-        setIsError={() => {}}
       />
     );
   }
@@ -188,13 +187,15 @@ function TableSectionWidget({
 
   const addIconButton = showCreateButton ? (
     <Button
-      variant="icon_v2"
-      size="icon_v2"
+      variant="ghost"
+      size="sm"
+      isIconOnly
       className="ml-2"
-      icon={<Plus className="w-4 h-4 stroke-icon" aria-hidden="true" />}
       aria-label={`New ${prettyString(resource?.page_label || props.resourceName)}`}
-      onClick={() => setCreateOpen(true)}
-    />
+      onPress={() => setCreateOpen(true)}
+    >
+      <Plus className="w-4 h-4 stroke-icon" aria-hidden="true" />
+    </Button>
   ) : undefined;
 
   if (!isTableWidget) {
@@ -203,10 +204,11 @@ function TableSectionWidget({
 
   return (
     <div>
-      <LeanTable
+      <AthenaResourceTable
         data={data}
+        isLoading={"isLoading" in apiResult && Boolean(apiResult.isLoading)}
         title={props.title}
-        titleSize={props.titleSize as LeanTableTitleSize | undefined}
+        titleSize={props.titleSize as AthenaResourceTableTitleSize | undefined}
         columns={filteredColumns}
         hideTopControls={hideTopControls}
         rowsPerPage={props.limit ?? 25}
@@ -242,5 +244,3 @@ function TableSectionWidget({
 }
 
 registerSectionWidget("table", TableSectionWidget);
-
-export { TableSectionWidget };

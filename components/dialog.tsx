@@ -1,6 +1,15 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  ComboBox,
+  ComboBoxContent,
+  ComboBoxInput,
+  ComboBoxItem,
+} from "@/components/ui/combo-box";
 import {
   Dialog,
   DialogContent,
@@ -9,29 +18,93 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  ComboBox,
-  ComboBoxContent,
-  ComboBoxInput,
-  ComboBoxItem,
-} from "@/components/ui/combo-box";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import { useUserStore } from "@/lib/stores";
-import type { FieldEditorSpec, FieldSpec, Primitive } from "../resource-types";
 import { fetchDataViaAthena } from "../adapters/athena-gateway";
+import type { FieldEditorSpec, FieldSpec, Primitive } from "../resource-types";
 
 export type { FieldEditorSpec, FieldSpec, Primitive };
 
-/**
- * Dialog component that renders form fields based on a specification
- * @param props - Component props including spec, initial values, and callbacks
- * @returns React component
- */
+type Option = { label: string; value: string | number | boolean };
+type FieldType = "text" | "number" | "boolean" | "select" | "date" | "textarea";
+
+type NormalizedField = {
+  key: string;
+  label: string;
+  type: FieldType;
+  dataType: string;
+  options?: Option[];
+  dataSource?: FieldEditorSpec["data_source"];
+  dateInputMode?: "date" | "datetime" | "unixtime";
+};
+
+function normalizeFields(spec: FieldSpec[]): NormalizedField[] {
+  return spec.flatMap((item) => {
+    const field = typeof item === "string"
+      ? { column_name: item }
+      : item;
+    const key = String(field.column_name || "").trim();
+    if (!key || field.hidden) return [];
+
+    const dataType = String(field.data_type || "").toLowerCase();
+    const editor = field.editor;
+    const type: FieldType = editor?.type ??
+      (dataType.includes("bool")
+        ? "boolean"
+        : dataType.includes("num") || dataType.includes("int") ||
+            dataType.includes("decimal") || dataType.includes("currency")
+        ? "number"
+        : dataType.includes("date") || dataType.includes("time")
+        ? "date"
+        : editor?.options
+        ? "select"
+        : "text");
+    const dateInputMode = dataType.includes("unixtime")
+      ? "unixtime"
+      : dataType.includes("timestamp") || dataType.includes("datetime")
+      ? "datetime"
+      : dataType.includes("date")
+      ? "date"
+      : undefined;
+
+    return [{
+      key,
+      label: String(field.header_label || field.header || key)
+        .replace(/_/g, " ")
+        .trim(),
+      type,
+      dataType,
+      options: Array.isArray(editor?.options) ? editor.options : undefined,
+      dataSource: editor?.data_source,
+      dateInputMode,
+    }];
+  });
+}
+
+function initializeValues(
+  fields: NormalizedField[],
+  initial: Partial<Record<string, Primitive>>,
+): Record<string, Primitive> {
+  return Object.fromEntries(
+    fields.map((field) => [field.key, initial[field.key] ?? ""]),
+  );
+}
+
+function pickValue(row: Record<string, unknown>, key: string): unknown {
+  if (key in row) return row[key];
+  const camelKey = key.replace(
+    /_([a-z])/g,
+    (_, letter: string) => letter.toUpperCase(),
+  );
+  return row[camelKey];
+}
+
 export function SpecDrivenDialog(props: {
   open: boolean;
   onCloseAction: () => void;
   title: string;
-  spec: Array<FieldSpec>;
+  spec: FieldSpec[];
   requiredKeys?: string[];
   initial?: Partial<Record<string, Primitive>>;
   pending?: boolean;
@@ -40,6 +113,7 @@ export function SpecDrivenDialog(props: {
   onSubmit(values: Record<string, unknown>): void;
   stripEmpty?: boolean;
   cacheEnabled?: boolean;
+  errorMessage?: string | null;
 }) {
   const {
     open,
@@ -53,411 +127,257 @@ export function SpecDrivenDialog(props: {
     cancelLabel = "Cancel",
     onSubmit,
     stripEmpty = true,
-    cacheEnabled = false,
+    errorMessage = null,
   } = props;
-
   const { user } = useUserStore();
+  const fields = useMemo(() => normalizeFields(spec), [spec]);
+  const [values, setValues] = useState<Record<string, Primitive>>(() =>
+    initializeValues(fields, initial)
+  );
+  const [dataSourceOptions, setDataSourceOptions] = useState<Map<string, Option[]>>(
+    new Map(),
+  );
+  const [loadingDataSources, setLoadingDataSources] = useState(false);
 
-  const [values, setValues] = useState<Record<string, Primitive>>(() => {
-    const init: Record<string, Primitive> = {};
-    const mapped = Array.isArray(spec) ? spec : [];
-    mapped.forEach((s) => {
-      const key = typeof s === "string" ? s : String(s?.column_name || "");
-      if (!key) return;
-      init[key] = initial[key] ?? "";
-    });
-    return init;
-  });
-  const [dataSourceOptions, setDataSourceOptions] = useState<
-    Map<string, Array<{ label: string; value: string | number | boolean }>>
-  >(new Map());
-
-  const [isOpen, setIsOpen] = useState(open);
-
-  if (open !== isOpen) {
-    setIsOpen(open);
-    if (open) {
-      const init: Record<string, Primitive> = {};
-      const mapped = Array.isArray(spec) ? spec : [];
-      mapped.forEach((s) => {
-        const key = typeof s === "string" ? s : String(s?.column_name || "");
-        if (!key) return;
-        init[key] = initial[key] ?? "";
-      });
-      setValues(init);
-    }
-  }
-
-  const fields = useMemo(() => {
-    const normalize = (s: FieldSpec) => {
-      if (typeof s === "string") {
-        return {
-          key: s,
-          label: String(s),
-          hidden: false,
-          data_type: "",
-          editor: undefined as FieldEditorSpec | undefined,
-        };
-      }
-      const key = String(s?.column_name || "").trim();
-      const label = String(s?.header_label || s?.header || key).trim();
-      return {
-        key,
-        label: label.replace(/_/g, " "),
-        hidden: Boolean(s?.hidden),
-        data_type: String(s?.data_type || ""),
-        editor: s?.editor,
-      };
-    };
-    const detectType = (
-      dataType: string,
-      editor?: FieldEditorSpec,
-    ): "text" | "number" | "boolean" | "select" | "date" => {
-      if (editor?.type) return editor.type;
-      const dt = String(dataType || "").toLowerCase();
-      if (dt.includes("bool")) return "boolean";
-      if (
-        dt.includes("num") ||
-        dt.includes("int") ||
-        dt.includes("decimal") ||
-        dt.includes("currency")
-      ) {
-        return "number";
-      }
-      if (dt.includes("date") || dt.includes("time")) {
-        return "date";
-      }
-      return editor?.options ? "select" : "text";
-    };
-    const detectDateMode = (dataType: string) => {
-      const dt = String(dataType || "").toLowerCase();
-      if (dt.includes("unixtime")) return "unixtime";
-      if (dt.includes("timestamp") || dt.includes("datetime")) {
-        return "datetime";
-      }
-      if (dt.includes("date")) return "date";
-      return undefined;
-    };
-
-    return (Array.isArray(spec) ? spec : [])
-      .map(normalize)
-      .filter((f) => f.key && !f.hidden)
-      .map((f) => {
-        const type = detectType(f.data_type, f.editor);
-        const options = type === "select" && Array.isArray(f.editor?.options)
-          ? f.editor?.options
-          : undefined;
-        return {
-          ...f,
-          type,
-          options,
-          data_source: f.editor?.data_source,
-          dateInputMode: detectDateMode(f.data_type),
-        };
-      });
-  }, [spec]);
-
-  // Fetch options for data_source fields
   useEffect(() => {
-    if (!open || !user?.user_id || !user?.organization_id) return;
+    if (open) setValues(initializeValues(fields, initial));
+  }, [open, fields, initial]);
 
-    const fetchDataSources = async () => {
-      const optionMap = new Map<
-        string,
-        Array<{ label: string; value: string | number | boolean }>
-      >();
-      const promises: Promise<void>[] = [];
+  useEffect(() => {
+    if (!open) return;
+    const sourceFields = fields.filter((field) => {
+      const source = field.dataSource;
+      if (!source) return false;
+      return typeof source !== "string" ||
+        (source.includes(".") && !source.startsWith("user.") &&
+          source !== "uuid_v4_gen");
+    });
+    if (sourceFields.length === 0) {
+      setDataSourceOptions(new Map());
+      return;
+    }
 
-      fields.forEach((f) => {
-        if (!f.data_source) return;
-        if (typeof f.data_source === "string") {
-          if (f.data_source.startsWith("user.")) return;
-          if (f.data_source === "uuid_v4_gen") return;
-          if (!f.data_source.includes(".")) return;
-        }
-
-        promises.push(
-          (async () => {
-            try {
-              const ds = typeof f.data_source === "string"
-                ? {
-                  table: f.data_source.split(".")[0],
-                  value_column: undefined,
-                  label_column: undefined,
-                }
-                : f.data_source;
-              const table = ds?.table;
-              if (!table) return;
-              const conditions: Array<
-                { eq_column: string; eq_value: unknown }
-              > = [];
-              if (user?.organization_id) {
-                conditions.push({
-                  eq_column: "organization_id",
-                  eq_value: user.organization_id,
-                });
-              }
-
-              const result = await fetchDataViaAthena({
-                table_name: table,
-                conditions: conditions.map((c) => ({
-                  eq_column: String(c.eq_column),
-                  eq_value: c.eq_value as string | number | boolean | null,
-                })),
-                limit: 100,
-              });
-
-              if (result.error) return;
-              const rows = Array.isArray(result.data) ? result.data : [];
-              const valueCol = ds?.value_column || `${table}_id` || "id";
-              const labelCol = ds?.label_column || "name";
-
-              const pick = (row: Record<string, unknown>, key: string) => {
-                if (key in row) return row[key];
-                const camel = key.replace(
-                  /_([a-z])/g,
-                  (_, letter: string) => letter.toUpperCase(),
-                );
-                if (camel in row) return row[camel];
-                return undefined;
-              };
-
-              optionMap.set(
-                f.key,
-                rows.map((r) => {
-                  const row = r as Record<string, unknown>;
-                  return {
-                    label: String(
-                      pick(row, labelCol) ?? pick(row, valueCol) ?? "",
-                    ),
-                    value: pick(row, valueCol) as string | number | boolean,
-                  };
-                }),
-              );
-            } catch (e) {
-              console.error("Failed to fetch data_source options", e);
-            }
-          })(),
-        );
+    let cancelled = false;
+    setLoadingDataSources(true);
+    void Promise.all(sourceFields.map(async (field) => {
+      const source = typeof field.dataSource === "string"
+        ? { table: field.dataSource.split(".")[0] }
+        : field.dataSource;
+      if (!source?.table) return [field.key, [] as Option[]] as const;
+      const result = await fetchDataViaAthena<Record<string, unknown>[]>({
+        table_name: source.table,
+        conditions: user?.organization_id
+          ? [{ eq_column: "organization_id", eq_value: user.organization_id }]
+          : [],
+        limit: 100,
       });
+      if (result.error) throw new Error(result.error);
+      const valueColumn = source.value_column || `${source.table}_id`;
+      const labelColumn = source.label_column || "name";
+      const options = (result.data || []).flatMap((row) => {
+        const value = pickValue(row, valueColumn);
+        if (typeof value !== "string" && typeof value !== "number" &&
+          typeof value !== "boolean") return [];
+        return [{
+          value,
+          label: String(pickValue(row, labelColumn) ?? value),
+        }];
+      });
+      return [field.key, options] as const;
+    })).then((entries) => {
+      if (!cancelled) setDataSourceOptions(new Map(entries));
+    }).catch(() => {
+      if (!cancelled) setDataSourceOptions(new Map());
+    }).finally(() => {
+      if (!cancelled) setLoadingDataSources(false);
+    });
 
-      await Promise.all(promises);
-      setDataSourceOptions(optionMap);
+    return () => {
+      cancelled = true;
     };
+  }, [open, fields, user?.organization_id]);
 
-    fetchDataSources();
-  }, [open, fields, user?.user_id, user?.company_id, cacheEnabled]);
+  const requiredSet = useMemo(() => new Set(requiredKeys), [requiredKeys]);
+  const missingRequired = requiredKeys.some((key) => {
+    const value = values[key];
+    return value == null || (typeof value === "string" && value.trim() === "");
+  });
 
-  function handleSubmit() {
-    const out: Record<string, unknown> = {};
-    Object.entries(values).forEach(([k, v]) => {
-      if (!stripEmpty) {
-        out[k] = v as unknown;
-        return;
-      }
-      if (v === "" || v == null) return;
-      out[k] = v as unknown;
-    });
-    onSubmit(out);
-  }
-
-  const hasMissingRequired = useMemo(() => {
-    const keys = Array.isArray(requiredKeys) ? requiredKeys : [];
-    if (keys.length === 0) return false;
-    return keys.some((key) => {
-      const v = values[key];
-      return v == null || String(v).trim() === "";
-    });
-  }, [requiredKeys, values]);
+  const submit = () => {
+    const entries = Object.entries(values).filter(([, value]) =>
+      !stripEmpty || (value !== "" && value != null)
+    );
+    onSubmit(Object.fromEntries(entries));
+  };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(isOpen) => !isOpen && onCloseAction()}
-    >
-      <DialogContent className="max-w-155">
+    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onCloseAction()}>
+      <DialogContent className="max-h-[88vh] max-w-3xl overflow-y-auto p-6 sm:p-8">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        <div
-          id="spec-driven-dialog-fields"
-          className="space-y-4"
-        >
-          {fields.map((col) => (
-            <label key={col.key} className="flex flex-col gap-1">
-              <span className="text-sm font-medium capitalize text-primary">
-                {col.label}
-              </span>
-              {col.type === "boolean"
-                ? (
-                  <label className="inline-flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      className="rounded-sm"
-                      checked={Boolean(values[col.key])}
-                      onChange={(e) =>
-                        setValues((s) => ({
-                          ...s,
-                          [col.key]: e.target.checked,
-                        }))}
-                    />
-                    <span className="text-xs text-primary">
-                      {values[col.key] ? "Yes" : "No"}
+
+        {errorMessage && (
+          <div
+            role="alert"
+            className="flex items-start gap-2 rounded-lg border border-danger-200 bg-danger-50 p-3 text-sm text-danger-700 dark:border-danger-800 dark:bg-danger-950 dark:text-danger-200"
+          >
+            <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
+          {fields.map((field) => {
+            const required = requiredSet.has(field.key);
+            const loading = pending || (Boolean(field.dataSource) && loadingDataSources);
+            const wide = field.type === "textarea" || field.key === "notes";
+            const inputType = field.type === "number"
+              ? "number"
+              : field.key.includes("email")
+              ? "email"
+              : field.key.includes("phone") || field.key.includes("contact_number")
+              ? "tel"
+              : "text";
+            const autoComplete = field.key === "first_name"
+              ? "given-name"
+              : field.key === "last_name"
+              ? "family-name"
+              : field.key.includes("email")
+              ? "email"
+              : field.key.includes("phone") || field.key.includes("contact_number")
+              ? "tel"
+              : "off";
+
+            return (
+              <label
+                key={field.key}
+                className={`flex min-w-0 flex-col gap-2 ${wide ? "md:col-span-2" : ""}`}
+              >
+                <span className="text-sm font-medium capitalize text-foreground">
+                  {field.label}
+                  {required && <span className="ml-1 text-danger-600">*</span>}
+                </span>
+                {loading
+                  ? <Skeleton className="h-10 w-full rounded-lg" />
+                  : field.type === "boolean"
+                  ? (
+                    <span className="flex h-10 items-center gap-3 rounded-lg border border-input bg-background px-3">
+                      <Checkbox
+                        id={field.key}
+                        name={field.key}
+                        aria-label={field.label}
+                        checked={Boolean(values[field.key])}
+                        onCheckedChange={(checked) =>
+                          setValues((current) => ({ ...current, [field.key]: checked }))}
+                      />
+                      <span className="text-sm text-foreground">
+                        {values[field.key] ? "Yes" : "No"}
+                      </span>
                     </span>
-                  </label>
-                )
-                : col.type === "select" && col.data_source
-                ? (
-                  <div className="w-full">
+                  )
+                  : field.type === "select"
+                  ? (
                     <ComboBox
-                      selectedKey={values[col.key]
-                        ? String(values[col.key])
-                        : null}
-                      shouldCloseOnBlur={false}
-                      inputValue={String(values[col.key])}
-                      closeOnReselect
-                      allowsEmptyCollection={false}
-                      keepAllItemsVisible={false}
+                      ariaLabel={field.label}
+                      selectedKey={values[field.key] == null || values[field.key] === ""
+                        ? null
+                        : String(values[field.key])}
                       onSelectionChange={(key) =>
-                        setValues((s) => ({
-                          ...s,
-                          [col.key]: key == null ? "" : String(key),
-                        }))}
-                      onInputChange={(key) =>
-                        setValues((s) => ({
-                          ...s,
-                          [col.key]: key == null ? "" : String(key),
-                        }))}
-                    >
-                      <ComboBoxInput placeholder="Select..." />
-                      <ComboBoxContent
-                        className="max-w-none whitespace-nowrap pointer-events-auto"
-                        popover={{
-                          style: {
-                            width: "auto",
-                            minWidth: "var(--trigger-width)",
-                            maxWidth: "min(calc(100vw - 2rem), 500px)",
-                          },
-                        }}
-                      >
-                        {(dataSourceOptions.get(col.key) || []).map((opt) => (
-                          <ComboBoxItem
-                            key={String(opt.value)}
-                            id={String(opt.value)}
-                            textValue={opt.label}
-                          >
-                            {opt.label}
-                          </ComboBoxItem>
-                        ))}
-                      </ComboBoxContent>
-                    </ComboBox>
-                  </div>
-                )
-                : col.type === "select" && Array.isArray(col.options)
-                ? (
-                  <div className="w-full">
-                    <ComboBox
-                      selectedKey={values[col.key]
-                        ? String(values[col.key])
-                        : null}
-                      shouldCloseOnBlur={false}
-                      onSelectionChange={(key) =>
-                        setValues((s) => ({
-                          ...s,
-                          [col.key]: key == null ? "" : String(key),
+                        setValues((current) => ({
+                          ...current,
+                          [field.key]: key == null ? "" : String(key),
                         }))}
                       onInputChange={() => {}}
                     >
-                      <ComboBoxInput placeholder="Select..." />
-                      <ComboBoxContent
-                        className="max-w-none whitespace-nowrap"
-                        popover={{
-                          style: {
-                            width: "auto",
-                            minWidth: "var(--trigger-width)",
-                            maxWidth: "min(calc(100vw - 2rem), 500px)",
-                          },
-                        }}
-                      >
-                        {(col.options || []).map((opt) => (
-                          <ComboBoxItem
-                            key={String(opt.value)}
-                            id={String(opt.value)}
-                            textValue={String(opt.label ?? opt.value)}
-                          >
-                            {String(opt.label ?? opt.value)}
-                          </ComboBoxItem>
-                        ))}
+                      <ComboBoxInput
+                        ariaLabel={field.label}
+                        className="rounded-lg border border-input bg-background"
+                        name={field.key}
+                      />
+                      <ComboBoxContent className="max-w-none whitespace-nowrap">
+                        {(field.dataSource
+                          ? dataSourceOptions.get(field.key) || []
+                          : field.options || []).map((option) => (
+                            <ComboBoxItem
+                              key={String(option.value)}
+                              id={String(option.value)}
+                              textValue={option.label}
+                            >
+                              {option.label}
+                            </ComboBoxItem>
+                          ))}
                       </ComboBoxContent>
                     </ComboBox>
-                  </div>
-                )
-                : col.dateInputMode
-                ? (
-                  <Input
-                    className="h-8"
-                    type={col.dateInputMode === "datetime"
-                      ? "datetime-local"
-                      : col.dateInputMode === "unixtime"
-                      ? "number"
-                      : "date"}
-                    value={values[col.key] == null
-                      ? ""
-                      : String(values[col.key] ?? "")}
-                    onChange={(e) => {
-                      const nextValue = e.target.value;
-                      const parsed = col.dateInputMode === "unixtime" &&
-                          nextValue !== ""
-                        ? Number(nextValue)
-                        : nextValue;
-                      setValues((s) => ({
-                        ...s,
-                        [col.key]: col.dateInputMode === "unixtime" &&
-                            nextValue === ""
-                          ? ""
-                          : parsed,
-                      }));
-                    }}
-                  />
-                )
-                : (
-                  <div className="flex items-center gap-2">
-                    <Input
-                      className="h-8"
-                      type={col.type === "number" ? "number" : "text"}
-                      value={values[col.key] == null
-                        ? ""
-                        : String(values[col.key] ?? "")}
-                      onChange={(e) =>
-                        setValues((s) => ({ ...s, [col.key]: e.target.value }))}
+                  )
+                  : field.type === "textarea"
+                  ? (
+                    <Textarea
+                      id={field.key}
+                      name={field.key}
+                      autoComplete={autoComplete}
+                      className="min-h-28 resize-y rounded-lg border border-input bg-background"
+                      value={values[field.key] == null ? "" : String(values[field.key])}
+                      onChange={(event) =>
+                        setValues((current) => ({
+                          ...current,
+                          [field.key]: event.target.value,
+                        }))}
+                      aria-required={required}
                     />
-                  </div>
-                )}
-            </label>
-          ))}
+                  )
+                  : (
+                    <Input
+                      id={field.key}
+                      name={field.key}
+                      autoComplete={autoComplete}
+                      className="h-10 rounded-lg border border-input bg-background"
+                      type={field.dateInputMode === "datetime"
+                        ? "datetime-local"
+                        : field.dateInputMode === "date"
+                        ? "date"
+                        : field.dateInputMode === "unixtime"
+                        ? "number"
+                        : inputType}
+                      value={values[field.key] == null ? "" : String(values[field.key])}
+                      onChange={(event) => {
+                        const value = field.type === "number" && event.target.value !== ""
+                          ? Number(event.target.value)
+                          : event.target.value;
+                        setValues((current) => ({ ...current, [field.key]: value }));
+                      }}
+                      aria-required={required}
+                    />
+                  )}
+              </label>
+            );
+          })}
         </div>
+
         <DialogFooter>
-          <div
-            id="spec-driven-dialog-footer"
-            className="flex justify-end gap-2 w-full "
-          >
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onCloseAction}
-              disabled={pending}
-            >
-              {cancelLabel}
-            </Button>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => handleSubmit()}
-              disabled={pending || hasMissingRequired}
-              className="rounded-sm"
-            >
-              {submitLabel}
-            </Button>
+          <div className="flex w-full justify-end gap-2">
+            {pending
+              ? (
+                <>
+                  <Skeleton className="h-9 w-20 rounded-lg" />
+                  <Skeleton className="h-9 w-28 rounded-lg" />
+                </>
+              )
+              : (
+                <>
+                  <Button variant="outline" size="sm" onClick={onCloseAction} className="rounded-lg">
+                    {cancelLabel}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={submit}
+                    disabled={missingRequired || fields.length === 0 || loadingDataSources}
+                    className="rounded-lg"
+                  >
+                    {submitLabel}
+                  </Button>
+                </>
+              )}
           </div>
         </DialogFooter>
       </DialogContent>

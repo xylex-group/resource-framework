@@ -320,7 +320,7 @@ function ChartSectionWidget({ spec, entity }: SectionWidgetRendererProps) {
                 }
               >
                 <SelectTrigger className="w-35">
-                  <SelectValue placeholder="Select period" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {periodOptions.map((option) => (
@@ -367,7 +367,7 @@ function ChartSectionWidget({ spec, entity }: SectionWidgetRendererProps) {
               }
             >
               <SelectTrigger className="w-35">
-                <SelectValue placeholder="Select period" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {periodOptions.map((option) => (
@@ -412,5 +412,3 @@ function ChartSectionWidget({ spec, entity }: SectionWidgetRendererProps) {
 }
 
 registerSectionWidget("chart", ChartSectionWidget);
-
-export { ChartSectionWidget };

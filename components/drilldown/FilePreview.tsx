@@ -35,7 +35,7 @@ function getExtAndMime(file: FilePreviewItem) {
 /**
  * Returns true if the file can be shown as an image or video preview (not just an icon).
  */
-export function isPreviewableFile(file: FilePreviewItem): boolean {
+function isPreviewableFile(file: FilePreviewItem): boolean {
   if (!file.url) return false;
   const { ext, mime } = getExtAndMime(file);
   if (IMAGE_EXTS.includes(ext) || mime.startsWith("image/")) return true;

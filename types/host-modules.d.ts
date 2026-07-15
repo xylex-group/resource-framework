@@ -6,6 +6,7 @@ declare module "next/navigation" {
   export function useSearchParams(): URLSearchParams;
   export function usePathname(): string;
   export function useParams<T = Record<string, string>>(): T;
+  export function notFound(): never;
 }
 
 declare module "next/link" {
@@ -40,42 +41,6 @@ declare module "next-themes" {
   };
 }
 
-declare module "@base-ui/react/button" {
-  export const Button: any;
-}
-
-declare module "@base-ui/react/input" {
-  export const Input: any;
-}
-
-declare module "@base-ui/react/select" {
-  export const Select: any;
-}
-
-declare module "@base-ui/react/separator" {
-  export const Separator: any;
-}
-
-declare module "@base-ui/react/scroll-area" {
-  export const ScrollArea: any;
-}
-
-declare module "@base-ui/react/tabs" {
-  export const Tabs: any;
-}
-
-declare module "@base-ui/react/tooltip" {
-  export const Tooltip: any;
-}
-
-declare module "@base-ui/react/merge-props" {
-  export function mergeProps<T = unknown>(...args: unknown[]): T;
-}
-
-declare module "@base-ui/react/use-render" {
-  export const useRender: any;
-}
-
 declare module "@bprogress/core" {
   export const BProgress: {
     start: () => void;
@@ -98,9 +63,4 @@ declare module "motion/react" {
 declare module "class-variance-authority" {
   export function cva(base?: string, config?: unknown): (...args: unknown[]) => string;
   export type VariantProps<T> = Record<string, unknown>;
-}
-
-declare module "@/drizzle/schema" {
-  const schema: Record<string, unknown>;
-  export { schema };
 }

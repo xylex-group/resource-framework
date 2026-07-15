@@ -111,7 +111,7 @@ Fix pattern:
 ### Upload endpoint not found
 
 Checks:
-- confirm environment exposes `/api/upload`
+- confirm `NEXT_PUBLIC_ATHENA_STORAGE_S3_ID` points to an accessible managed storage catalog
 - validate gateway base URL and route support
 
 Fix pattern:

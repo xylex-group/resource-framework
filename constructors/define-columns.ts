@@ -6,7 +6,7 @@ import type {
   ResourceFieldSpec,
 } from "../resource-types";
 import { defaultEditorByColumn } from "./column-registry";
-import { getDrizzleColumnInfo } from "../utils/drizzle-editor";
+import { getAthenaColumnInfo } from "../athena/model-metadata";
 
 /**
  * Builds column specifications compatible with ResourceRoute.columns from high-level field specs.
@@ -35,12 +35,10 @@ export function defineColumns(specs: ResourceFieldSpec[]): BuiltColumnSpec[] {
 
   return deduped.map((s) => {
     const fallbackEditor = defaultEditorByColumn[s.column_name];
-    const editorMeta = (s as { editor?: { data_source?: DataSourceRef } }).editor;
+    const editorMeta = s.editor;
     const editableMeta = (s as { editable?: { data_source?: DataSourceRef } })
       .editable;
-    const candidateType = typeof s.field_type !== "undefined"
-      ? s.field_type
-      : fallbackEditor?.type;
+    const candidateType = s.field_type ?? editorMeta?.type ?? fallbackEditor?.type;
 
     let resolvedEditorType: "text" | "boolean" | "select" | "textarea" | undefined;
     switch (candidateType) {
@@ -66,6 +64,14 @@ export function defineColumns(specs: ResourceFieldSpec[]): BuiltColumnSpec[] {
       editableMeta?.data_source ??
       s.data_source;
 
+    const editor = resolvedEditorType
+      ? {
+        type: resolvedEditorType,
+        options: editorMeta?.options ?? s.options,
+        data_source: resolvedDataSource,
+      }
+      : undefined;
+
     const editable = resolvedEditorType
       ? {
         type: resolvedEditorType,
@@ -77,12 +83,13 @@ export function defineColumns(specs: ResourceFieldSpec[]): BuiltColumnSpec[] {
       }
       : undefined;
 
-    const info = getDrizzleColumnInfo(undefined, s.column_name);
+    const info = getAthenaColumnInfo(undefined, s.column_name);
     return {
       column_name: s.column_name,
       header: s.header,
       header_label: s.header_label,
       data_type: info.dataType ?? s.data_type,
+      editor,
       use: s.use,
       order: s.order,
       href: s.href,

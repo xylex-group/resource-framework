@@ -19,7 +19,7 @@ The resource framework uses [Sonner](https://sonner.emilkowal.ski/) for toast no
 ## Basic Usage
 
 ```typescript
-import { useNotification } from "@/packages/resource-framework/hooks/useNotification";
+import { useNotification } from "@/hooks/use-notifications";
 
 function MyComponent() {
   const { notification } = useNotification();
@@ -301,7 +301,7 @@ setInterval(() => {
 Combine notifications with error boundaries and try-catch blocks:
 
 ```typescript
-import { useNotification } from "@/packages/resource-framework/hooks/useNotification";
+import { useNotification } from "@/hooks/use-notifications";
 
 function DataForm() {
   const { notification } = useNotification();

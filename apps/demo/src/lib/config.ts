@@ -7,6 +7,7 @@ export const APP_CONFIG = {
     db_api_url: "https://athena-db.com",
     standard_client: "railway_direct",
     api_key: process.env.NEXT_PUBLIC_ATHENA_API_KEY ?? "",
+    storage_s3_id: process.env.NEXT_PUBLIC_ATHENA_STORAGE_S3_ID ?? "",
   },
 };
 

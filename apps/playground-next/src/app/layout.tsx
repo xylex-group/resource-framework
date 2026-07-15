@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
+import "@xylex-group/athena-auth-ui/styles";
 import "./globals.css";
 
 const sans = Space_Grotesk({

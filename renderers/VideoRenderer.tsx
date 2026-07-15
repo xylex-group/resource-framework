@@ -1,17 +1,6 @@
 "use client";
 
-import {
-	VideoPlayer,
-	VideoPlayerContent,
-	VideoPlayerControlBar,
-	VideoPlayerMuteButton,
-	VideoPlayerPlayButton,
-	VideoPlayerSeekBackwardButton,
-	VideoPlayerSeekForwardButton,
-	VideoPlayerTimeDisplay,
-	VideoPlayerTimeRange,
-	VideoPlayerVolumeRange,
-} from "@/components/ui/video-player";
+import { Card } from "@xylex-group/athena-auth-ui/primitives";
 
 /**
  * Video player component with controls
@@ -27,11 +16,11 @@ export function VideoRenderer({
 }) {
 	return (
 		<div
-			className="flex w-full items-center justify-center bg-black"
+			className="flex w-full items-center justify-center"
 			style={maxHeight ? { maxHeight } : undefined}
 		>
-			<VideoPlayer
-				className="overflow-hidden rounded-md border bg-black cursor-default"
+			<Card
+				className="cursor-default overflow-hidden rounded-xl p-2"
 				style={{
 					width: "fit-content",
 					height: "fit-content",
@@ -39,28 +28,18 @@ export function VideoRenderer({
 					maxWidth: "100%",
 				}}
 			>
-				<VideoPlayerContent
-					crossOrigin=""
+				<video
+					crossOrigin="anonymous"
 					preload="auto"
-					slot="media"
 					src={src}
-					controls={false}
-					className="object-contain w-auto h-auto"
+					controls
+					className="h-auto w-auto max-w-full rounded-lg object-contain"
 					style={{
 						maxHeight: maxHeight,
 						maxWidth: "100%",
 					}}
 				/>
-				<VideoPlayerControlBar>
-					<VideoPlayerPlayButton />
-					<VideoPlayerSeekBackwardButton />
-					<VideoPlayerSeekForwardButton />
-					<VideoPlayerTimeRange />
-					<VideoPlayerTimeDisplay showDuration />
-					<VideoPlayerMuteButton />
-					<VideoPlayerVolumeRange className="bg-" />
-				</VideoPlayerControlBar>
-			</VideoPlayer>
+			</Card>
 		</div>
 	);
 }

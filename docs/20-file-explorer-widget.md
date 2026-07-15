@@ -124,7 +124,7 @@ Example file record:
 Upload Flow:
 1. User selects file(s)
 2. Validate file size against maxFileSizeMB
-3. Call `uploadFileViaAthena()` which POSTs multipart form data to the Athena-hosted `/api/upload` route with:
+3. Call `uploadFileViaAthena()` with the managed storage catalog ID, file body, and resource metadata:
    - file (multipart)
    - resolvedOrganizationId
    - projectId

@@ -1,7 +1,7 @@
 "use client";
 
-import ErrorBlock from "@/components/ui/error";
-import { LeanTable } from "@/components/ui-responsive/lean-table";
+import { ResourceError } from "./ui/resource-error";
+import { AthenaResourceTable } from "./table/athena-resource-table";
 import { useApiClient } from "../hooks/use-api-client";
 import {
   useBackButtonStore,
@@ -137,7 +137,17 @@ const toFilterFieldDefinition = (
  * @param props - Component props including optional resourceName
  * @returns React component
  */
-export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
+export const ResourceTable = ({
+  resourceName,
+  initialData,
+  createAction,
+}: {
+  resourceName?: string;
+  initialData?: TableRowData[];
+  createAction?: (
+    payload: Record<string, unknown>,
+  ) => Promise<TableRowData>;
+}) => {
   const params = useParams<{ resource_name: string }>();
   const resource_name = resourceName ?? params?.resource_name;
   const searchParams = useSearchParams();
@@ -154,6 +164,7 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
   const { notification } = useNotification();
   const { hasScope } = useUserScopes({ cache_enabled: true });
   const [createOpen, setCreateOpen] = useState(false);
+  const [localInitialData, setLocalInitialData] = useState(initialData);
   const cacheExperimental = hasScope("xbp_cache_experimental_v2");
 
   const { resource, resourceLoading } = useResourceRoute(
@@ -227,7 +238,7 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
     schema: resource?.schema || "public",
     conditions,
     columns: apiColumns,
-    enabled: Boolean(
+    enabled: initialData === undefined && Boolean(
       resource?.table &&
       user?.user_id &&
       user?.organization_id &&
@@ -237,9 +248,17 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
     limit: effectiveLimit,
   });
 
-  const data = "data" in apiResult ? apiResult.data : null;
-  const isError = "isError" in apiResult ? apiResult.isError : false;
+  const apiData = "data" in apiResult ? apiResult.data : null;
+  useEffect(() => {
+    setLocalInitialData(initialData);
+  }, [initialData]);
+
+  const data = localInitialData ?? apiData;
+  const isError = initialData === undefined &&
+    ("isError" in apiResult ? apiResult.isError : false);
   const error = "error" in apiResult ? apiResult.error : null;
+  const isLoading = initialData === undefined &&
+    ("isLoading" in apiResult ? Boolean(apiResult.isLoading) : false);
 
   // Flatten data if it's nested arrays
   const flatData = useMemo(() => {
@@ -356,19 +375,7 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
       : [];
   const prevResourceRef = useRef<typeof resource>(undefined);
   const prevResourceNameRef = useRef<string>(undefined);
-  const resourceLabel = resource?.page_label || resource_name || "resources";
   const searchEnabled = resource?.enableSearch !== false;
-
-  const searchColumnLabels = useMemo(
-    () => searchColumnIds.map((columnId) => prettyString(columnId)),
-    [searchColumnIds],
-  );
-  const searchPlaceholder = useMemo(() => {
-    const base = `Search in ${resourceLabel}`;
-    return searchColumnLabels.length > 0
-      ? `${base} (searches ${searchColumnLabels.join(", ")})...`
-      : `${base}...`;
-  }, [resourceLabel, searchColumnLabels]);
   const firstColumnIdentifier =
     columns.length > 0 ? getColumnIdentifier(columns[0]) : undefined;
   const primaryFilterColumn = searchEnabled
@@ -450,13 +457,10 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
 
   if (isError) {
     return (
-      <ErrorBlock
+      <ResourceError
         fullPage
-        type="error"
         title="failed to load data"
         content={error || `could not load resources for "${resource_name}"`}
-        isError={true}
-        setIsError={() => {}}
         onRetry={() => window.location.reload()}
       />
     );
@@ -496,9 +500,10 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
           </div>
         );
       })()}
-      <LeanTable
+      <AthenaResourceTable
         columns={columns as ColumnDef<TableRowData>[]}
         data={filteredData}
+        isLoading={isLoading || resourceLoading}
         title={(() => {
           const deferToHeader = resource?.deferToHeader ?? false;
           const deferTitle = resource?.deferTitleToHeader ?? deferToHeader;
@@ -641,7 +646,6 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
         }}
         filterColumn={primaryFilterColumn}
         filterColumns={filterColumnsProp}
-        filterPlaceholder={searchPlaceholder}
         defaultSorting={
           querySort
             ? [querySort]
@@ -662,13 +666,10 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
         {...addResourceProps}
       />
       {!resource && !resourceLoading && (
-        <ErrorBlock
+        <ResourceError
           fullPage
-          type="error"
           title="resource not found"
           content={`the resource "${resource_name}" does not exist or is not configured`}
-          isError={true}
-          setIsError={() => {}}
         />
       )}
 
@@ -686,8 +687,21 @@ export const ResourceTable = ({ resourceName }: { resourceName?: string }) => {
           columns={createColumns}
           DialogComponent={createCfg?.dialog}
           table={resource?.table}
+          schema={resource?.schema}
+          defaultValues={createCfg?.defaultValues}
+          createAction={createAction}
           onCreatedAction={(row: TableRowData | null) => {
             try {
+              if (row) {
+                if (localInitialData) {
+                  setLocalInitialData((current) => [row, ...(current ?? [])]);
+                } else if ("mutate" in apiResult) {
+                  void apiResult.mutate();
+                }
+                notification({ message: "Created successfully", success: true });
+              }
+
+              if (!createCfg.navigateToCreatedResource) return;
               const idColumn = resource?.idColumn || "id";
               const id = row?.[idColumn];
               if (id != null) {

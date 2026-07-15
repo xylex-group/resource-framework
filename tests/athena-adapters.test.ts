@@ -1,15 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const fromMock = vi.fn();
-const createClientMock = vi.fn(() => ({
+const storageUploadMock = vi.fn();
+const storageProxyUrlMock = vi.fn();
+const storageListMock = vi.fn();
+const createAthenaBrowserClientMock = vi.fn(() => ({
   from: fromMock,
+  storage: {
+    file: {
+      upload: storageUploadMock,
+      proxyUrl: storageProxyUrlMock,
+      list: storageListMock,
+    },
+  },
 }));
 
-vi.mock("@xylex-group/athena", () => ({
-  Backend: {
-    Athena: { type: "athena" },
-  },
-  createClient: createClientMock,
+vi.mock("@xylex-group/athena/next/client", () => ({
+  createAthenaBrowserClient: createAthenaBrowserClientMock,
 }));
 
 vi.mock("@/lib/config", () => ({
@@ -34,8 +41,9 @@ describe("Athena adapters", () => {
     });
     const limit = vi.fn(() => ({ select }));
     const offset = vi.fn(() => ({ limit, select }));
-    const eq = vi.fn(() => ({ offset, limit, select }));
-    fromMock.mockReturnValue({ eq, offset, limit, select });
+    const order = vi.fn(() => ({ offset, limit, select }));
+    const eq = vi.fn(() => ({ order, offset, limit, select }));
+    fromMock.mockReturnValue({ eq, order, offset, limit, select });
 
     const { fetchDataViaAthena } = await import(
       "@/packages/resource-framework/adapters/athena-gateway"
@@ -47,14 +55,15 @@ describe("Athena adapters", () => {
       conditions: [{ eq_column: "organization_id", eq_value: "org-1" }],
       limit: 10,
       offset: 20,
+      order_by: "created_at desc",
     }, {
       headers: { "X-Organization-Id": "org-1" },
     });
 
-    expect(createClientMock).toHaveBeenCalledWith(
-      "https://athena-db.com",
-      "test-key",
+    expect(createAthenaBrowserClientMock).toHaveBeenCalledWith(
       expect.objectContaining({
+        url: "https://athena-db.com",
+        key: "test-key",
         client: "railway_direct",
         headers: expect.objectContaining({
           "X-Organization-Id": "org-1",
@@ -64,6 +73,7 @@ describe("Athena adapters", () => {
     );
     expect(fromMock).toHaveBeenCalledWith("customers");
     expect(eq).toHaveBeenCalledWith("organization_id", "org-1");
+    expect(order).toHaveBeenCalledWith("created_at", { ascending: false });
     expect(offset).toHaveBeenCalledWith(20);
     expect(limit).toHaveBeenCalledWith(10);
     expect(select).toHaveBeenCalledWith("customer_id, name");
@@ -102,71 +112,50 @@ describe("Athena adapters", () => {
     });
   });
 
-  it("uses Athena file endpoints for upload and refresh-url", async () => {
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          data: {
-            url: "https://athena-db.com/files/file.pdf",
-            file_url: "https://athena-db.com/files/file.pdf",
-            storage_key: "rsf/org-1/customers/cust-1/file.pdf",
-          },
-        }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          success: true,
-          url: "https://athena-db.com/files/file.pdf?token=fresh",
-          expiresIn: 3600,
-        }),
-      });
-
-    vi.stubGlobal("fetch", fetchMock);
+  it("uses Athena managed storage for upload and signed proxy URLs", async () => {
+    storageUploadMock.mockResolvedValue({
+      files: [{
+        file: {
+          id: "file-1",
+          bucket: "suitsconnect",
+          storage_key: "rsf/org-1/customers/cust-1/file.txt",
+        },
+        storage_key: "rsf/org-1/customers/cust-1/file.txt",
+      }],
+      count: 1,
+    });
+    storageProxyUrlMock.mockResolvedValue({
+      url: "https://athena-db.com/storage/files/file-1/proxy?token=fresh",
+      expires_in: 3600,
+    });
 
     const { refreshFileUrlViaAthena, uploadFileViaAthena } = await import(
       "@/packages/resource-framework/adapters/athena-files"
     );
 
-    const formData = new FormData();
-    formData.append("file", new Blob(["hello"], { type: "text/plain" }), "file.txt");
-
-    const uploadResult = await uploadFileViaAthena(formData);
+    const file = new Blob(["hello"], { type: "text/plain" });
+    const uploadResult = await uploadFileViaAthena({
+      s3_id: "s3-1",
+      files: file,
+      fileName: "file.txt",
+      organizationId: "org-1",
+      prefixPath: "rsf/org-1/customers/cust-1",
+    });
     const refreshResult = await refreshFileUrlViaAthena({
-      fileKey: "rsf/org-1/customers/cust-1/file.pdf",
-      bucket: "suitsconnect",
+      fileId: "file-1",
     });
 
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      1,
-      "https://athena-db.com/api/upload",
-      expect.objectContaining({
-        method: "POST",
-        headers: expect.objectContaining({
-          "X-Request-Id": expect.any(String),
-          "Idempotency-Key": expect.any(String),
-          "X-Idempotency-Key": expect.any(String),
-        }),
-        body: formData,
-      }),
+    expect(storageUploadMock).toHaveBeenCalledWith(expect.objectContaining({
+      s3_id: "s3-1",
+      files: file,
+      fileName: "file.txt",
+    }));
+    expect(storageProxyUrlMock).toHaveBeenCalledWith("file-1", {
+      purpose: "stream",
+    });
+    expect(uploadResult.files[0]?.storage_key).toBe(
+      "rsf/org-1/customers/cust-1/file.txt",
     );
-    expect(fetchMock).toHaveBeenNthCalledWith(
-      2,
-      "https://athena-db.com/api/files/refresh-url",
-      expect.objectContaining({
-        method: "POST",
-        headers: expect.objectContaining({
-          "Content-Type": "application/json",
-          "X-Request-Id": expect.any(String),
-          "Idempotency-Key": expect.any(String),
-          "X-Idempotency-Key": expect.any(String),
-        }),
-      }),
-    );
-    expect(uploadResult.storage_key).toBe("rsf/org-1/customers/cust-1/file.pdf");
     expect(refreshResult.url).toContain("token=fresh");
-
-    vi.unstubAllGlobals();
   });
 });

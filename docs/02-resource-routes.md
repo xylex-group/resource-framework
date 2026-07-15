@@ -16,7 +16,7 @@ Resource routes define how resources appear and behave in the dashboard.
 ## Basic Definition
 
 ```typescript
-import { defineResourceRoute } from '@/packages/resource-framework/constructors/define-drizzle-resource-route';
+import { defineResourceRoute } from '@/packages/resource-framework/constructors/define-athena-resource-route';
 
 export const customersRoute: ResourceRoute = {
   table: 'customers',

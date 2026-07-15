@@ -38,7 +38,7 @@ const unsavedChangesVariants = cva(
     },
 );
 
-export interface UnsavedChangesProps
+interface UnsavedChangesProps
     extends VariantProps<typeof unsavedChangesVariants> {
     /** Additional CSS class */
     className?: string;
@@ -331,9 +331,6 @@ function UnsavedChanges({
                                 }}
                                 className="relative flex items-center gap-2 overflow-hidden pl-2"
                             >
-                                {/* Gradient mask */}
-                                <div className="absolute inset-y-0 left-0 w-2 bg-linear-to-r from-transparent to-background z-20 pointer-events-none" />
-
                                 {/* Buttons container with background */}
                                 <div className="flex items-center gap-2 bg-background z-10">
                                     {!hideReset && (
@@ -365,4 +362,4 @@ function UnsavedChanges({
     );
 }
 
-export { UnsavedChanges, unsavedChangesVariants };
+export { UnsavedChanges };

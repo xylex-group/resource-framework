@@ -185,24 +185,20 @@ export default function CustomerDetailPage({ id }) {
 
 ```typescript
 // components/CustomMetricsWidget.tsx
-import { useResourceContext } from '@/packages/resource-framework/hooks/useResourceContext';
-
 function CustomMetricsWidget({ spec, entity }) {
-  const { resource } = useResourceContext();
-  
   return (
     <div className="grid grid-cols-3 gap-4">
       <MetricCard
         label="Total Invoices"
-        value={resource?.invoice_count}
+        value={entity.invoice_count}
       />
       <MetricCard
         label="Total Revenue"
-        value={formatCurrency(resource?.total_revenue)}
+        value={formatCurrency(entity.total_revenue)}
       />
       <MetricCard
         label="Active Status"
-        value={resource?.status}
+        value={entity.status}
       />
     </div>
   );

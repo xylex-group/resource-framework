@@ -1,7 +1,7 @@
 "use client";
 
+import { Chip } from "@heroui/react";
 import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
-import { cn } from "@/lib/utils";
 
 export type FlagProps = HTMLAttributes<HTMLSpanElement> & {
   country?: string;
@@ -34,15 +34,16 @@ export function Flag({
   };
 
   return (
-    <span
-      className={cn(
-        "rounded-full bg-slate-800 text-xs font-semibold uppercase tracking-tight text-slate-200",
-        className,
-      )}
-      style={mergedStyle}
+    <Chip
       {...props}
+      aria-label={country ? `Country ${country.toUpperCase()}` : undefined}
+      className={className}
+      color="default"
+      size="sm"
+      style={mergedStyle}
+      variant="soft"
     >
       {display}
-    </span>
+    </Chip>
   );
 }

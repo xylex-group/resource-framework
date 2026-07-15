@@ -4,7 +4,7 @@
 
 ### Overview
 
-This is a **pnpm + Turborepo** monorepo for `@xylex-group/resource-framework`, a metadata-driven UI framework built on Drizzle ORM. It contains a root library package and two Next.js 16 demo apps (`apps/demo` on port 3000, `apps/playground-next` on port 3001).
+This is a **pnpm + Turborepo** monorepo for `@xylex-group/resource-framework`, a metadata-driven UI framework built on Athena. It contains a root library package and two Next.js 16 demo apps (`apps/demo` on port 3000, `apps/playground-next` on port 3001).
 
 ### Running services
 

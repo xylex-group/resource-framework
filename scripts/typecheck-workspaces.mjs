@@ -16,7 +16,7 @@ const checks = [
     args: [tscEntrypoint, "-p", "apps/demo/tsconfig.json", "--noEmit", "--pretty", "false"],
     requiredPaths: [
       "apps/demo/node_modules/next/package.json",
-      "apps/demo/node_modules/@base-ui/react/package.json",
+      "apps/demo/node_modules/@heroui/react/package.json",
       "apps/demo/node_modules/next-themes/package.json",
     ],
   },
@@ -26,8 +26,6 @@ const checks = [
     args: [tscEntrypoint, "-p", "apps/playground-next/tsconfig.json", "--noEmit", "--pretty", "false"],
     requiredPaths: [
       "apps/playground-next/node_modules/next/package.json",
-      "apps/demo/node_modules/@base-ui/react/package.json",
-      "apps/demo/node_modules/next-themes/package.json",
     ],
   },
 ];

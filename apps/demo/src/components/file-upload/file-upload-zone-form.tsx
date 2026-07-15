@@ -2,8 +2,9 @@
 
 import { useCallback } from "react";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 
-export interface UploadedFile {
+interface UploadedFile {
   fileKey: string;
   url: string;
 }
@@ -38,7 +39,7 @@ export default function FileUploadZoneForm({
     <div className="space-y-2 rounded-sm border border-dashed border-slate-700 p-3 text-sm text-slate-200">
       <p>Drag & drop a file or click to upload.</p>
       <label className="inline-flex cursor-pointer items-center gap-2">
-        <input type="file" className="hidden" onChange={handleUpload} />
+        <Input type="file" className="hidden" onChange={handleUpload} />
         <Button variant="ghost" type="button">
           Choose file
         </Button>

@@ -7,44 +7,18 @@ import {
   useApiClient,
 } from "@xylex-group/resource-framework";
 import { useUserStore } from "../lib/stores";
+import { Button } from "../components/ui/button";
+import { Card } from "../components/ui/card";
+import { Input } from "../components/ui/input";
 
 type PlaygroundRow = Record<string, unknown>;
 
-const sectionStyle: React.CSSProperties = {
-  backdropFilter: "blur(18px)",
-  background: "var(--panel)",
-  border: "1px solid var(--line)",
-  borderRadius: 24,
-  padding: 24,
-  boxShadow: "0 24px 60px rgba(30, 28, 26, 0.08)",
-};
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  borderRadius: 14,
-  border: "1px solid var(--line)",
-  background: "rgba(255,255,255,0.74)",
-  padding: "12px 14px",
-  font: "inherit",
-  color: "var(--ink)",
-};
-
-const buttonStyle: React.CSSProperties = {
-  borderRadius: 999,
-  border: "1px solid var(--line)",
-  padding: "12px 18px",
-  font: "600 0.95rem var(--font-sans)",
-  background: "var(--ink)",
-  color: "#fff",
-  cursor: "pointer",
-};
-
 export function PlaygroundClient() {
   const user = useUserStore((state) => state.user);
+  const storageS3Id = process.env.NEXT_PUBLIC_ATHENA_STORAGE_S3_ID ?? "";
   const [tableName, setTableName] = useState("customers");
   const [idColumn, setIdColumn] = useState("resource_id");
-  const [refreshKey, setRefreshKey] = useState("");
-  const [refreshBucket, setRefreshBucket] = useState("suitsconnect");
+  const [refreshFileId, setRefreshFileId] = useState("");
   const [uploadMessage, setUploadMessage] = useState<string>("");
   const [refreshMessage, setRefreshMessage] = useState<string>("");
   const [sampleName, setSampleName] = useState("Playground Resource");
@@ -117,23 +91,25 @@ export function PlaygroundClient() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("projectId", "playground");
-    formData.append("resolvedOrganizationId", user.organization_id);
-    formData.append(
-      "objectPath",
-      `rsf/${user.organization_id}/${tableName}/playground`,
-    );
-
     try {
-      const result = await uploadFileViaAthena(formData);
-      setUploadMessage(
-        `Uploaded ${file.name} -> ${result.storage_key ?? result.url ?? "ok"}`,
-      );
-      if (result.storage_key) {
-        setRefreshKey(result.storage_key);
+      if (!storageS3Id) {
+        throw new Error("NEXT_PUBLIC_ATHENA_STORAGE_S3_ID is not configured.");
       }
+      const result = await uploadFileViaAthena({
+        s3_id: storageS3Id,
+        files: file,
+        fileName: file.name,
+        organizationId: user.organization_id,
+        prefixPath: `rsf/${user.organization_id}/${tableName}/playground`,
+      });
+      const uploaded = result.files[0];
+      if (!uploaded) {
+        throw new Error("Athena storage returned no uploaded file.");
+      }
+      setUploadMessage(
+        `Uploaded ${file.name} -> ${uploaded.storage_key}`,
+      );
+      setRefreshFileId(uploaded.file.id);
     } catch (uploadError) {
       setUploadMessage(
         uploadError instanceof Error ? uploadError.message : String(uploadError),
@@ -146,8 +122,7 @@ export function PlaygroundClient() {
   async function handleRefreshUrl() {
     try {
       const result = await refreshFileUrlViaAthena({
-        fileKey: refreshKey,
-        bucket: refreshBucket,
+        fileId: refreshFileId,
       });
       setRefreshMessage(result.url ?? "No URL returned");
     } catch (refreshError) {
@@ -172,12 +147,11 @@ export function PlaygroundClient() {
           gap: 20,
         }}
       >
-        <section style={{ ...sectionStyle, padding: 32 }}>
+        <Card style={{ padding: 32 }}>
           <div style={{ display: "grid", gap: 12 }}>
             <span
               style={{
                 font: "600 0.75rem var(--font-mono)",
-                letterSpacing: "0.18em",
                 textTransform: "uppercase",
                 color: "var(--accent)",
               }}
@@ -200,7 +174,7 @@ export function PlaygroundClient() {
               and user store the framework requires.
             </p>
           </div>
-        </section>
+        </Card>
 
         <section
           style={{
@@ -209,89 +183,79 @@ export function PlaygroundClient() {
             gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
           }}
         >
-          <div style={sectionStyle}>
+          <Card style={{ padding: 24 }}>
             <h2 style={{ marginTop: 0 }}>Dataset</h2>
             <div style={{ display: "grid", gap: 12 }}>
               <label>
                 <div style={{ marginBottom: 6, color: "var(--muted)" }}>Table</div>
-                <input
-                  style={inputStyle}
+                <Input
                   value={tableName}
                   onChange={(event) => setTableName(event.target.value)}
                 />
               </label>
               <label>
                 <div style={{ marginBottom: 6, color: "var(--muted)" }}>ID column</div>
-                <input
-                  style={inputStyle}
+                <Input
                   value={idColumn}
                   onChange={(event) => setIdColumn(event.target.value)}
                 />
               </label>
               <label>
                 <div style={{ marginBottom: 6, color: "var(--muted)" }}>Sample name</div>
-                <input
-                  style={inputStyle}
+                <Input
                   value={sampleName}
                   onChange={(event) => setSampleName(event.target.value)}
                 />
               </label>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-                <button style={buttonStyle} onClick={handleInsert}>Insert sample</button>
-                <button style={buttonStyle} onClick={handleUpdateFirst}>Update first</button>
-                <button style={buttonStyle} onClick={handleDeleteFirst}>Delete first</button>
-                <button style={buttonStyle} onClick={() => void mutate()}>Refetch</button>
+                <Button onPress={handleInsert}>Insert sample</Button>
+                <Button onPress={handleUpdateFirst}>Update first</Button>
+                <Button variant="destructive" onPress={handleDeleteFirst}>Delete first</Button>
+                <Button variant="outline" onPress={() => void mutate()}>Refetch</Button>
               </div>
               <div style={{ color: isError ? "var(--warning)" : "var(--muted)" }}>
                 {isLoading ? "Loading..." : (error ?? (uploadMessage || "Ready"))}
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div style={sectionStyle}>
+          <Card style={{ padding: 24 }}>
             <h2 style={{ marginTop: 0 }}>Files</h2>
             <div style={{ display: "grid", gap: 12 }}>
               <label>
                 <div style={{ marginBottom: 6, color: "var(--muted)" }}>Upload test file</div>
-                <input
-                  style={inputStyle}
+                <Input
                   type="file"
                   onChange={handleFileUpload}
                 />
               </label>
               <label>
-                <div style={{ marginBottom: 6, color: "var(--muted)" }}>File key</div>
-                <input
-                  style={inputStyle}
-                  value={refreshKey}
-                  onChange={(event) => setRefreshKey(event.target.value)}
+                <div style={{ marginBottom: 6, color: "var(--muted)" }}>Athena file ID</div>
+                <Input
+                  value={refreshFileId}
+                  onChange={(event) => setRefreshFileId(event.target.value)}
                 />
               </label>
-              <label>
-                <div style={{ marginBottom: 6, color: "var(--muted)" }}>Bucket</div>
-                <input
-                  style={inputStyle}
-                  value={refreshBucket}
-                  onChange={(event) => setRefreshBucket(event.target.value)}
-                />
-              </label>
-              <button style={buttonStyle} onClick={handleRefreshUrl}>
+              <Button
+                onPress={handleRefreshUrl}
+                disabled={!refreshFileId}
+              >
                 Refresh signed URL
-              </button>
+              </Button>
               <div
                 style={{
                   font: "0.82rem var(--font-mono)",
-                  color: refreshMessage ? "var(--ink)" : "var(--muted)",
+                  color: refreshMessage ? "var(--foreground)" : "var(--muted)",
                   overflowWrap: "anywhere",
                 }}
               >
                 {refreshMessage || "No refresh result yet"}
               </div>
             </div>
-          </div>
+          </Card>
         </section>
 
-        <section style={sectionStyle}>
+        <Card style={{ padding: 24 }}>
           <div
             style={{
               display: "flex",
@@ -312,15 +276,15 @@ export function PlaygroundClient() {
               margin: 0,
               padding: 18,
               borderRadius: 18,
-              background: "rgba(30, 28, 26, 0.92)",
-              color: "#f8f4ea",
+              background: "var(--foreground)",
+              color: "var(--background)",
               overflowX: "auto",
               font: "0.85rem/1.55 var(--font-mono)",
             }}
           >
             {JSON.stringify(rows, null, 2)}
           </pre>
-        </section>
+        </Card>
       </div>
     </main>
   );

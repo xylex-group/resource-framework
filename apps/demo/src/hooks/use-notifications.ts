@@ -1,5 +1,7 @@
 "use client";
 
+import { toast } from "sonner";
+
 export interface NotificationOptions {
   message: string;
   description?: string;
@@ -14,9 +16,9 @@ export function useNotification() {
     description,
     success = true,
   }: NotificationOptions) => {
-    if (!success) {
-      alert(description ? `${message}\n${description}` : message);
-    }
+    const options = description ? { description } : undefined;
+    if (success) toast.success(message, options);
+    else toast.error(message, options);
   };
 
   return { notification };

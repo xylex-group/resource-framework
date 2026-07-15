@@ -78,6 +78,11 @@ web_modules/
 .next
 out
 
+# Turborepo and Cloudflare build output
+.turbo/
+**/.open-next/
+**/.wrangler/
+
 # Nuxt.js build / generate output
 .nuxt
 dist

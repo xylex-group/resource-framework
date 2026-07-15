@@ -3,10 +3,9 @@ import { PriorityIcon } from "@/components/icons";
 import { ScopeCell } from "../components/cells/ScopeCell";
 import {
   buildColumnsFromRegistry,
-  type LeanColumnSpec,
 } from "../constructors/column-registry";
 import { getPriorityLabel, stringPriorityToNumber } from "./priority";
-import type { ResourceRoute, TableColumnMeta, TableRowData } from "../resource-types";
+import type { LeanColumnSpec, ResourceRoute, TableColumnMeta, TableRowData } from "../resource-types";
 
 type RouteColumnConfig = Exclude<
   NonNullable<ResourceRoute["columns"]>[number],

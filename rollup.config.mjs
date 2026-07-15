@@ -4,6 +4,29 @@ import commonjs from "@rollup/plugin-commonjs";
 import typescript from "@rollup/plugin-typescript";
 import alias from "@rollup/plugin-alias";
 
+const sharedUiModules = [
+  "badge",
+  "button",
+  "card",
+  "checkbox",
+  "combo-box",
+  "dialog",
+  "input",
+  "label",
+  "number-field",
+  "popover",
+  "select",
+  "separator",
+  "skeleton",
+  "switch",
+  "textarea",
+];
+const sharedUiModuleIds = sharedUiModules.map((name) => `@/components/ui/${name}`);
+const sharedUiAliases = sharedUiModules.map((name) => ({
+  find: `@/components/ui/${name}`,
+  replacement: path.resolve(process.cwd(), `components/ui/${name}.tsx`),
+}));
+
 /** @type {import('rollup').RollupOptions[]} */
 const configs = [
   {
@@ -43,7 +66,10 @@ const configs = [
         "@/ui",
         "@/notifications",
       ];
-      if (hostPrefixes.some((prefix) => id.startsWith(prefix))) {
+      if (
+        !sharedUiModuleIds.includes(id) &&
+        hostPrefixes.some((prefix) => id.startsWith(prefix))
+      ) {
         return true;
       }
       return (
@@ -55,7 +81,10 @@ const configs = [
         id.startsWith("@bprogress/core") ||
         id.startsWith("motion/react") ||
         id.startsWith("class-variance-authority") ||
-        id.startsWith("drizzle-orm") ||
+        id === "@xylex-group/athena" ||
+        id.startsWith("@xylex-group/athena/") ||
+        id.startsWith("@xylex-group/athena-auth-ui") ||
+        id.startsWith("@heroui/") ||
         id.startsWith("papaparse") ||
         id === "md5"
       );
@@ -93,10 +122,7 @@ const configs = [
             find: "@/packages/resource-framework",
             replacement: path.resolve(process.cwd(), "."),
           },
-          {
-            find: "@/drizzle",
-            replacement: path.resolve(process.cwd(), "drizzle"),
-          },
+          ...sharedUiAliases,
           {
             find: "@/components",
             replacement: path.resolve(process.cwd(), "apps/demo/src/components"),

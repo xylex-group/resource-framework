@@ -1,8 +1,8 @@
 "use client";
 
+import { Card } from "@/components/ui/card";
 import { NumberField } from "@/components/ui/number-field";
 import type { ResourceFormField } from "../../../../../../types/resource-forms";
-import { cn } from "@/lib/utils";
 
 export interface ShareHolderCardProps {
   field: ResourceFormField;
@@ -17,8 +17,8 @@ export function ShareHolderCard({
   onChange,
 }: ShareHolderCardProps) {
   return (
-    <div className={cn("space-y-1 rounded-sm border border-border bg-card p-3")}>
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">
+    <Card className="space-y-1 p-3">
+      <div className="text-xs uppercase text-muted-foreground">
         {field.label}
       </div>
       <NumberField
@@ -26,6 +26,6 @@ export function ShareHolderCard({
         onValueChange={(v) => onChange(v)}
         className="bg-transparent py-0 text-base font-semibold text-foreground"
       />
-    </div>
+    </Card>
   );
 }

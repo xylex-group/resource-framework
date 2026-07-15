@@ -12,6 +12,7 @@
  * 
  * Usage:
  * ```tsx
+ * import { Button } from "@/components/ui/button";
  * import { Lightbox, useLightbox } from "@/packages/resource-framework/lightbox";
  * 
  * function MyComponent() {
@@ -28,7 +29,7 @@
  *   
  *   return (
  *     <>
- *       <button onClick={handleOpenImage}>View Image</button>
+ *       <Button onPress={handleOpenImage}>View Image</Button>
  *       <Lightbox
  *         files={state.files}
  *         currentIndex={state.currentIndex}
@@ -43,7 +44,6 @@
 
 // Main component
 export { Lightbox } from "./components/Lightbox";
-export { useLightboxScroll } from "./context/scroll-context";
 
 // Sub-components for custom implementations
 export { LightboxNavigation } from "./components/LightboxNavigation";
@@ -57,25 +57,16 @@ export {
   VideoRenderer,
   PdfRenderer,
   AudioRenderer,
-  DocumentRenderer,
   UnsupportedRenderer,
 } from "./renderers";
 
 // Hooks
 export { useLightbox } from "./hooks/useLightbox";
-export { useAuthorizedFileUrl } from "./hooks/useAuthorizedFileUrl";
 
 // Utilities
 export { detectFileType, canPreview, isPreviewSupported } from "./utils/file-type-detector";
 export { formatFileSize, formatDate } from "./utils/format";
 export { refreshFileUrl } from "./utils/url-refresh";
-export { 
-  getCachedUrl, 
-  setCachedUrl, 
-  clearCachedUrl, 
-  clearAllCachedUrls, 
-  getCacheStats 
-} from "./utils/url-cache";
 
 // Registry
 export { getRendererForFile, registerRenderer, getRegisteredRenderers } from "./renderer-registry";

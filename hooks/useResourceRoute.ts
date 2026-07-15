@@ -7,7 +7,7 @@ import { fetchDataViaAthena } from "../adapters/athena-gateway";
 
 /**
  * Hook to fetch and manage resource route configuration.
- * Attempts to load from static RESOURCE_ROUTES first, then falls back to fetching from the database using Drizzle ORM.
+ * Attempts to load from static RESOURCE_ROUTES first, then falls back to fetching from the database using Athena.
  *
  * @param resourceName - The name of the resource to load configuration for
  * @param user - The current user object containing user_id, company_id, and organization_id
@@ -110,7 +110,7 @@ export const useResourceRoute = (
         const rowData = row as Record<string, unknown>;
         const mapped: ResourceRoute = {
           table: (rowData?.table as string) || (resourceName || ""),
-          drizzleTable: (rowData?.table as string) || undefined,
+          athenaModel: (rowData?.table as string) || undefined,
           idColumn: (rowData?.id_column as string) || "id",
           path: (rowData?.path as string) || undefined,
           schema: (rowData?.schema as string) || undefined,

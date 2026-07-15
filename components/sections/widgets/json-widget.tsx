@@ -34,5 +34,3 @@ function JsonSectionWidget({ spec, entity }: SectionWidgetRendererProps) {
 }
 
 registerSectionWidget("json", JsonSectionWidget);
-
-export { JsonSectionWidget };

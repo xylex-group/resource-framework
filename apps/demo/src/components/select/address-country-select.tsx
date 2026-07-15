@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { countryCodes } from "@/lib/constants";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export interface AddressCountrySelectProps {
   value: string;
@@ -20,22 +21,25 @@ export function AddressCountrySelect({
   return (
     <div className={cn("space-y-2", width_full ? "w-full" : "w-auto")}>
       {label && (
-        <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <Label className="text-xs font-semibold uppercase text-muted-foreground">
           {label}
         </Label>
       )}
-      <select
-        className="h-9 w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
+      <Select
         value={value || ""}
-        onChange={(event) => onChange(event.target.value)}
+        onValueChange={onChange}
       >
-        <option value="">Select country</option>
-        {countryCodes.map((country) => (
-          <option key={country.code} value={country.code}>
-            {country.name}
-          </option>
-        ))}
-      </select>
+        <SelectTrigger className="w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {countryCodes.map((country) => (
+            <SelectItem key={country.code} value={country.code}>
+              {country.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

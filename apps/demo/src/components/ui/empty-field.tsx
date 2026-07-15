@@ -1,7 +1,7 @@
 "use client";
 
+import { EmptyState } from "@heroui/react";
 import type { HTMLAttributes } from "react";
-import { cn } from "@/lib/utils";
 
 type EmptyFieldProps = HTMLAttributes<HTMLDivElement> & {
   title?: string;
@@ -16,21 +16,18 @@ export function EmptyField({
   ...props
 }: EmptyFieldProps) {
   return (
-    <div
-      className={cn(
-        "flex min-h-[120px] flex-col items-center justify-center rounded-sm border border-dashed border-slate-700 bg-slate-900/40 p-6 text-center text-sm text-slate-400",
-        className,
-      )}
+    <EmptyState
+      className={`min-h-32 rounded-xl ${className ?? ""}`}
       {...props}
     >
       {children ? (
         children
       ) : (
         <>
-          {title ? <p className="font-medium text-slate-200">{title}</p> : null}
-          <p>{message || "Nothing to show yet."}</p>
+          {title ? <h3 className="font-medium text-foreground">{title}</h3> : null}
+          <p className="text-sm text-muted-foreground">{message || "Nothing to show yet."}</p>
         </>
       )}
-    </div>
+    </EmptyState>
   );
 }

@@ -1,8 +1,7 @@
 import type { ColumnConfigObject, ResourceData } from "@/lib/types";
-import type { ResourceRoute } from "../../resource-types";
+import type { LeanColumnSpec, ResourceRoute } from "../../resource-types";
 import {
   buildColumnsFromRegistry,
-  type LeanColumnSpec,
 } from "../../constructors/column-registry";
 import { coerceByDatatype } from "../../utils/coerce";
 import {

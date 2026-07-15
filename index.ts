@@ -1,21 +1,30 @@
 export * from "./resource-types";
 export {
-  defineDrizzleColumns,
-  defineDrizzleResourceRoute,
-} from "./constructors/define-drizzle-resource-route";
-
-// S3 File Handler
+  defineAthenaColumns,
+  defineAthenaResourceRoute,
+  type AthenaBuiltColumnSpec,
+  type AthenaResourceFieldSpec,
+  type AthenaResourceRoute,
+} from "./constructors/define-athena-resource-route";
 export {
-  fetchS3File,
-  fetchS3FileAsText,
-  fetchS3FileAsArrayBuffer,
-  fetchS3FileAsBlob,
-  fetchS3FileAsJson,
-  downloadS3File,
-  validateS3FileUrl,
+  resourceModels,
+  type AthenaResourceModelColumn,
+  type AthenaResourceModelName,
+  type AthenaResourceModelRow,
+} from "./athena/models/resource-models";
+
+// managed storage File Handler
+export {
+  fetchAuthorizedFile,
+  fetchAuthorizedFileAsText,
+  fetchAuthorizedFileAsArrayBuffer,
+  fetchAuthorizedFileAsBlob,
+  fetchAuthorizedFileAsJson,
+  downloadAuthorizedFile,
+  validateAuthorizedFileUrl,
   type FetchFileOptions,
   type FetchFileResult,
-} from "./utils/s3-file-handler";
+} from "./utils/authorized-file";
 
 // Notifications
 export {
@@ -111,12 +120,6 @@ export {
   type UseApiClientSingleProps,
   type UseApiClientMultiProps,
 } from "./hooks/use-api-client";
-export {
-  type DrizzleColumnFieldType,
-  type DrizzleColumnName,
-  type DrizzleColumnValue,
-  type DrizzleTableName,
-} from "./types/drizzle-schema";
 export { VideoRenderer } from "./renderers/VideoRenderer";
 export {
   Lightbox,
@@ -229,14 +232,6 @@ export { DrilldownLayout } from "./components/drilldown/drilldown-layout";
 export { DrilldownActivity } from "./components/drilldown/drilldown-activity";
 export { type SelectDataSourceProps } from "./components/fields/select-data-source";
 export {
-  DrilldownTable,
-  DrilldownTableBody,
-  DrilldownTableCell,
-  DrilldownTableFooter,
-  DrilldownTableHeader,
-  DrilldownTableRow,
-} from "./components/drilldown/drilldown-table";
-export {
   DrilldownEntityRenderer,
   type EntityField,
 } from "./components/drilldown/drilldown-entity-renderer";
@@ -259,9 +254,11 @@ export {
   toSnakeCase,
 } from "./utils/key-case";
 export {
-  getDrizzleEditorType,
-  getDrizzleFieldType,
-} from "./utils/drizzle-editor";
+  getAthenaColumnInfo,
+  getAthenaColumnMetadata,
+  getAthenaEditorType,
+  getAthenaFieldType,
+} from "./athena/model-metadata";
 export { noop } from "./utils/render-functions";
 export { insertRow } from "./utils/insert";
 export { ResourceDrilldownSection } from "./components/resource-drilldown-section";
@@ -293,43 +290,8 @@ export {
   useResourceFormRuntime,
   type UseResourceFormRuntimeResult,
 } from "./hooks/use-resource-form-runtime";
-export { DisplaySettings } from "./components/table/display-settings";
 export { useAddResourceButton } from "./components/table/AddResourceButton";
 export { createActionsColumn } from "./components/table/ActionsColumn";
-export {
-  TableAddButton,
-  type TableAddButtonProps,
-} from "./components/table/table-add-button";
-export {
-  TableSearchInput,
-  type TableSearchInputProps,
-} from "./components/table/table-search-input";
-export {
-  TableFullscreenToggle,
-  type TableFullscreenToggleProps,
-} from "./components/table/table-fullscreen-toggle";
-export {
-  TableDeleteDialog,
-  type TableDeleteDialogProps,
-} from "./components/table/table-delete-dialog";
-export {
-  TableDownloadButton,
-  type TableDownloadButtonProps,
-} from "./components/table/table-download-button";
-export {
-  TableTopControls,
-  type TableTopControlsProps,
-} from "./components/table/table-top-controls";
-export { TableHeaderCell } from "./components/table/table-header-cell";
-export { TableBodyCell } from "./components/table/table-body-cell";
-export {
-  TablePaginationControls,
-  type TablePaginationControlsProps,
-} from "./components/table/table-pagination-controls";
-export {
-  TablePaginationInfo,
-  type TablePaginationInfoProps,
-} from "./components/table/table-pagination-info";
 
 export type { PlaygroundFormDefinition } from "./demo/playground-forms";
 export {

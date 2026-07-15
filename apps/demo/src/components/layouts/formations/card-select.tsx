@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export interface CardSelectOption {
+interface CardSelectOption {
   value: string;
   title: string;
   description?: string;

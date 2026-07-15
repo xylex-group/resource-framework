@@ -103,11 +103,15 @@ const numberOps = FILTER_REGISTRY['number'].operators;
 Filters sync with URL query params:
 
 ```typescript
+import { useSearchParams } from 'next/navigation';
+import { parseQueryFilters } from '@xylex-group/resource-framework';
+
 function Page() {
-  const { filters, setFilters } = useQueryFilters();
+  const searchParams = useSearchParams();
+  const filters = parseQueryFilters(searchParams);
 
   // URL: ?filters=status:active,country:US
-  // Automatically restored on page load
+  return <FilterPanel filters={filters} />;
 }
 ```
 

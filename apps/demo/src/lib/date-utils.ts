@@ -5,10 +5,11 @@ export function formatUnixSecondsToDate(timestamp: number) {
 
 export function formatUnixSecondsToMonthDayTime(timestamp: number) {
   const date = new Date(timestamp * 1000);
-  return `${date.toLocaleString(undefined, {
+  return date.toLocaleString("en-US", {
     month: "short",
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  })}`;
+    timeZone: "UTC",
+  });
 }

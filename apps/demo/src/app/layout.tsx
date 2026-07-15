@@ -1,9 +1,11 @@
+import "@xylex-group/athena-auth-ui/styles";
 import "./globals.css";
 import { ResourceProvider } from "@rf/components/ResourceProvider";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Toaster } from "sonner";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -26,6 +28,7 @@ export default function RootLayout({
               <ThemeToggle />
             </div>
             {children}
+            <Toaster richColors closeButton position="bottom-right" />
           </ResourceProvider>
         </ThemeProvider>
       </body>

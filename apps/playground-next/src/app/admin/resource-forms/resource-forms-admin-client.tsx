@@ -15,6 +15,11 @@ import {
   type ResolvedPlaygroundResourceForm,
   type PlaygroundResourceFormRow,
 } from "../../../lib/resource-forms";
+import { Button } from "../../../components/ui/button";
+import { Card } from "../../../components/ui/card";
+import { Checkbox } from "../../../components/ui/checkbox";
+import { Input } from "../../../components/ui/input";
+import { Textarea } from "../../../components/ui/textarea";
 
 type EditorState = {
   resource_form_id: string;
@@ -32,40 +37,20 @@ type EditorState = {
   defaultValuesText: string;
 };
 
-const sectionStyle: CSSProperties = {
-  backdropFilter: "blur(18px)",
-  background: "var(--panel)",
-  border: "1px solid var(--line)",
-  borderRadius: 24,
-  padding: 24,
-  boxShadow: "0 24px 60px rgba(30, 28, 26, 0.08)",
-};
-
-const inputStyle: CSSProperties = {
-  width: "100%",
-  borderRadius: 14,
-  border: "1px solid var(--line)",
-  background: "rgba(255,255,255,0.72)",
-  padding: "12px 14px",
-  font: "500 0.95rem var(--font-sans)",
-  color: "var(--ink)",
-};
-
 const textAreaStyle: CSSProperties = {
-  ...inputStyle,
   minHeight: 220,
   fontFamily: "var(--font-mono)",
   fontSize: 13,
   lineHeight: 1.5,
 };
 
-const buttonStyle: CSSProperties = {
-  borderRadius: 999,
-  border: "1px solid var(--line)",
+const linkStyle: CSSProperties = {
+  borderRadius: "var(--athena-auth-ui-control-radius)",
+  border: "1px solid var(--border)",
   padding: "12px 18px",
   font: "600 0.95rem var(--font-sans)",
-  background: "var(--ink)",
-  color: "#fff",
+  background: "var(--accent)",
+  color: "var(--accent-foreground)",
   cursor: "pointer",
 };
 
@@ -265,9 +250,9 @@ export function ResourceFormsAdminClient() {
   return (
     <main style={{ minHeight: "100vh", padding: "40px 20px 80px" }}>
       <div style={{ maxWidth: 1360, margin: "0 auto", display: "grid", gap: 20 }}>
-        <section style={{ ...sectionStyle, padding: 32 }}>
+        <Card style={{ padding: 32 }}>
           <div style={{ display: "grid", gap: 12 }}>
-            <span style={{ font: "600 0.75rem var(--font-mono)", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--accent)" }}>
+            <span style={{ font: "600 0.75rem var(--font-mono)", textTransform: "uppercase", color: "var(--accent)" }}>
               Resource Forms Admin
             </span>
             <h1 style={{ margin: 0, fontFamily: "var(--font-serif)", fontSize: "clamp(2.3rem, 5vw, 4rem)", lineHeight: 0.96 }}>
@@ -278,12 +263,12 @@ export function ResourceFormsAdminClient() {
               validate it through the shared contract helpers, and persist directly to Athena.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-              <button style={buttonStyle} onClick={handleSave} disabled={!canSave}>
+              <Button onPress={handleSave} disabled={!canSave}>
                 Save row
-              </button>
-              <button
-                style={{ ...buttonStyle, background: "transparent", color: "var(--ink)" }}
-                onClick={() => {
+              </Button>
+              <Button
+                variant="outline"
+                onPress={() => {
                   setIsCreatingNew(true);
                   setSelectedId(null);
                   setDraft(createDraftFromRow());
@@ -291,19 +276,19 @@ export function ResourceFormsAdminClient() {
                 }}
               >
                 New draft
-              </button>
-              <button style={{ ...buttonStyle, background: "transparent", color: "var(--ink)" }} onClick={handleSeedDefinitions}>
+              </Button>
+              <Button variant="outline" onPress={handleSeedDefinitions}>
                 Seed canonical definitions
-              </button>
-              <Link href="/" style={{ ...buttonStyle, textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+              </Button>
+              <Link href="/" style={{ ...linkStyle, textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
                 Back to runtime
               </Link>
             </div>
           </div>
-        </section>
+        </Card>
 
-        <section style={{ display: "grid", gap: 20, gridTemplateColumns: "320px minmax(0, 1fr) 320px" }}>
-          <aside style={sectionStyle}>
+        <section className="playground-admin-grid">
+          <Card style={{ padding: 24 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
               <h2 style={{ margin: 0 }}>Rows</h2>
               <span style={{ color: "var(--muted)", fontSize: 12 }}>{forms.length}</span>
@@ -315,23 +300,17 @@ export function ResourceFormsAdminClient() {
             ) : (
               <div style={{ display: "grid", gap: 10 }}>
                 {forms.map((form: ResolvedPlaygroundResourceForm) => (
-                  <button
+                  <Button
                     key={form.id}
                     type="button"
-                    onClick={() => {
+                    onPress={() => {
                       setIsCreatingNew(false);
                       setSelectedId(form.id);
                       const raw = rawRows.find((row) => String(row.resource_form_id) === form.id);
                       setDraft(createDraftFromRow(raw));
                     }}
-                    style={{
-                      borderRadius: 18,
-                      border: form.id === selectedId ? "1px solid var(--accent)" : "1px solid var(--line)",
-                      background: "rgba(255,255,255,0.45)",
-                      padding: 14,
-                      textAlign: "left",
-                      cursor: "pointer",
-                    }}
+                    style={{ textAlign: "left" }}
+                    variant={form.id === selectedId ? "secondary" : "ghost"}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
                       <strong>{form.title}</strong>
@@ -340,80 +319,80 @@ export function ResourceFormsAdminClient() {
                     <p style={{ marginBottom: 0, color: "var(--muted)", lineHeight: 1.5 }}>
                       {form.description || "No description stored on this row."}
                     </p>
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}
-          </aside>
+          </Card>
 
-          <section style={{ ...sectionStyle, display: "grid", gap: 18 }}>
-            <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+          <Card style={{ display: "grid", gap: 18, padding: 24 }}>
+            <div className="playground-field-grid">
               <label>
-                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Row id</div>
-                <input value={draft.resource_form_id} onChange={(e) => setDraft((current) => ({ ...current, resource_form_id: e.target.value }))} style={inputStyle} />
+                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase" }}>Row id</div>
+                <Input value={draft.resource_form_id} onChange={(e) => setDraft((current) => ({ ...current, resource_form_id: e.target.value }))} />
               </label>
               <label>
-                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Slug</div>
-                <input value={draft.slug} onChange={(e) => setDraft((current) => ({ ...current, slug: e.target.value }))} style={inputStyle} />
+                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase" }}>Slug</div>
+                <Input value={draft.slug} onChange={(e) => setDraft((current) => ({ ...current, slug: e.target.value }))} />
               </label>
               <label>
-                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Title</div>
-                <input value={draft.title} onChange={(e) => setDraft((current) => ({ ...current, title: e.target.value }))} style={inputStyle} />
+                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase" }}>Title</div>
+                <Input value={draft.title} onChange={(e) => setDraft((current) => ({ ...current, title: e.target.value }))} />
               </label>
               <label>
-                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Entity</div>
-                <input value={draft.entity} onChange={(e) => setDraft((current) => ({ ...current, entity: e.target.value }))} style={inputStyle} />
+                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase" }}>Entity</div>
+                <Input value={draft.entity} onChange={(e) => setDraft((current) => ({ ...current, entity: e.target.value }))} />
               </label>
               <label>
-                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Schema version</div>
-                <input value={draft.schema_version} onChange={(e) => setDraft((current) => ({ ...current, schema_version: e.target.value }))} style={inputStyle} />
+                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase" }}>Schema version</div>
+                <Input value={draft.schema_version} onChange={(e) => setDraft((current) => ({ ...current, schema_version: e.target.value }))} />
               </label>
               <label>
-                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Migration key</div>
-                <input value={draft.migration_key} onChange={(e) => setDraft((current) => ({ ...current, migration_key: e.target.value }))} style={inputStyle} />
+                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase" }}>Migration key</div>
+                <Input value={draft.migration_key} onChange={(e) => setDraft((current) => ({ ...current, migration_key: e.target.value }))} />
               </label>
               <label style={{ gridColumn: "1 / -1" }}>
-                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Description</div>
-                <input value={draft.description} onChange={(e) => setDraft((current) => ({ ...current, description: e.target.value }))} style={inputStyle} />
+                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase" }}>Description</div>
+                <Input value={draft.description} onChange={(e) => setDraft((current) => ({ ...current, description: e.target.value }))} />
               </label>
               <label>
-                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Source provider</div>
-                <input value={draft.source_schema_provider} onChange={(e) => setDraft((current) => ({ ...current, source_schema_provider: e.target.value }))} style={inputStyle} />
+                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase" }}>Source provider</div>
+                <Input value={draft.source_schema_provider} onChange={(e) => setDraft((current) => ({ ...current, source_schema_provider: e.target.value }))} />
               </label>
               <label>
-                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Source schema URL</div>
-                <input value={draft.source_schema_url} onChange={(e) => setDraft((current) => ({ ...current, source_schema_url: e.target.value }))} style={inputStyle} />
+                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase" }}>Source schema URL</div>
+                <Input value={draft.source_schema_url} onChange={(e) => setDraft((current) => ({ ...current, source_schema_url: e.target.value }))} />
               </label>
               <label>
-                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Sort order</div>
-                <input value={draft.sort_order} onChange={(e) => setDraft((current) => ({ ...current, sort_order: e.target.value }))} style={inputStyle} />
+                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase" }}>Sort order</div>
+                <Input value={draft.sort_order} onChange={(e) => setDraft((current) => ({ ...current, sort_order: e.target.value }))} />
               </label>
               <label style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 24 }}>
-                <input type="checkbox" checked={draft.is_active} onChange={(e) => setDraft((current) => ({ ...current, is_active: e.target.checked }))} />
+                <Checkbox checked={draft.is_active} onCheckedChange={(isActive) => setDraft((current) => ({ ...current, is_active: isActive }))} />
                 <span style={{ fontSize: 14 }}>Active row</span>
               </label>
             </div>
 
-            <div style={{ display: "grid", gap: 18, gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+            <div className="playground-field-grid" style={{ gap: 18 }}>
               <label>
-                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Schema JSON</div>
-                <textarea value={draft.schemaText} onChange={(e) => setDraft((current) => ({ ...current, schemaText: e.target.value }))} style={textAreaStyle} />
+                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase" }}>Schema JSON</div>
+                <Textarea value={draft.schemaText} onChange={(e) => setDraft((current) => ({ ...current, schemaText: e.target.value }))} style={textAreaStyle} />
               </label>
               <label>
-                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Default values JSON</div>
-                <textarea value={draft.defaultValuesText} onChange={(e) => setDraft((current) => ({ ...current, defaultValuesText: e.target.value }))} style={textAreaStyle} />
+                <div style={{ marginBottom: 6, fontSize: 12, color: "var(--muted)", textTransform: "uppercase" }}>Default values JSON</div>
+                <Textarea value={draft.defaultValuesText} onChange={(e) => setDraft((current) => ({ ...current, defaultValuesText: e.target.value }))} style={textAreaStyle} />
               </label>
             </div>
-          </section>
+          </Card>
 
-          <aside style={{ ...sectionStyle, display: "grid", gap: 16 }}>
+          <Card style={{ display: "grid", gap: 16, padding: 24 }}>
             <section>
               <h2 style={{ marginTop: 0 }}>Validation</h2>
-              <p style={{ color: validation.ok ? "#0f766e" : "#b91c1c", lineHeight: 1.5 }}>
+              <p style={{ color: validation.ok ? "var(--success)" : "var(--danger)", lineHeight: 1.5 }}>
                 {validation.ok ? "Schema valid." : formatResourceFormIssues(validation.issues)}
               </p>
               {!parsedDefaults.ok && (
-                <p style={{ color: "#b91c1c", lineHeight: 1.5 }}>
+                <p style={{ color: "var(--danger)", lineHeight: 1.5 }}>
                   default_values JSON invalid: {parsedDefaults.error}
                 </p>
               )}
@@ -431,7 +410,7 @@ export function ResourceFormsAdminClient() {
               <h2 style={{ marginTop: 0 }}>Status</h2>
               <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>{message}</p>
             </section>
-          </aside>
+          </Card>
         </section>
       </div>
     </main>

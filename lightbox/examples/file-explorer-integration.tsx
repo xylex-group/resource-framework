@@ -8,6 +8,8 @@
 import { useMemo, useState } from "react";
 import { Lightbox, useLightbox, type LightboxFile } from "../index";
 import type { FileItem } from "../../components/drilldown/drilldown-file-explorer";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface FileExplorerWithLightboxProps {
   files: FileItem[];
@@ -65,7 +67,7 @@ export function FileExplorerWithLightbox({
       {/* Upload Area */}
       {onUpload && (
         <div className="border-2 border-dashed border-border rounded-sm p-8 text-center">
-          <input
+          <Input
             type="file"
             multiple
             onChange={(e) => {
@@ -157,7 +159,7 @@ function FileCard({
 
       {/* Delete Button */}
       {onDelete && (
-        <button
+        <Button
           onClick={(e) => {
             e.stopPropagation();
             if (confirm(`Delete ${file.file_name || file.name}?`)) {
@@ -167,7 +169,7 @@ function FileCard({
           className="absolute top-2 right-2 w-6 h-6 bg-background/80 hover:bg-hover backdrop-blur-sm rounded-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
         >
           <span className="text-xs">x</span>
-        </button>
+        </Button>
       )}
     </div>
   );

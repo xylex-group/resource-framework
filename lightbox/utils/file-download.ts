@@ -17,7 +17,7 @@ export interface DownloadableFile {
   url?: string;
 }
 
-export const hasBlockedDownloadExtension = (file: DownloadableFile): boolean => {
+const hasBlockedDownloadExtension = (file: DownloadableFile): boolean => {
   const nameExt = getExtensionForValue(file.name);
   if (BLOCKED_DOWNLOAD_EXTENSIONS.has(nameExt)) {
     return true;

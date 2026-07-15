@@ -1,8 +1,6 @@
 import { DateInputMode } from "../resource-types";
-import { FormStateData } from "@/lib/types";
-import { Dispatch, SetStateAction } from "react";
 
-export const parseToDate = (
+const parseToDate = (
     value: string | undefined,
 ): Date | null => {
     if (value == null || value === "") return null;
@@ -76,20 +74,4 @@ export const convertDateInputValue = (
         return parsed.toISOString();
     }
     return inputValue;
-};
-export const handleDateInputChange = (
-    fieldKey: string,
-    inputValue: string,
-    dateInputMode: DateInputMode | undefined,
-    setFormState: Dispatch<SetStateAction<FormStateData>>,
-): void => {
-    if (!dateInputMode) return;
-    const next = convertDateInputValue(
-        inputValue,
-        dateInputMode,
-    );
-    setFormState((s) => ({
-        ...s,
-        [fieldKey]: next,
-    }));
 };

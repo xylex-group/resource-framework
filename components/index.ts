@@ -1,4 +1,6 @@
 export * from "./ResourceTable";
+export * from "./table/athena-resource-table";
+export * from "./ui/resource-error";
 export * from "./ResourceDrilldown";
 export * from "./ResourceProvider";
 export * from "./create-resource-button";

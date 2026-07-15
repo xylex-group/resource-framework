@@ -1,6 +1,8 @@
 "use client";
 
+import { Button, Chip } from "@heroui/react";
 import { cn } from "@/lib/utils";
+import { Card } from "./card";
 
 export interface PricingCardProps {
   value: string;
@@ -26,42 +28,35 @@ export function PricingCard({
   onClickAction,
 }: PricingCardProps) {
   return (
-    <button
-      type="button"
-      onClick={onClickAction}
-      className={cn(
-        "w-full rounded-lg border p-4 text-left transition hover:border-slate-500",
-        selected
-          ? "border-sky-500 bg-slate-900"
-          : "border-slate-800 bg-slate-950/40",
-      )}
+    <Button
+      className="h-auto w-full justify-start rounded-xl p-0 text-left"
       data-value={value}
+      onPress={onClickAction}
+      variant="ghost"
     >
-      <div className="flex items-center justify-between">
-        <span className="text-base font-semibold text-slate-100">{title}</span>
-        {badge ? (
-          <span className="rounded-full border border-slate-700 px-2 py-0.5 text-xs uppercase tracking-wide text-slate-300">
-            {badge}
-          </span>
+      <Card
+        className={cn(
+          "w-full p-4 text-left transition-colors",
+          selected && "ring-2 ring-focus",
+        )}
+        variant={selected ? "secondary" : "default"}
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-base font-semibold text-foreground">{title}</span>
+          {badge ? <Chip size="sm" variant="soft">{badge}</Chip> : null}
+        </div>
+        {price || cadence ? (
+          <p className="mt-1 text-sm text-muted-foreground">
+            {price} {cadence ? `/${cadence}` : ""}
+          </p>
         ) : null}
-      </div>
-      {price || cadence ? (
-        <p className="mt-1 text-sm text-slate-300">
-          {price} {cadence ? `/${cadence}` : ""}
-        </p>
-      ) : null}
-      {features.length > 0 && (
-        <ul className="mt-2 space-y-1 text-xs text-slate-400">
-          {features.map((feature) => (
-            <li key={feature}>• {feature}</li>
-          ))}
-        </ul>
-      )}
-      {footer && (
-        <p className="mt-2 text-xs text-slate-500">
-          {footer}
-        </p>
-      )}
-    </button>
+        {features.length > 0 ? (
+          <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+            {features.map((feature) => <li key={feature}>{feature}</li>)}
+          </ul>
+        ) : null}
+        {footer ? <p className="mt-2 text-xs text-muted-foreground">{footer}</p> : null}
+      </Card>
+    </Button>
   );
 }

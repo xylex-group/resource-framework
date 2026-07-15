@@ -2,7 +2,7 @@
 
 import { ChartContainer } from "../ui/chart";
 
-export interface ChartDataPoint {
+interface ChartDataPoint {
   [key: string]: unknown;
 }
 
@@ -29,14 +29,6 @@ export interface LineBarChartWidgetProps {
   bucket?: string;
 }
 
-export function AreaChartWidget() {
-  return (
-    <ChartContainer className="h-32">
-      <p className="text-xs text-slate-400">Area chart placeholder</p>
-    </ChartContainer>
-  );
-}
-
 export function LineBarChartWidget(props: LineBarChartWidgetProps) {
   return (
     <ChartContainer
@@ -54,8 +46,4 @@ export function LineBarChartWidget(props: LineBarChartWidgetProps) {
       </p>
     </ChartContainer>
   );
-}
-
-export function formatDateLabel(value: string) {
-  return value;
 }

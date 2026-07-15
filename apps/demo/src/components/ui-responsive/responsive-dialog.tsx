@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { Button, Modal } from "@heroui/react";
 import { cn } from "@/lib/utils";
 
 export interface ResponsiveDialogProps {
@@ -25,47 +25,27 @@ export function ResponsiveDialog({
   classNames,
   children,
 }: ResponsiveDialogProps) {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-      <div
-        className={cn(
-          "max-h-[90vh] w-full max-w-lg overflow-auto rounded-lg border border-border bg-card p-4 shadow-2xl",
-          disableMaxWidth ? "max-w-full" : "",
-          className,
-        )}
-      >
-        {title && (
-          <div
-            className={cn(
-              "mb-3 text-lg font-semibold text-slate-100",
-              classNames?.title,
-            )}
-          >
-            {title}
-          </div>
-        )}
-        <div className={classNames?.content}>{children}</div>
-        <div className="mt-4 flex justify-end">
-          <button
-            type="button"
-            className="text-xs font-semibold uppercase tracking-wide text-slate-400 hover:text-white"
-            onClick={onClose}
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
+    <Modal>
+      <Modal.Backdrop isOpen={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <Modal.Container
+          placement="center"
+          scroll="inside"
+          size={disableMaxWidth ? "full" : "lg"}
+        >
+          <Modal.Dialog className={cn("max-h-[90vh] rounded-xl", className)}>
+            {title ? (
+              <Modal.Header>
+                <Modal.Heading className={classNames?.title}>{title}</Modal.Heading>
+              </Modal.Header>
+            ) : null}
+            <Modal.Body className={classNames?.content}>{children}</Modal.Body>
+            <Modal.Footer>
+              <Button onPress={onClose} variant="secondary">Close</Button>
+            </Modal.Footer>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </Modal>
   );
 }

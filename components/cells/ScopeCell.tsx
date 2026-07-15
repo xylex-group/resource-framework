@@ -66,5 +66,3 @@ export const ScopeCell: FC<{
     </div>
   );
 };
-
-export default ScopeCell;

@@ -1,8 +1,8 @@
 "use client";
 
 /**
- * useApiClient Hook - Drizzle ORM Edition
- * Provides type-safe CRUD operations using server actions with Drizzle ORM
+ * useApiClient Hook - Athena Edition
+ * Provides type-safe CRUD operations using server actions with Athena
  * Migrated from external API calls to direct database operations
  */
 
@@ -308,7 +308,7 @@ function buildClientFor<T>(
   return { fetchWhere, insert, insertMany, update, remove };
 }
 
-export interface ApiClientInstance<T> {
+interface ApiClientInstance<T> {
   fetchWhere: (params?: {
     conditions?: ApiClientCondition[];
     columns?: string[];
@@ -667,7 +667,7 @@ export function useApiClient<T>({
     isLoading,
     isError,
     error,
-    cacheKey: null, // No longer needed with Drizzle
+    cacheKey: null, // No longer needed with Athena
     mutate,
     fetchWhere,
     insert,

@@ -1,14 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  AthenaTable,
+  type AthenaTableColumn,
+} from "@xylex-group/athena-auth-ui/tables";
 import { FileText, Loader2 } from "lucide-react";
 import type { LightboxRendererProps } from "../types";
 import { Button } from "@/components/ui/button";
 import { useAuthorizedFileUrl } from "../hooks/useAuthorizedFileUrl";
 import {
-  fetchS3FileAsArrayBuffer,
-  fetchS3FileAsText,
-} from "../../utils/s3-file-handler";
+  fetchAuthorizedFileAsArrayBuffer,
+  fetchAuthorizedFileAsText,
+} from "../../utils/authorized-file";
 import { cn } from "@/lib/utils";
 import JSZip from "jszip";
 import Papa from "papaparse";
@@ -128,7 +132,7 @@ export function DocumentRenderer({
       const ext = getFileExtension(file.name);
 
       if (ext === "docx") {
-        const result = await fetchS3FileAsArrayBuffer(url, {
+        const result = await fetchAuthorizedFileAsArrayBuffer(url, {
           onRetry: (attempt) => {
             console.log(
               `[DocumentRenderer] Retrying fetch, attempt ${attempt}...`,
@@ -141,7 +145,7 @@ export function DocumentRenderer({
         const text = await parseDocx(result.data);
         setParsedContent({ type: "docx", content: text });
       } else if (ext === "csv") {
-        const result = await fetchS3FileAsText(url, {
+        const result = await fetchAuthorizedFileAsText(url, {
           onRetry: (attempt) => {
             console.log(
               `[DocumentRenderer] Retrying fetch, attempt ${attempt}...`,
@@ -154,7 +158,7 @@ export function DocumentRenderer({
         const csvData = parseCsv(result.data);
         setParsedContent({ type: "csv", content: result.data, csvData });
       } else if (ext === "txt") {
-        const result = await fetchS3FileAsText(url, {
+        const result = await fetchAuthorizedFileAsText(url, {
           onRetry: (attempt) => {
             console.log(
               `[DocumentRenderer] Retrying fetch, attempt ${attempt}...`,
@@ -231,6 +235,17 @@ export function DocumentRenderer({
 
   // CSV needs full width, documents need constrained width
   const isCsv = parsedContent.type === "csv";
+  const csvColumns = useMemo<AthenaTableColumn<Record<string, string>>[]>(
+    () =>
+      Object.keys(parsedContent.csvData?.[0] ?? {}).map((header, index) => ({
+        id: header,
+        isRowHeader: index === 0,
+        label: header,
+        mobileRole: index === 0 ? "title" : "detail",
+        valueKey: header,
+      })),
+    [parsedContent.csvData],
+  );
 
   return (
     <div 
@@ -247,41 +262,16 @@ export function DocumentRenderer({
         >
           {parsedContent.type === "csv" && parsedContent.csvData
             ? (
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm">
-                  <thead>
-                    <tr className="border-b border-border">
-                      {Object.keys(parsedContent.csvData[0] || {}).map((
-                        header,
-                      ) => (
-                        <th
-                          key={header}
-                          className="text-left px-3 py-2 font-medium text-primary bg-muted wrap-break-word whitespace-nowrap"
-                        >
-                          {header}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {parsedContent.csvData.map((row, idx) => (
-                      <tr
-                        key={idx}
-                        className="border-b border-border hover:bg-hover"
-                      >
-                        {Object.values(row).map((cell, cellIdx) => (
-                          <td
-                            key={cellIdx}
-                            className="px-3 py-2 text-primary whitespace-nowrap"
-                          >
-                            {cell}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <AthenaTable
+                ariaLabel="Document rows"
+                columns={csvColumns}
+                desktopBreakpoint="auto"
+                emptyState={() => "This document has no rows."}
+                getRowKey={(_row, index) => String(index)}
+                rows={parsedContent.csvData}
+                tableId="document-preview"
+                virtualization={{ isEnabled: parsedContent.csvData.length > 100 }}
+              />
             )
             : parsedContent.type === "docx"
             ? (

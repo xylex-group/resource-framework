@@ -14,7 +14,7 @@ interface UserPreferenceRow {
 }
 
 /**
- * Hook to load and persist user preferences for a specific resource table using Drizzle ORM.
+ * Hook to load and persist user preferences for a specific resource table using Athena.
  * Automatically fetches preferences on mount and debounces updates to the database.
  *
  * @param user - The current user object

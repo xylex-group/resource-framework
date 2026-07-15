@@ -1,6 +1,7 @@
 "use client";
 
 import type { HTMLAttributes, ReactNode } from "react";
+import { Card } from "@xylex-group/athena-auth-ui/primitives";
 import { cn } from "@/lib/utils";
 
 export interface ChartContainerProps extends HTMLAttributes<HTMLDivElement> {
@@ -15,9 +16,9 @@ export function ChartContainer({
   ...props
 }: ChartContainerProps) {
   return (
-    <div
+    <Card
       className={cn(
-        "rounded-lg border border-slate-700 bg-slate-950/50 p-3 text-sm text-slate-200",
+        "rounded-xl p-3 text-sm",
         className,
       )}
       {...props}
@@ -26,6 +27,6 @@ export function ChartContainer({
         <pre className="sr-only">{JSON.stringify(config)}</pre>
       )}
       {children}
-    </div>
+    </Card>
   );
 }

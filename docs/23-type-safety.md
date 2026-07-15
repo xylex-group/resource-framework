@@ -147,7 +147,7 @@ const { data } = useApiClient<CustomData>({
 <!-- codex:architecture-review:start -->
 ## Architecture Assessment
 - Technical debt rating: 3/5 - the type surface is broad, but not everything is generated from a single source of truth.
-- Refactor path: Generate more types from Drizzle or OpenAPI metadata and reduce manually synchronized interfaces.
+- Refactor path: Derive more types from Athena models and generated registry metadata and reduce manually synchronized interfaces.
 - Replacement: Schema-generated types and validators shared between runtime and package declarations.
 - Weak points: Manual interfaces can drift, app-only aliases bleed into package code, and deep import usage weakens type-surface discipline.
 <!-- codex:architecture-review:end -->

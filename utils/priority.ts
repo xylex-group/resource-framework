@@ -1,6 +1,6 @@
 export type PriorityTypes = 0 | 1 | 2 | 3 | 4;
 
-export const priorityLabels = {
+const priorityLabels = {
   0: "No Priority",
   1: "Low Priority",
   2: "Medium Priority",
